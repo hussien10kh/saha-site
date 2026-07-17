@@ -247,6 +247,28 @@ textarea {
   cursor: pointer;
 }
 
+.install-app-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary-light);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.install-app-btn:hover {
+  background: var(--border);
+}
+
+.install-app-btn svg {
+  width: 20px;
+  height: 20px;
+  color: var(--primary);
+}
+
 .header-bell-btn svg {
   width: 22px;
   height: 22px;

@@ -17,6 +17,51 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+/* ---------------------------------------------------------
+   PWA install button — shown in the header. On Android/Chrome
+   it triggers the native install prompt; iOS Safari never fires
+   beforeinstallprompt, so we show a one-time text hint instead
+   since Apple only allows Share → Add to Home Screen there.
+   --------------------------------------------------------- */
+let deferredInstallPrompt = null;
+
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+
+function isStandaloneApp(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function syncInstallButtons(){
+  const show = !isStandaloneApp() && (deferredInstallPrompt || isIOS());
+  document.querySelectorAll('.install-app-btn').forEach(b => { b.style.display = show ? 'flex' : 'none'; });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  syncInstallButtons();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  syncInstallButtons();
+});
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.install-app-btn');
+  if(!btn) return;
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    syncInstallButtons();
+  } else if(isIOS()){
+    toast('اضغط زر المشاركة ⬆ من الأسفل، ثم اختر "إضافة إلى الشاشة الرئيسية"', null, 5000);
+  }
+});
+
 const ICONS = {
   home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>`,
   building:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/></svg>`,
@@ -36,6 +81,7 @@ const ICONS = {
   check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>`,
   warning:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.9 18.5a1.7 1.7 0 0 0 1.5 2.6h17.2a1.7 1.7 0 0 0 1.5-2.6L13.7 3.9a1.7 1.7 0 0 0-3.4 0Z"/></svg>`,
   upload:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>`,
+  download:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>`,
   fb:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.6h2.6l.4-3h-3v-1.9c0-.9.2-1.5 1.6-1.5h1.6V4.3C15.9 4.2 14.9 4 13.8 4c-2.4 0-4 1.5-4 4.1v2.3H7.2v3h2.6V21h3.7Z"/></svg>`,
   ig:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>`,
   tw:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 0 0-7 3.7A11.6 11.6 0 0 1 3.4 4.6a4.1 4.1 0 0 0 1.3 5.5c-.7 0-1.3-.2-1.9-.5v.1c0 2 1.4 3.6 3.3 4a4.2 4.2 0 0 1-1.9.1 4.1 4.1 0 0 0 3.8 2.9A8.3 8.3 0 0 1 2 18.4a11.6 11.6 0 0 0 6.3 1.9c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.2Z"/></svg>`,
@@ -531,7 +577,7 @@ function initials(name){ return (name||'؟').trim().charAt(0); }
 /* ---------------------------------------------------------
    Toast
    --------------------------------------------------------- */
-function toast(msg, type){
+function toast(msg, type, duration){
   let el = document.querySelector('.toast');
   if(!el){
     el = document.createElement('div');
@@ -543,7 +589,7 @@ function toast(msg, type){
   el.innerHTML = (isError ? ICONS.warning : ICONS.check) + '<span>'+escapeHTML(msg)+'</span>';
   requestAnimationFrame(()=> el.classList.add('show'));
   clearTimeout(el._t);
-  el._t = setTimeout(()=> el.classList.remove('show'), isError ? 4000 : 2600);
+  el._t = setTimeout(()=> el.classList.remove('show'), duration || (isError ? 4000 : 2600));
 }
 
 /* ---------------------------------------------------------
@@ -571,6 +617,9 @@ async function renderHeader(activeCategory){
             </div>
           </div>` : ''}
           <a class="btn btn-primary cta-auth" href="${auth.href}">${auth.label}</a>
+          <button class="install-app-btn" id="headerInstallBtn" type="button" aria-label="ثبّت التطبيق" style="display:none">
+            ${ICONS.download}
+          </button>
           <div class="hamburger-wrap">
             <button class="hamburger" id="hamburgerBtn" aria-label="القائمة">${ICONS.menu}</button>
             <div class="hamburger-dropdown" id="hamburgerDropdown">
@@ -602,6 +651,8 @@ async function renderHeader(activeCategory){
   mount.querySelectorAll('.tab, .hamburger-dropdown a').forEach(t=>{
     if((t.dataset.cat||'')===(activeCategory||'')) t.classList.add('active');
   });
+
+  syncInstallButtons();
 
   const hamb = document.getElementById('hamburgerBtn');
   const hambDropdown = document.getElementById('hamburgerDropdown');
