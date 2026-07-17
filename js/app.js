@@ -361,11 +361,13 @@ async function requireAdmin(){
   if(!(await isAdminLoggedIn())){ location.href = 'admin-login.html'; return false; }
   return true;
 }
-async function updateAdminPassword(newPassword){
+/* Generic — works for any signed-in account (admin or regular user), since
+   it's just Supabase Auth's own updateUser under the hood. */
+async function updateAccountPassword(newPassword){
   const { error } = await sb.auth.updateUser({ password: newPassword });
   if(error) throw error;
 }
-async function updateAdminEmail(newEmail){
+async function updateAccountEmail(newEmail){
   const { error } = await sb.auth.updateUser({ email: newEmail });
   if(error) throw error;
 }

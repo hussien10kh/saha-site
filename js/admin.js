@@ -442,8 +442,8 @@ function renderSettingsTab(mount){
     const newEmail = document.getElementById('sEmail').value.trim();
     const newPass = document.getElementById('sNewPass').value;
     try{
-      if(newEmail !== adminUser.email) await updateAdminEmail(newEmail);
-      if(newPass) await updateAdminPassword(newPass);
+      if(newEmail !== adminUser.email) await updateAccountEmail(newEmail);
+      if(newPass) await updateAccountPassword(newPass);
       adminUser = await getCurrentUser();
       toast('تم تحديث بيانات الدخول بنجاح');
       document.getElementById('sNewPass').value = '';
