@@ -1627,7 +1627,8 @@ textarea {
   }
 
   .ad-desc {
-    display: none;
+    -webkit-line-clamp: 1;
+    font-size: 13px;
   }
 
   .ad-meta {
