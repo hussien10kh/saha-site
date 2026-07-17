@@ -5,7 +5,7 @@
    untouched so auth/data calls behave normally.
    ========================================================= */
 
-const CACHE_NAME = 'saaha-v1';
+const CACHE_NAME = 'saaha-v2';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -52,14 +52,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Stale-while-revalidate: serve the cached copy immediately for speed,
+  // but always refetch in the background so the next load has the latest
+  // file — a plain cache-first here would keep serving a file from the
+  // very first install forever, even after later deploys change it.
   event.respondWith(
     caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((res) => {
+      const network = fetch(req).then((res) => {
         const copy = res.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
         return res;
-      });
+      }).catch(() => cached);
+      return cached || network;
     })
   );
 });
