@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ساحة | إعلانات مبوبة في سوريا - عقارات، سيارات، والمزيد</title>
+<meta name="description" content="ساحة: منصة إعلانات مبوبة مجانية في سوريا لبيع وشراء العقارات والسيارات وكل ما تحتاجه. تصفح آلاف الإعلانات في دمشق وجميع المحافظات السورية، وانشر إعلانك مجاناً خلال دقائق.">
+<meta name="keywords" content="إعلانات مبوبة سوريا, بيع وشراء, عقارات للبيع, شقق للبيع دمشق, سيارات للبيع سوريا, إعلانات مجانية, سوق سوريا, ساحة">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ساحة">
+<meta property="og:title" content="ساحة | إعلانات مبوبة في سوريا">
+<meta property="og:description" content="منصة إعلانات مبوبة مجانية لبيع وشراء العقارات والسيارات وكل ما تحتاجه في سوريا.">
+<meta property="og:locale" content="ar_AR">
+<link rel="canonical" href="https://saaha.net/index.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="page-body">
+  <div class="container">
+    <div class="layout">
+
+      <section>
+        <div id="resultsInfo" style="display:none;margin-bottom:14px;color:var(--muted);font-size:14px;font-weight:600;"></div>
+        <div class="feed" id="feed"></div>
+        <div class="empty-state" id="emptyState" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <h3 id="emptyTitle">لا توجد إعلانات مطابقة</h3>
+          <p id="emptyText">جرّب تعديل كلمة البحث أو اختيار تصنيف آخر.</p>
+        </div>
+      </section>
+
+      <aside class="panel sidebar-panel">
+        <h2 class="panel-title">إعلانات مميزة</h2>
+        <div class="featured-list" id="featuredList"></div>
+      </aside>
+
+    </div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<div id="mobile-nav"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const cat = params.get('cat') || '';
+  const q = (params.get('q') || '').trim();
+  const city = params.get('city') || '';
+
+  (async()=>{
+    await renderHeader(cat);
+    renderFooter();
+    renderMobileNav('home');
+    renderFeaturedSidebar();
+  })();
+
+  if(cat) trackFilterEvent('category', cat);
+  if(q) trackFilterEvent('search', q);
+  if(city) trackFilterEvent('city', city);
+
+  async function loadFeed(){
+    await loadFavorites();
+    let ads = await getActiveAds();
+    if(cat) ads = ads.filter(a=>a.category===cat);
+    if(city) ads = ads.filter(a=> (a.city||'').includes(city));
+    if(q){
+      const needle = q.toLowerCase();
+      ads = ads.filter(a=> (a.title+a.description+a.city).toLowerCase().includes(needle));
+    }
+    const feed = document.getElementById('feed');
+    const empty = document.getElementById('emptyState');
+    const info = document.getElementById('resultsInfo');
+
+    if(cat || q || city){
+      info.style.display='block';
+      const label = cat ? (CATEGORY_LABELS[cat] || '') : '';
+      info.textContent = `${ads.length} نتيجة`
+        + (label ? ` في «${label}»` : '')
+        + (city ? ` في مدينة «${city}»` : '')
+        + (q ? ` لكلمة «${q}»` : '');
+    }
+
+    if(ads.length===0){
+      feed.style.display='none';
+      empty.style.display='block';
+      if(!cat && !q && !city){
+        document.getElementById('emptyTitle').textContent = 'لا توجد إعلانات بعد';
+        document.getElementById('emptyText').innerHTML = 'كن أول من ينشر إعلاناً على ساحة. <a class="btn btn-primary" style="margin-top:10px;display:inline-flex;" href="' + addAdHref() + '">أضف إعلانك</a>';
+      } else {
+        document.getElementById('emptyTitle').textContent = 'لا توجد إعلانات مطابقة';
+        document.getElementById('emptyText').textContent = 'جرّب تعديل كلمة البحث أو اختيار تصنيف آخر.';
+      }
+    }else{
+      feed.style.display='flex';
+      empty.style.display='none';
+      feed.innerHTML = ads.map(adCardHTML).join('');
+    }
+  }
+  loadFeed();
+
+  // fill the search input with current query for convenience
+  const si = document.getElementById('searchInput');
+  if(si && q) si.value = q;
+</script>
+</body>
+</html>

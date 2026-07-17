@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول | ساحة</title>
+<meta name="description" content="سجّل دخولك أو أنشئ حساباً جديداً على ساحة للبدء بنشر إعلاناتك والتواصل مع المهتمين.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="page-body">
+  <div class="auth-wrap panel">
+    <div class="auth-tabs">
+      <button class="active" id="tabLogin">تسجيل الدخول</button>
+      <button id="tabSignup">حساب جديد</button>
+      <button id="tabGuest">كضيف</button>
+    </div>
+    <form id="authForm">
+      <div class="field full" id="nameField" style="display:none;">
+        <label>الاسم الكامل</label>
+        <input type="text" id="nameInput" placeholder="مثال: أبو محمد">
+      </div>
+      <div class="field full" id="contactField">
+        <label>البريد الإلكتروني</label>
+        <input type="email" id="contactInput" placeholder="example@email.com">
+      </div>
+      <div class="field full" id="guestPhoneField" style="display:none;">
+        <label>رقم الجوال</label>
+        <input type="tel" id="guestPhoneInput" placeholder="09xx xxx xxx">
+      </div>
+      <div class="field full" id="passField">
+        <label>كلمة المرور</label>
+        <input type="password" id="passInput" placeholder="••••••••" minlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="authSubmit">تسجيل الدخول</button>
+    </form>
+
+    <div style="display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--muted-2);font-size:13px;">
+      <div style="flex:1;height:1px;background:var(--border);"></div>أو<div style="flex:1;height:1px;background:var(--border);"></div>
+    </div>
+    <button type="button" class="btn btn-outline btn-block btn-lg" id="googleBtn" style="gap:10px;">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.8-.1-1.5-.2-2.2H12v4.3h5.9c-.3 1.4-1 2.5-2.2 3.3v2.7h3.6c2.1-1.9 3.2-4.8 3.2-8.1Z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.1-4.5H2.2v2.8C4.1 20.5 7.8 23 12 23Z"/><path fill="#FBBC05" d="M5.9 14.2c-.2-.7-.3-1.4-.3-2.2s.1-1.5.3-2.2V7H2.2C1.4 8.6 1 10.3 1 12s.4 3.4 1.2 5l3.7-2.8Z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2C17.4 2 15 1 12 1 7.8 1 4.1 3.5 2.2 7l3.7 2.8c.8-2.6 3.2-4.4 6.1-4.4Z"/></svg>
+      <span>الدخول عبر جوجل</span>
+    </button>
+
+    <p style="text-align:center;color:var(--muted);font-size:13px;margin-top:16px;">
+      حسابك محفوظ فعلياً وتقدر تسجّل دخولك فيه من أي جهاز.
+    </p>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<div id="mobile-nav"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script>
+  (async()=>{
+    await renderHeader('');
+    renderFooter();
+    renderMobileNav('');
+  })();
+
+  const tabLogin = document.getElementById('tabLogin');
+  const tabSignup = document.getElementById('tabSignup');
+  const tabGuest = document.getElementById('tabGuest');
+  const nameField = document.getElementById('nameField');
+  const contactField = document.getElementById('contactField');
+  const passField = document.getElementById('passField');
+  const guestPhoneField = document.getElementById('guestPhoneField');
+  const submitBtn = document.getElementById('authSubmit');
+  let activeTab = 'login';
+
+  function setActiveTab(tab){
+    activeTab = tab;
+    [tabLogin, tabSignup, tabGuest].forEach(t=>t.classList.remove('active'));
+    nameField.style.display = (tab==='signup' || tab==='guest') ? 'block' : 'none';
+    contactField.style.display = (tab==='login' || tab==='signup') ? 'block' : 'none';
+    passField.style.display = (tab==='login' || tab==='signup') ? 'block' : 'none';
+    guestPhoneField.style.display = tab==='guest' ? 'block' : 'none';
+    if(tab==='login'){ tabLogin.classList.add('active'); submitBtn.textContent='تسجيل الدخول'; }
+    if(tab==='signup'){ tabSignup.classList.add('active'); submitBtn.textContent='إنشاء حساب'; }
+    if(tab==='guest'){ tabGuest.classList.add('active'); submitBtn.textContent='متابعة كضيف'; }
+  }
+  tabLogin.addEventListener('click', ()=> setActiveTab('login'));
+  tabSignup.addEventListener('click', ()=> setActiveTab('signup'));
+  tabGuest.addEventListener('click', ()=> setActiveTab('guest'));
+
+  function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+  function isValidSyrianPhone(v){ return /^0?9\d{8}$/.test(v.replace(/[\s-]/g,'')); }
+
+  function goToRedirect(){
+    const redirect = new URLSearchParams(location.search).get('redirect') || 'index.html';
+    setTimeout(()=> location.href = redirect, 600);
+  }
+
+  document.getElementById('authForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+
+    if(activeTab === 'guest'){
+      const nameVal = document.getElementById('nameInput').value.trim();
+      const phone = document.getElementById('guestPhoneInput').value.trim();
+      if(!nameVal){
+        toast('الرجاء إدخال اسمك');
+        return;
+      }
+      if(!isValidSyrianPhone(phone)){
+        toast('الرجاء إدخال رقم جوال سوري صحيح');
+        return;
+      }
+      try{
+        await signInAsGuest(nameVal, phone);
+        toast('تم المتابعة كضيف بنجاح');
+        goToRedirect();
+      }catch(err){
+        toast('تعذّرت المتابعة كضيف، حاول مجدداً');
+      }
+      return;
+    }
+
+    const contact = document.getElementById('contactInput').value.trim();
+    const pass = document.getElementById('passInput').value;
+    const nameVal = document.getElementById('nameInput').value.trim();
+
+    if(!contact || !isValidEmail(contact)){
+      toast('الرجاء إدخال بريد إلكتروني صحيح');
+      return;
+    }
+    if(!pass || pass.length < 6){
+      toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      return;
+    }
+
+    try{
+      if(activeTab === 'signup'){
+        await signUpWithEmail(contact, pass, nameVal || contact);
+        toast('تم إنشاء حسابك بنجاح');
+      } else {
+        await signInWithEmail(contact, pass);
+        toast('تم تسجيل الدخول بنجاح');
+      }
+      goToRedirect();
+    }catch(err){
+      toast(err.message === 'Invalid login credentials' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة' : (err.message || 'حدث خطأ، حاول مجدداً'));
+    }
+  });
+
+  /* Google sign-in: fully wired to Google Identity Services, but needs a
+     real OAuth Client ID (created in Google Cloud Console, authorized for
+     this site's domain) before it can actually authenticate anyone. Once
+     configured, it signs the user into Supabase via the Google ID token. */
+  const GOOGLE_CLIENT_ID = '212224115105-3qjssjv7ei3p637ld6en88qdmgj421ee.apps.googleusercontent.com';
+  document.getElementById('googleBtn').addEventListener('click', ()=>{
+    if(GOOGLE_CLIENT_ID.startsWith('TODO')){
+      toast('تسجيل الدخول عبر جوجل يحتاج إعداد Client ID أولاً');
+      return;
+    }
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: async (response)=>{
+        const { error } = await sb.auth.signInWithIdToken({ provider:'google', token: response.credential });
+        if(error){ toast('تعذّر تسجيل الدخول عبر جوجل'); return; }
+        toast('تم تسجيل الدخول عبر جوجل بنجاح');
+        goToRedirect();
+      },
+    });
+    google.accounts.id.prompt();
+  });
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>

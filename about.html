@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عن ساحة | ساحة</title>
+<meta name="description" content="تعرّف على منصة ساحة، الوجهة السورية لبيع وشراء العقارات والسيارات وكل شيء آخر بسهولة وأمان.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="page-body">
+  <div class="container">
+    <section class="panel" style="max-width:820px;margin:0 auto;">
+      <h2 class="panel-title">عن ساحة</h2>
+      <div style="font-size:15px;line-height:2;color:#3a4356;">
+        <p>ساحة منصة إعلانات مبوبة سورية تهدف إلى تجميع العقارات والسيارات وكل ما يحتاجه الناس في مكان واحد سهل الاستخدام.</p>
+        <p>هدفنا تسهيل عملية البيع والشراء بين الأفراد مباشرة، بدون وسطاء، مع تجربة استخدام بسيطة وواضحة تناسب الجميع.</p>
+        <p>نعمل باستمرار على تطوير المنصة وإضافة ميزات جديدة تخدم مستخدمينا وتزيد من أمان وسهولة التواصل بين البائع والمشتري.</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<div id="mobile-nav"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script>
+  (async()=>{
+    await renderHeader('');
+    renderFooter();
+    renderMobileNav('');
+  })();
+</script>
+</body>
+</html>

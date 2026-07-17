@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم | ساحة</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  @media (max-width:920px){ #sidebarToggle{display:flex !important;} }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="adminSidebar"></aside>
+  <main class="admin-main">
+    <div class="admin-topbar" id="adminTopbar"></div>
+    <div id="adminContent"></div>
+  </main>
+</div>
+
+<!-- Add / edit ad modal -->
+<div class="modal-overlay" id="adModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">إضافة إعلان جديد</div>
+      <button class="modal-close" id="modalCloseBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script src="js/admin.js"></script>
+<script>
+  document.getElementById('modalCloseBtn').addEventListener('click', ()=>{
+    document.getElementById('adModal').classList.remove('open');
+  });
+  document.getElementById('adModal').addEventListener('click', e=>{
+    if(e.target.id === 'adModal') document.getElementById('adModal').classList.remove('open');
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شروط الاستخدام | ساحة</title>
+<meta name="description" content="شروط استخدام منصة ساحة لنشر الإعلانات المبوبة والتواصل بين المستخدمين.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="page-body">
+  <div class="container">
+    <section class="panel" style="max-width:820px;margin:0 auto;">
+      <h2 class="panel-title">شروط الاستخدام</h2>
+      <div style="font-size:15px;line-height:1.9;color:#3a4356;display:flex;flex-direction:column;gap:16px;">
+        <p>يرجى قراءة هذه الشروط بعناية قبل استخدام منصة ساحة. استخدامك للمنصة يعني موافقتك على هذه الشروط.</p>
+
+        <h3 style="margin:10px 0 0;font-size:16px;">1. نشر الإعلانات</h3>
+        <p>يجب أن تكون الإعلانات المنشورة صحيحة وواضحة ولا تحتوي على معلومات مضللة. يُمنع نشر إعلانات لمنتجات أو خدمات مخالفة للقانون.</p>
+
+        <h3 style="margin:10px 0 0;font-size:16px;">2. مسؤولية المستخدم</h3>
+        <p>المستخدم هو المسؤول الوحيد عن صحة المعلومات والصور التي ينشرها، وعن أي تعامل يتم بينه وبين مستخدمين آخرين نتيجة الإعلان.</p>
+
+        <h3 style="margin:10px 0 0;font-size:16px;">3. دور المنصة</h3>
+        <p>ساحة وسيط تقني يتيح عرض الإعلانات فقط، ولا تُعتبر طرفاً في أي عملية بيع أو شراء تتم بين المستخدمين، ولا تتحمل أي مسؤولية عن جودة المنتجات أو صحة الاتفاقات بين الطرفين.</p>
+
+        <h3 style="margin:10px 0 0;font-size:16px;">4. إزالة الإعلانات</h3>
+        <p>تحتفظ إدارة ساحة بالحق في إزالة أي إعلان مخالف لهذه الشروط دون إشعار مسبق.</p>
+
+        <h3 style="margin:10px 0 0;font-size:16px;">5. تعديل الشروط</h3>
+        <p>يجوز لنا تحديث هذه الشروط من وقت لآخر، وسيتم نشر أي تعديل على هذه الصفحة.</p>
+
+        <p style="color:var(--muted);font-size:13px;">آخر تحديث لهذه الشروط: يوليو 2026.</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<div id="mobile-nav"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script>
+  (async()=>{
+    await renderHeader('');
+    renderFooter();
+    renderMobileNav('');
+  })();
+</script>
+</body>
+</html>

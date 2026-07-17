@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin-login.html
+Disallow: /account.html
+Disallow: /login.html
+
+Sitemap: https://saaha.net/sitemap.xml

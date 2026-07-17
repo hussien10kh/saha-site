@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تفاصيل الإعلان | ساحة</title>
+<meta name="description" id="metaDescription" content="تصفح تفاصيل هذا الإعلان على ساحة، منصة الإعلانات المبوبة في سوريا.">
+<meta property="og:type" content="product">
+<meta property="og:site_name" content="ساحة">
+<meta property="og:title" id="ogTitle" content="تفاصيل الإعلان | ساحة">
+<meta property="og:description" id="ogDescription" content="تصفح تفاصيل هذا الإعلان على ساحة.">
+<meta property="og:image" id="ogImage" content="">
+<meta property="og:url" id="ogUrl" content="">
+<meta property="og:locale" content="ar_AR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" id="canonicalLink" href="">
+<script type="application/ld+json" id="jsonLd"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="page-body">
+  <div class="container">
+    <div class="layout layout-detail" id="layoutRoot">
+
+      <section id="detailRoot"></section>
+
+      <aside class="panel sidebar-panel">
+        <h2 class="panel-title">إعلانات مميزة</h2>
+        <div class="featured-list" id="featuredList"></div>
+      </aside>
+
+    </div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<div id="mobile-nav"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script>
+(async function main(){
+  const id = new URLSearchParams(location.search).get('id');
+  const ad = await getAdById(id);
+
+  await renderHeader('');
+  renderFooter();
+  renderMobileNav('home');
+  renderFeaturedSidebar(id);
+  await loadFavorites();
+
+  if(!ad){
+    document.getElementById('detailRoot').innerHTML = `
+      <div class="panel empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>
+        <h3>هذا الإعلان غير موجود</h3>
+        <p>ربما تم حذفه أو أن الرابط غير صحيح.</p>
+        <a class="btn btn-primary" href="index.html" style="margin-top:12px;">العودة للرئيسية</a>
+      </div>`;
+    return;
+  }
+
+  document.title = ad.title + ' | ساحة';
+  const shortDesc = ad.description.length > 155 ? ad.description.slice(0, 152) + '...' : ad.description;
+  const pageUrl = location.origin + location.pathname + '?id=' + ad.id;
+  document.getElementById('metaDescription').setAttribute('content', shortDesc);
+  document.getElementById('ogTitle').setAttribute('content', ad.title + ' | ساحة');
+  document.getElementById('ogDescription').setAttribute('content', shortDesc);
+  document.getElementById('ogImage').setAttribute('content', ad.images[0]);
+  document.getElementById('ogUrl').setAttribute('content', pageUrl);
+  document.getElementById('canonicalLink').setAttribute('href', pageUrl);
+  document.getElementById('jsonLd').textContent = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: ad.title,
+    description: ad.description,
+    image: ad.images,
+    category: CATEGORY_LABELS[ad.category] || ad.category,
+    offers: {
+      '@type': 'Offer',
+      url: pageUrl,
+      priceCurrency: 'SYP',
+      price: ad.price || undefined,
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/UsedCondition',
+    },
+  });
+  trackAdView(ad.id);
+  await renderDetail();
+
+  async function renderDetail(){
+    const root = document.getElementById('detailRoot');
+    const title = escapeHTML(ad.title), desc = escapeHTML(ad.description);
+    const seller = escapeHTML(ad.seller), sellerCity = escapeHTML(ad.city);
+    const phoneDigitsOnly = (ad.phone || '').replace(/\s+/g,'');
+    const currentUser = await getCurrentUser();
+    const isOwner = !!currentUser && currentUser.id === ad.ownerId;
+    root.innerHTML = `
+      <div class="panel detail-panel">
+        <div class="seller-row">
+          <div class="comment-avatar" style="width:52px;height:52px;font-size:20px;">${initials(ad.seller)}</div>
+          <div>
+            <div class="seller-name">${seller}</div>
+            <div class="seller-meta">${ICONS.pin}${sellerCity} &nbsp;·&nbsp; عضو منذ ${escapeHTML(ad.memberSince)}</div>
+          </div>
+        </div>
+
+        <div class="contact-row">
+          ${ad.contactMethod==='phone' && ad.phone
+            ? `<a class="contact-btn" href="tel:${escapeHTML(phoneDigitsOnly)}" style="margin-bottom:0;">${ICONS.phone}${escapeHTML(ad.phone)}</a>
+               <a class="whatsapp-btn" href="https://wa.me/${toWhatsAppDigits(ad.phone)}" target="_blank" rel="noopener">${ICONS.wa}تواصل عبر واتساب</a>`
+            : `<button class="contact-btn" id="contactBtn" type="button" style="margin-bottom:0;">${ICONS.phone}تواصل عبر الردود</button>`}
+        </div>
+
+        <div class="detail-title-row" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+          <h1 class="detail-title" style="margin:0;">${title}</h1>
+          <button class="fav-btn detail-fav-btn${isFavorite(ad.id)?' active':''}" type="button" id="detailFavBtn" style="position:static;flex-shrink:0;">${ICONS.heart}</button>
+        </div>
+        <div class="detail-sub">
+          <span>نشر ${escapeHTML(ad.postedAgo)}</span>
+          <span>${ICONS.eye}${ad.views} مشاهدة</span>
+        </div>
+
+        ${isOwner ? `
+        <div class="owner-actions" style="display:flex;gap:10px;margin-bottom:8px;">
+          <a class="btn btn-outline" href="add-ad.html?edit=${ad.id}">${ICONS.plus}تعديل الإعلان</a>
+        </div>` : ''}
+
+        <p class="detail-desc">${desc}</p>
+
+        <div style="margin-top:4px;margin-bottom:8px;">
+          <span class="price-tag">${formatPrice(ad.price)}</span>
+        </div>
+
+        <div class="gallery-main"><img id="mainImg" src="${ad.images[0]}" alt="${title}"></div>
+        <div class="gallery-thumbs" id="thumbs">
+          ${ad.images.map((src,i)=>`<img src="${src}" class="${i===0?'active':''}" data-i="${i}">`).join('')}
+        </div>
+
+        <div class="share-section">
+          <h2 class="section-heading" style="margin:0 0 4px;">مشاركة الإعلان</h2>
+          <div class="share-row">
+            <a class="share-btn" href="https://wa.me/?text=${encodeURIComponent(ad.title + ' - ' + location.href)}" target="_blank" rel="noopener" aria-label="مشاركة عبر واتساب">${ICONS.wa}</a>
+            <a class="share-btn" href="https://t.me/share/url?url=${encodeURIComponent(location.href)}&text=${encodeURIComponent(ad.title)}" target="_blank" rel="noopener" aria-label="مشاركة عبر تيليجرام">${ICONS.tg}</a>
+            <a class="share-btn" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(location.href)}&text=${encodeURIComponent(ad.title)}" target="_blank" rel="noopener" aria-label="مشاركة عبر تويتر">${ICONS.tw}</a>
+            <button class="share-btn" type="button" id="copyLinkBtn" aria-label="نسخ الرابط">${ICONS.link}</button>
+            ${navigator.share ? `<button class="share-btn" type="button" id="nativeShareBtn" aria-label="مشاركة عبر تطبيقات الجهاز">${ICONS.share}</button>` : ''}
+          </div>
+        </div>
+
+        <div class="similar-section">
+          <h2 class="section-heading">إعلانات مشابهة</h2>
+          <div class="similar-grid" id="similarGrid"></div>
+        </div>
+
+        <div class="comments-section">
+          <h2 class="section-heading" id="commentsHeading"></h2>
+          <div id="commentsList"></div>
+          <div id="commentFormWrap"></div>
+        </div>
+      </div>`;
+
+    // favorite
+    document.getElementById('detailFavBtn').addEventListener('click', function(){
+      toggleFavorite(ad.id).then(on=> this.classList.toggle('active', on));
+    });
+
+    // gallery
+    document.getElementById('thumbs').addEventListener('click', e=>{
+      const img = e.target.closest('img');
+      if(!img) return;
+      document.getElementById('mainImg').src = img.src;
+      document.querySelectorAll('#thumbs img').forEach(t=>t.classList.remove('active'));
+      img.classList.add('active');
+    });
+
+    // contact — only present when the advertiser chose "reply" as the contact method
+    const contactBtn = document.getElementById('contactBtn');
+    if(contactBtn){
+      contactBtn.addEventListener('click', ()=>{
+        document.getElementById('commentsHeading').scrollIntoView({behavior:'smooth', block:'center'});
+        toast('تواصل مع المعلن عبر التعليقات بالأسفل');
+      });
+    }
+
+    // share
+    document.getElementById('copyLinkBtn').addEventListener('click', ()=>{
+      navigator.clipboard.writeText(location.href).then(()=> toast('تم نسخ رابط الإعلان'));
+    });
+    const nativeShareBtn = document.getElementById('nativeShareBtn');
+    if(nativeShareBtn){
+      nativeShareBtn.addEventListener('click', ()=>{
+        navigator.share({ title: ad.title, text: ad.title, url: location.href }).catch(()=>{});
+      });
+    }
+
+    // similar
+    const similar = await getSimilarAds(ad);
+    document.getElementById('similarGrid').innerHTML = similar.length
+      ? similar.map(similarCardHTML).join('')
+      : `<p style="color:var(--muted);font-size:14px;">لا توجد إعلانات مشابهة حالياً.</p>`;
+
+    // comments — feature is tied to login
+    await renderComments();
+    await renderCommentForm();
+  }
+
+  async function renderCommentForm(){
+    const wrap = document.getElementById('commentFormWrap');
+    const user = await getCurrentUser();
+    if(user){
+      wrap.innerHTML = `
+        <div class="comment-form panel" style="box-shadow:none;border-style:dashed;">
+          <label for="commentInput">أضف تعليقك (باسم ${escapeHTML(user.name)})</label>
+          <textarea id="commentInput" placeholder="اكتب تعليقك هنا..."></textarea>
+          <button class="btn btn-primary" id="sendCommentBtn" type="button">إرسال</button>
+        </div>`;
+      document.getElementById('sendCommentBtn').addEventListener('click', async ()=>{
+        const box = document.getElementById('commentInput');
+        const text = box.value.trim();
+        if(!text) return;
+        await saveComment(ad.id, {name:user.name, text});
+        box.value='';
+        await renderComments();
+        toast('تم إضافة تعليقك');
+      });
+    } else {
+      const redirect = encodeURIComponent('listing.html?id=' + ad.id);
+      wrap.innerHTML = `
+        <div class="comment-form panel" style="box-shadow:none;border-style:dashed;text-align:center;">
+          <p style="margin:0 0 12px;font-size:14px;color:var(--muted);font-weight:700;">
+            يجب تسجيل الدخول لتتمكن من إضافة تعليق
+          </p>
+          <a class="btn btn-primary" href="login.html?redirect=${redirect}">تسجيل الدخول</a>
+        </div>`;
+    }
+  }
+
+  async function renderComments(){
+    const list = await getComments(ad.id);
+    document.getElementById('commentsHeading').textContent = `التعليقات (${list.length})`;
+    document.getElementById('commentsList').innerHTML = list.map(c=>`
+      <div class="comment">
+        <div class="comment-avatar">${initials(c.name)}</div>
+        <div class="comment-bubble">
+          <div class="comment-head"><span class="comment-name">${escapeHTML(c.name)}</span><span class="comment-time">${escapeHTML(c.time)}</span></div>
+          <p class="comment-text">${escapeHTML(c.text)}</p>
+          <span class="comment-reply">رد</span>
+        </div>
+      </div>`).join('') || `<p style="color:var(--muted);font-size:14px;">لا توجد تعليقات بعد، كن أول من يعلّق.</p>`;
+  }
+})();
+</script>
+</body>
+</html>

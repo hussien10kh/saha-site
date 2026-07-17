@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل دخول لوحة التحكم | ساحة</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body{background:#0d1526;}
+  .admin-login-wrap{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .admin-login-card{
+    background:#fff;border-radius:18px;max-width:400px;width:100%;padding:34px 30px;box-shadow:0 20px 60px rgba(0,0,0,.35);
+  }
+  .admin-login-logo{text-align:center;margin-bottom:6px;}
+  .admin-login-logo .logo-lock{
+    width:52px;height:52px;border-radius:14px;background:var(--primary-light);color:var(--primary);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 14px;
+  }
+  .admin-login-logo .logo-lock svg{width:26px;height:26px;}
+  .admin-login-title{text-align:center;font-size:20px;font-weight:900;margin-bottom:4px;}
+  .admin-login-sub{text-align:center;font-size:13px;color:var(--muted);margin-bottom:24px;}
+  .admin-error{
+    display:none;background:#fdecec;color:var(--danger);border:1px solid #f6c9c6;border-radius:10px;
+    padding:10px 14px;font-size:13px;font-weight:700;margin-bottom:16px;text-align:center;
+  }
+  .admin-error.show{display:block;}
+  .admin-hint{margin-top:18px;font-size:12px;color:var(--muted-2);text-align:center;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<div class="admin-login-wrap">
+  <div class="admin-login-card">
+    <div class="admin-login-logo">
+      <div class="logo-lock">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      </div>
+    </div>
+    <div class="admin-login-title">لوحة تحكم ساحة</div>
+    <p class="admin-login-sub">سجّل الدخول للوصول إلى لوحة التحكم</p>
+
+    <div class="admin-error" id="adminError">البريد الإلكتروني أو كلمة المرور غير صحيحة</div>
+
+    <form id="adminLoginForm">
+      <div class="field full">
+        <label for="adminEmail">البريد الإلكتروني</label>
+        <input type="email" id="adminEmail" placeholder="admin@sahat.com" required>
+      </div>
+      <div class="field full">
+        <label for="adminPassword">كلمة المرور</label>
+        <input type="password" id="adminPassword" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">دخول</button>
+    </form>
+
+    <p class="admin-hint">
+      الدخول هنا يحتاج حساباً حقيقياً مفعّلاً كأدمن (عمود is_admin) بقاعدة البيانات.<br>
+      يمكنك تغيير كلمة المرور لاحقاً من تبويب "الإعدادات" داخل لوحة التحكم.
+    </p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script>
+(async function main(){
+  // if already logged in, skip straight to the dashboard
+  if(await isAdminLoggedIn()){ location.href = 'admin.html'; return; }
+
+  document.getElementById('adminLoginForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const email = document.getElementById('adminEmail').value.trim();
+    const password = document.getElementById('adminPassword').value;
+    const errBox = document.getElementById('adminError');
+    if(await adminLogin(email, password)){
+      location.href = 'admin.html';
+    } else {
+      errBox.classList.add('show');
+    }
+  });
+})();
+</script>
+</body>
+</html>

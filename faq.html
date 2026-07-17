@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الأسئلة الشائعة | ساحة</title>
+<meta name="description" content="إجابات على أكثر الأسئلة شيوعاً حول نشر الإعلانات والتواصل والحساب على منصة ساحة.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main class="page-body">
+  <div class="container">
+    <section class="panel" style="max-width:820px;margin:0 auto;">
+      <h2 class="panel-title">الأسئلة الشائعة</h2>
+      <div style="font-size:15px;line-height:1.9;color:#3a4356;display:flex;flex-direction:column;gap:22px;">
+        <div>
+          <h3 style="margin:0 0 6px;font-size:16px;">كيف أنشر إعلاناً على ساحة؟</h3>
+          <p style="margin:0;">اضغط على زر "أضف إعلانك" في أعلى الصفحة، عبّئ بيانات إعلانك (العنوان، السعر، الوصف، الصور)، ثم اضغط "نشر الإعلان".</p>
+        </div>
+        <div>
+          <h3 style="margin:0 0 6px;font-size:16px;">هل نشر الإعلان مجاني؟</h3>
+          <p style="margin:0;">نعم، نشر الإعلانات على ساحة مجاني بالكامل حالياً.</p>
+        </div>
+        <div>
+          <h3 style="margin:0 0 6px;font-size:16px;">هل يمكنني نشر إعلان بدون سعر؟</h3>
+          <p style="margin:0;">نعم، يمكنك إيقاف خيار السعر عند نشر الإعلان، وسيظهر إعلانك بعبارة "السعر عند التواصل".</p>
+        </div>
+        <div>
+          <h3 style="margin:0 0 6px;font-size:16px;">كيف يتواصل معي المهتمون بإعلاني؟</h3>
+          <p style="margin:0;">عند نشر الإعلان يمكنك اختيار التواصل عبر رقم جوالك مباشرة (اتصال أو واتساب)، أو عبر الردود والتعليقات على الإعلان إن فضّلت عدم إظهار رقمك.</p>
+        </div>
+        <div>
+          <h3 style="margin:0 0 6px;font-size:16px;">هل بياناتي وصوري آمنة؟</h3>
+          <p style="margin:0;">نأخذ خصوصية مستخدمينا بجدية. للمزيد من التفاصيل راجع <a href="privacy.html" style="color:var(--primary);font-weight:700;">سياسة الخصوصية</a>.</p>
+        </div>
+        <div>
+          <h3 style="margin:0 0 6px;font-size:16px;">وجدت إعلاناً مخالفاً، ماذا أفعل؟</h3>
+          <p style="margin:0;">يمكنك التواصل معنا من صفحة <a href="contact.html" style="color:var(--primary);font-weight:700;">تواصل معنا</a> لإبلاغنا عن أي إعلان مخالف وسنقوم بمراجعته وإزالته إن لزم الأمر.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<div id="mobile-nav"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/app.js"></script>
+<script>
+  (async()=>{
+    await renderHeader('');
+    renderFooter();
+    renderMobileNav('');
+  })();
+</script>
+</body>
+</html>
