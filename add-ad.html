@@ -394,7 +394,7 @@
     const price = hasPrice ? Number(document.getElementById('priceInput').value) : null;
     const city = document.getElementById('cityInput').value.trim();
     const desc = document.getElementById('descInput').value.trim();
-    const phone = document.getElementById('phoneInput').value.trim();
+    const phone = normalizePhone(document.getElementById('phoneInput').value);
     const contactMethod = phoneToggle.checked ? 'phone' : 'replies';
 
     if(!title || !city || !desc || (hasPrice && !price)){

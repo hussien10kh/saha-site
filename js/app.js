@@ -496,10 +496,23 @@ function formatPrice(n){
   return Number(n).toLocaleString('en-US')+' ل.س';
 }
 
+/* Some phone keyboards (Arabic/Persian digit layouts) type ٠١٢٣.../۰۱۲۳...
+   instead of 0123... — convert those to plain ASCII digits and drop
+   anything else, so every phone number stored/shown/dialed is consistent
+   regardless of what keyboard the person typed it on. */
+function normalizePhone(v){
+  if(!v) return '';
+  const map = {
+    '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9',
+    '۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9',
+  };
+  return v.replace(/[٠-٩۰-۹]/g, d => map[d]).replace(/\D/g, '');
+}
+
 /* Converts a local Syrian mobile number (e.g. "0999 123 456") to the
    international digits-only format WhatsApp deep links require. */
 function toWhatsAppDigits(phone){
-  let digits = (phone||'').replace(/\D/g,'');
+  let digits = normalizePhone(phone);
   if(!digits) return '';
   if(digits.startsWith('0')) digits = '963' + digits.slice(1);
   else if(!digits.startsWith('963')) digits = '963' + digits;

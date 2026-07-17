@@ -98,7 +98,7 @@
     const root = document.getElementById('detailRoot');
     const title = escapeHTML(ad.title), desc = escapeHTML(ad.description);
     const seller = escapeHTML(ad.seller), sellerCity = escapeHTML(ad.city);
-    const phoneDigitsOnly = (ad.phone || '').replace(/\s+/g,'');
+    const phoneDigitsOnly = normalizePhone(ad.phone);
     const currentUser = await getCurrentUser();
     const isOwner = !!currentUser && currentUser.id === ad.ownerId;
     root.innerHTML = `
