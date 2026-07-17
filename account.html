@@ -25,10 +25,41 @@
         <input type="file" id="avatarInput" accept="image/*" hidden>
       </div>
       <div style="flex:1;">
-        <div style="font-weight:800;font-size:17px;" id="accountName"></div>
-        <div style="color:var(--muted);font-size:13px;margin-top:2px;">هذا الاسم والصورة يظهران للمهتمين بإعلاناتك</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-weight:800;font-size:17px;" id="accountName"></div>
+          <button type="button" id="editNameBtn" title="تغيير الاسم" style="width:26px;height:26px;border-radius:50%;background:var(--bg);border:none;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
+        </div>
+        <div id="editNameRow" style="display:none;align-items:center;gap:8px;margin-top:6px;">
+          <input type="text" id="editNameInput" maxlength="60" style="flex:1;max-width:260px;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-size:14px;">
+          <button type="button" id="saveNameBtn" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">حفظ</button>
+          <button type="button" id="cancelNameBtn" class="btn btn-outline" style="padding:8px 16px;font-size:13px;">إلغاء</button>
+        </div>
+        <div style="color:var(--muted);font-size:13px;margin-top:2px;" id="accountHint">هذا الاسم والصورة يظهران للمهتمين بإعلاناتك</div>
       </div>
       <button type="button" id="logoutBtn" class="btn btn-outline" style="color:var(--danger);border-color:var(--danger);flex-shrink:0;">تسجيل الخروج</button>
+    </section>
+
+    <section class="panel" id="accountSettingsPanel" style="display:none;margin-bottom:20px;">
+      <h2 class="panel-title">إعدادات الحساب</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label for="settingsEmailInput">البريد الإلكتروني</label>
+          <div style="display:flex;gap:8px;">
+            <input type="email" id="settingsEmailInput" style="flex:1;">
+            <button type="button" id="saveEmailBtn" class="btn btn-outline" style="flex-shrink:0;">حفظ</button>
+          </div>
+          <p class="field-hint">تغيير البريد بيحتاج تأكيد من بريدك الجديد أحياناً حسب إعدادات الحساب.</p>
+        </div>
+        <div class="field">
+          <label for="settingsPassInput">كلمة مرور جديدة</label>
+          <div style="display:flex;gap:8px;">
+            <input type="password" id="settingsPassInput" placeholder="اتركها فارغة إن لم ترغب بالتغيير" minlength="6" style="flex:1;">
+            <button type="button" id="savePassBtn" class="btn btn-outline" style="flex-shrink:0;">حفظ</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <div class="layout">
@@ -76,6 +107,65 @@
   );
   document.getElementById('accountName').textContent = user.name;
   document.getElementById('avatarImg').src = user.avatar || DEFAULT_AVATAR;
+
+  // email + password settings only make sense for a real email account,
+  // not a guest (anonymous) session which has no email/password to change
+  if(user.email && !user.isAnonymous){
+    const settingsPanel = document.getElementById('accountSettingsPanel');
+    settingsPanel.style.display = 'block';
+    document.getElementById('settingsEmailInput').value = user.email;
+
+    document.getElementById('saveEmailBtn').addEventListener('click', async ()=>{
+      const newEmail = document.getElementById('settingsEmailInput').value.trim();
+      if(!newEmail || newEmail === user.email) return;
+      try{
+        await updateAccountEmail(newEmail);
+        toast('تم إرسال رابط تأكيد للبريد الجديد، افتحه لإتمام التغيير');
+      }catch(err){
+        toast(err.message || 'تعذّر تحديث البريد', 'error');
+      }
+    });
+
+    document.getElementById('savePassBtn').addEventListener('click', async ()=>{
+      const newPass = document.getElementById('settingsPassInput').value;
+      if(!newPass){ toast('اكتب كلمة مرور جديدة أولاً', 'error'); return; }
+      if(newPass.length < 6){ toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error'); return; }
+      try{
+        await updateAccountPassword(newPass);
+        document.getElementById('settingsPassInput').value = '';
+        toast('تم تحديث كلمة المرور بنجاح');
+      }catch(err){
+        toast(err.message || 'تعذّر تحديث كلمة المرور', 'error');
+      }
+    });
+  }
+
+  const editNameBtn = document.getElementById('editNameBtn');
+  const editNameRow = document.getElementById('editNameRow');
+  const editNameInput = document.getElementById('editNameInput');
+  const accountHint = document.getElementById('accountHint');
+  editNameBtn.addEventListener('click', ()=>{
+    editNameInput.value = document.getElementById('accountName').textContent;
+    editNameRow.style.display = 'flex';
+    accountHint.style.display = 'none';
+    editNameBtn.style.display = 'none';
+    editNameInput.focus();
+  });
+  document.getElementById('cancelNameBtn').addEventListener('click', ()=>{
+    editNameRow.style.display = 'none';
+    accountHint.style.display = 'block';
+    editNameBtn.style.display = 'flex';
+  });
+  document.getElementById('saveNameBtn').addEventListener('click', async ()=>{
+    const newName = editNameInput.value.trim();
+    if(!newName){ toast('الرجاء إدخال اسم صحيح', 'error'); return; }
+    await updateProfile({ name: newName });
+    document.getElementById('accountName').textContent = newName;
+    editNameRow.style.display = 'none';
+    accountHint.style.display = 'block';
+    editNameBtn.style.display = 'flex';
+    toast('تم تحديث اسمك');
+  });
 
   document.getElementById('logoutBtn').addEventListener('click', async ()=>{
     await logout();

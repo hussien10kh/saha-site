@@ -252,7 +252,7 @@ async function saveAdFromModal(){
   const imageUrl = document.getElementById('mImage').value.trim() || PLACEHOLDER_IMG;
 
   if(!title || !price || !city || !description || !seller){
-    toast('الرجاء تعبئة جميع الحقول');
+    toast('الرجاء تعبئة جميع الحقول', 'error');
     return;
   }
 
@@ -442,14 +442,14 @@ function renderSettingsTab(mount){
     const newEmail = document.getElementById('sEmail').value.trim();
     const newPass = document.getElementById('sNewPass').value;
     try{
-      if(newEmail !== adminUser.email) await updateAdminEmail(newEmail);
-      if(newPass) await updateAdminPassword(newPass);
+      if(newEmail !== adminUser.email) await updateAccountEmail(newEmail);
+      if(newPass) await updateAccountPassword(newPass);
       adminUser = await getCurrentUser();
       toast('تم تحديث بيانات الدخول بنجاح');
       document.getElementById('sNewPass').value = '';
       renderTopbar();
     }catch(err){
-      toast(err.message || 'تعذّر تحديث بيانات الدخول');
+      toast(err.message || 'تعذّر تحديث بيانات الدخول', 'error');
     }
   });
 }

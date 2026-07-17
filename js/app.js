@@ -26,6 +26,7 @@ const ICONS = {
   menu:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>`,
   close:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
   check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>`,
+  warning:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.9 18.5a1.7 1.7 0 0 0 1.5 2.6h17.2a1.7 1.7 0 0 0 1.5-2.6L13.7 3.9a1.7 1.7 0 0 0-3.4 0Z"/></svg>`,
   upload:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>`,
   fb:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.6h2.6l.4-3h-3v-1.9c0-.9.2-1.5 1.6-1.5h1.6V4.3C15.9 4.2 14.9 4 13.8 4c-2.4 0-4 1.5-4 4.1v2.3H7.2v3h2.6V21h3.7Z"/></svg>`,
   ig:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>`,
@@ -277,6 +278,10 @@ function markNotificationsSeen(notes){
    exists for every account, created automatically by a DB
    trigger the moment the auth user is created.
    --------------------------------------------------------- */
+/* Falls back to the part before "@" (never the raw email) so a name never
+   silently ends up looking like an email address anywhere on the site. */
+function emailPrefix(email){ return email ? email.split('@')[0] : ''; }
+
 async function getCurrentUser(){
   const { data: { session } } = await sb.auth.getSession();
   if(!session) return null;
@@ -284,7 +289,7 @@ async function getCurrentUser(){
   return {
     id: session.user.id,
     email: session.user.email || null,
-    name: (profile && profile.name) || session.user.email || 'مستخدم',
+    name: (profile && profile.name) || emailPrefix(session.user.email) || 'مستخدم',
     phone: profile ? profile.phone : null,
     avatar: profile ? profile.avatar_url : null,
     isAdmin: !!(profile && profile.is_admin),
@@ -356,11 +361,13 @@ async function requireAdmin(){
   if(!(await isAdminLoggedIn())){ location.href = 'admin-login.html'; return false; }
   return true;
 }
-async function updateAdminPassword(newPassword){
+/* Generic — works for any signed-in account (admin or regular user), since
+   it's just Supabase Auth's own updateUser under the hood. */
+async function updateAccountPassword(newPassword){
   const { error } = await sb.auth.updateUser({ password: newPassword });
   if(error) throw error;
 }
-async function updateAdminEmail(newEmail){
+async function updateAccountEmail(newEmail){
   const { error } = await sb.auth.updateUser({ email: newEmail });
   if(error) throw error;
 }
@@ -503,17 +510,19 @@ function initials(name){ return (name||'؟').trim().charAt(0); }
 /* ---------------------------------------------------------
    Toast
    --------------------------------------------------------- */
-function toast(msg){
+function toast(msg, type){
   let el = document.querySelector('.toast');
   if(!el){
     el = document.createElement('div');
     el.className='toast';
     document.body.appendChild(el);
   }
-  el.innerHTML = ICONS.check + '<span>'+msg+'</span>';
+  const isError = type === 'error';
+  el.classList.toggle('toast-error', isError);
+  el.innerHTML = (isError ? ICONS.warning : ICONS.check) + '<span>'+escapeHTML(msg)+'</span>';
   requestAnimationFrame(()=> el.classList.add('show'));
   clearTimeout(el._t);
-  el._t = setTimeout(()=> el.classList.remove('show'), 2600);
+  el._t = setTimeout(()=> el.classList.remove('show'), isError ? 4000 : 2600);
 }
 
 /* ---------------------------------------------------------

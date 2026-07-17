@@ -165,7 +165,6 @@
     }
     if(editingAd.contactMethod==='replies'){
       document.getElementById('phoneToggle').checked = false;
-      document.getElementById('phoneToggleLabel').textContent = 'التواصل عبر الردود';
     }
   }
 
@@ -190,9 +189,19 @@
 
   const phoneToggle = document.getElementById('phoneToggle');
   const phoneToggleLabel = document.getElementById('phoneToggleLabel');
-  phoneToggle.addEventListener('change', ()=>{
+  const phoneInput = document.getElementById('phoneInput');
+  function syncPhoneField(){
     phoneToggleLabel.textContent = phoneToggle.checked ? 'التواصل عبر رقم الجوال' : 'التواصل عبر الردود';
-  });
+    phoneInput.disabled = !phoneToggle.checked;
+    if(!phoneToggle.checked){
+      phoneInput.value = '';
+      phoneInput.placeholder = 'التواصل عبر الردود';
+    } else {
+      phoneInput.placeholder = '09xx xxx xxx';
+    }
+  }
+  phoneToggle.addEventListener('change', syncPhoneField);
+  syncPhoneField();
 
   const uploadBox = document.getElementById('uploadBox');
   const fileInput = document.getElementById('fileInput');
@@ -257,7 +266,7 @@
         uploadedImages.push(dataUrl);
         renderPreviews();
         updatePreview();
-      }).catch(()=> toast('تعذّر معالجة إحدى الصور، حاول برفعها مجدداً'));
+      }).catch(()=> toast('تعذّر معالجة إحدى الصور، حاول برفعها مجدداً', 'error'));
     });
     fileInput.value = '';
   });
@@ -343,7 +352,7 @@
     }
 
     if(isPostingTooFast()){
-      toast('لقد نشرت عدة إعلانات خلال وقت قصير، الرجاء الانتظار قليلاً قبل نشر إعلان جديد');
+      toast('لقد نشرت عدة إعلانات خلال وقت قصير، الرجاء الانتظار قليلاً قبل نشر إعلان جديد', 'error');
       return;
     }
 
@@ -389,23 +398,23 @@
     const contactMethod = phoneToggle.checked ? 'phone' : 'replies';
 
     if(!title || !city || !desc || (hasPrice && !price)){
-      toast('الرجاء تعبئة جميع الحقول المطلوبة');
+      toast('الرجاء تعبئة جميع الحقول المطلوبة', 'error');
       return;
     }
     if(title.length < 8 || title.length > 80){
-      toast('عنوان الإعلان يجب أن يكون بين 8 و80 حرفاً');
+      toast('عنوان الإعلان يجب أن يكون بين 8 و80 حرفاً', 'error');
       return;
     }
     if(desc.length < 30 || desc.length > 2000){
-      toast('وصف الإعلان يجب أن يكون بين 30 و2000 حرف');
+      toast('وصف الإعلان يجب أن يكون بين 30 و2000 حرف', 'error');
       return;
     }
     if(looksLikeGibberish(title) || looksLikeGibberish(desc)){
-      toast('يبدو أن العنوان أو الوصف غير واضح، الرجاء كتابة نص حقيقي ومفهوم');
+      toast('يبدو أن العنوان أو الوصف غير واضح، الرجاء كتابة نص حقيقي ومفهوم', 'error');
       return;
     }
     if(await isDuplicateAd(title, desc, editingAd ? editingAd.id : null)){
-      toast('يوجد إعلان آخر بنفس العنوان والوصف تماماً');
+      toast('يوجد إعلان آخر بنفس العنوان والوصف تماماً', 'error');
       return;
     }
 
@@ -423,12 +432,12 @@
       document.getElementById('titleInput').value = pending.title;
       document.getElementById('cityInput').value = pending.city;
       document.getElementById('descInput').value = pending.desc;
-      document.getElementById('phoneInput').value = pending.phone || '';
       priceToggle.checked = pending.hasPrice;
       syncPriceField();
       if(pending.hasPrice) document.getElementById('priceInput').value = pending.price;
       phoneToggle.checked = pending.contactMethod === 'phone';
-      phoneToggleLabel.textContent = phoneToggle.checked ? 'التواصل عبر رقم الجوال' : 'التواصل عبر الردود';
+      if(phoneToggle.checked) document.getElementById('phoneInput').value = pending.phone || '';
+      syncPhoneField();
       uploadedImages = pending.images || [];
       renderPreviews();
       updatePreview();

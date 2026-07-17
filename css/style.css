@@ -1454,6 +1454,15 @@ textarea {
   width: 18px;
   height: 18px;
   color: #3ddc84;
+  flex-shrink: 0;
+}
+
+.toast.toast-error {
+  background: #4a1a1a;
+}
+
+.toast.toast-error svg {
+  color: #ff6b5e;
 }
 
 /* ---------- Mobile ---------- */
