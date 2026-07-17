@@ -648,8 +648,8 @@ async function renderFooter(){
         <div class="footer-logo">ساحة</div>
         <p class="footer-about">منصة إعلانات مبوبة تجمع بين العقارات والسيارات وكل ما تحتاجه في مكان واحد. بيع واشترِ بسهولة وأمان من مستخدمين حقيقيين في منطقتك.</p>
         <div class="social-row">
-          <a href="#" aria-label="فيسبوك">${ICONS.fb}</a>
-          <a href="#" aria-label="إنستغرام">${ICONS.ig}</a>
+          <a href="https://www.facebook.com/people/%D8%B3%D8%A7%D8%AD%D8%A9-%D8%A7%D8%B9%D9%84%D8%A7%D9%86%D8%A7%D8%AA-%D9%85%D8%A8%D9%88%D8%A8%D8%A9/61591966771852/" target="_blank" rel="noopener" aria-label="فيسبوك">${ICONS.fb}</a>
+          <a href="https://www.instagram.com/saahasyria/" target="_blank" rel="noopener" aria-label="إنستغرام">${ICONS.ig}</a>
           <a href="#" aria-label="تويتر">${ICONS.tw}</a>
           <a href="contact.html" aria-label="تواصل معنا">${ICONS.mail}</a>
         </div>
