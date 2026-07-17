@@ -36,7 +36,16 @@
       </div>
       <div class="field full" id="passField">
         <label>كلمة المرور</label>
-        <input type="password" id="passInput" placeholder="••••••••" minlength="6">
+        <div style="position:relative;">
+          <input type="password" id="passInput" placeholder="••••••••" minlength="6" style="padding-left:44px;">
+          <button type="button" id="togglePassBtn" aria-label="إظهار كلمة المرور" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:none;background:none;display:flex;align-items:center;justify-content:center;color:var(--muted);">
+            <svg id="togglePassIcon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="field full" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <input type="checkbox" id="rememberMe" checked style="width:16px;height:16px;">
+        <label for="rememberMe" style="margin:0;font-weight:600;font-size:13.5px;">تذكرني على هذا الجهاز</label>
       </div>
       <button type="submit" class="btn btn-primary btn-block btn-lg" id="authSubmit">تسجيل الدخول</button>
     </form>
@@ -93,6 +102,18 @@
   tabSignup.addEventListener('click', ()=> setActiveTab('signup'));
   tabGuest.addEventListener('click', ()=> setActiveTab('guest'));
 
+  const passInput = document.getElementById('passInput');
+  const togglePassBtn = document.getElementById('togglePassBtn');
+  const togglePassIcon = document.getElementById('togglePassIcon');
+  const EYE_OPEN = togglePassIcon.innerHTML;
+  const EYE_CLOSED = '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path d="m4 4 16 16"/>';
+  togglePassBtn.addEventListener('click', ()=>{
+    const show = passInput.type === 'password';
+    passInput.type = show ? 'text' : 'password';
+    togglePassIcon.innerHTML = show ? EYE_CLOSED : EYE_OPEN;
+    togglePassBtn.setAttribute('aria-label', show ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور');
+  });
+
   function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
   function isValidSyrianPhone(v){ return /^0?9\d{8}$/.test(v.replace(/[\s-]/g,'')); }
 
@@ -103,6 +124,7 @@
 
   document.getElementById('authForm').addEventListener('submit', async e=>{
     e.preventDefault();
+    setRememberPref(document.getElementById('rememberMe').checked);
 
     if(activeTab === 'guest'){
       const nameVal = document.getElementById('nameInput').value.trim();
@@ -162,6 +184,7 @@
       toast('تسجيل الدخول عبر جوجل يحتاج إعداد Client ID أولاً');
       return;
     }
+    setRememberPref(document.getElementById('rememberMe').checked);
     google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: async (response)=>{

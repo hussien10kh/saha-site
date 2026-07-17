@@ -107,6 +107,17 @@
   </div>
 </main>
 
+<div class="modal-overlay" id="publishedModal">
+  <div class="modal-box" style="text-align:center;max-width:380px;">
+    <p style="font-weight:800;font-size:16px;margin:6px 0 4px;">تم نشر إعلانك ✅</p>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 18px;">مشاركته تزيد من فرص نجاحه.</p>
+    <div class="form-actions" style="justify-content:center;">
+      <button type="button" class="btn btn-primary" id="publishedShareBtn">مشاركة الإعلان</button>
+      <button type="button" class="btn btn-outline" id="publishedDoneBtn">تم</button>
+    </div>
+  </div>
+</div>
+
 <div id="site-footer"></div>
 <div id="mobile-nav"></div>
 
@@ -347,8 +358,24 @@
       contactMethod,
       ownerId: user.id,
     });
-    toast('تم نشر إعلانك بنجاح');
-    setTimeout(()=> location.href = 'listing.html?id=' + newAd.id, 700);
+    showPublishedModal(newAd);
+  }
+
+  function showPublishedModal(newAd){
+    const listingUrl = location.origin + '/listing.html?id=' + newAd.id;
+    const modal = document.getElementById('publishedModal');
+    modal.classList.add('open');
+    document.getElementById('publishedShareBtn').onclick = ()=>{
+      if(navigator.share){
+        navigator.share({ title: newAd.title, text: newAd.title, url: listingUrl }).catch(()=>{});
+      } else {
+        navigator.clipboard.writeText(listingUrl).then(()=> toast('تم نسخ رابط الإعلان'));
+      }
+    };
+    document.getElementById('publishedDoneBtn').onclick = ()=>{
+      modal.classList.remove('open');
+      location.href = 'listing.html?id=' + newAd.id;
+    };
   }
 
   document.getElementById('adForm').addEventListener('submit', async e=>{
