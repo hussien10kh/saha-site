@@ -115,7 +115,7 @@
   });
 
   function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-  function isValidSyrianPhone(v){ return /^0?9\d{8}$/.test(v.replace(/[\s-]/g,'')); }
+  function isValidSyrianPhone(v){ return /^0?9\d{8}$/.test(normalizePhone(v)); }
 
   function goToRedirect(){
     const redirect = new URLSearchParams(location.search).get('redirect') || 'index.html';
@@ -128,7 +128,7 @@
 
     if(activeTab === 'guest'){
       const nameVal = document.getElementById('nameInput').value.trim();
-      const phone = document.getElementById('guestPhoneInput').value.trim();
+      const phone = normalizePhone(document.getElementById('guestPhoneInput').value);
       if(!nameVal){
         toast('الرجاء إدخال اسمك', 'error');
         return;
