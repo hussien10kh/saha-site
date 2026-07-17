@@ -130,11 +130,11 @@
       const nameVal = document.getElementById('nameInput').value.trim();
       const phone = document.getElementById('guestPhoneInput').value.trim();
       if(!nameVal){
-        toast('الرجاء إدخال اسمك');
+        toast('الرجاء إدخال اسمك', 'error');
         return;
       }
       if(!isValidSyrianPhone(phone)){
-        toast('الرجاء إدخال رقم جوال سوري صحيح');
+        toast('الرجاء إدخال رقم جوال سوري صحيح', 'error');
         return;
       }
       try{
@@ -142,7 +142,7 @@
         toast('تم المتابعة كضيف بنجاح');
         goToRedirect();
       }catch(err){
-        toast('تعذّرت المتابعة كضيف، حاول مجدداً');
+        toast('تعذّرت المتابعة كضيف، حاول مجدداً', 'error');
       }
       return;
     }
@@ -152,17 +152,21 @@
     const nameVal = document.getElementById('nameInput').value.trim();
 
     if(!contact || !isValidEmail(contact)){
-      toast('الرجاء إدخال بريد إلكتروني صحيح');
+      toast('الرجاء إدخال بريد إلكتروني صحيح', 'error');
       return;
     }
     if(!pass || pass.length < 6){
-      toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
       return;
     }
 
     try{
       if(activeTab === 'signup'){
-        await signUpWithEmail(contact, pass, nameVal || contact);
+        const data = await signUpWithEmail(contact, pass, nameVal || contact);
+        if(!data.session){
+          toast('تم إنشاء حسابك! افتح بريدك الإلكتروني واضغط رابط التفعيل حتى تقدر تسجّل الدخول.');
+          return; // no session yet — nothing to redirect into
+        }
         toast('تم إنشاء حسابك بنجاح');
       } else {
         await signInWithEmail(contact, pass);
@@ -170,7 +174,12 @@
       }
       goToRedirect();
     }catch(err){
-      toast(err.message === 'Invalid login credentials' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة' : (err.message || 'حدث خطأ، حاول مجدداً'));
+      const FRIENDLY = {
+        'Invalid login credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+        'Email not confirmed': 'لازم تفعّل بريدك أولاً — تحقق من صندوق الوارد واضغط رابط التفعيل.',
+        'User already registered': 'هذا البريد مسجّل مسبقاً، جرّب تسجيل الدخول بدلاً من إنشاء حساب.',
+      };
+      toast(FRIENDLY[err.message] || err.message || 'حدث خطأ، حاول مجدداً', 'error');
     }
   });
 
@@ -181,7 +190,7 @@
   const GOOGLE_CLIENT_ID = '212224115105-3qjssjv7ei3p637ld6en88qdmgj421ee.apps.googleusercontent.com';
   document.getElementById('googleBtn').addEventListener('click', ()=>{
     if(GOOGLE_CLIENT_ID.startsWith('TODO')){
-      toast('تسجيل الدخول عبر جوجل يحتاج إعداد Client ID أولاً');
+      toast('تسجيل الدخول عبر جوجل يحتاج إعداد Client ID أولاً', 'error');
       return;
     }
     setRememberPref(document.getElementById('rememberMe').checked);
@@ -189,7 +198,7 @@
       client_id: GOOGLE_CLIENT_ID,
       callback: async (response)=>{
         const { error } = await sb.auth.signInWithIdToken({ provider:'google', token: response.credential });
-        if(error){ toast('تعذّر تسجيل الدخول عبر جوجل'); return; }
+        if(error){ toast('تعذّر تسجيل الدخول عبر جوجل', 'error'); return; }
         toast('تم تسجيل الدخول عبر جوجل بنجاح');
         goToRedirect();
       },

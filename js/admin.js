@@ -252,7 +252,7 @@ async function saveAdFromModal(){
   const imageUrl = document.getElementById('mImage').value.trim() || PLACEHOLDER_IMG;
 
   if(!title || !price || !city || !description || !seller){
-    toast('الرجاء تعبئة جميع الحقول');
+    toast('الرجاء تعبئة جميع الحقول', 'error');
     return;
   }
 
@@ -449,7 +449,7 @@ function renderSettingsTab(mount){
       document.getElementById('sNewPass').value = '';
       renderTopbar();
     }catch(err){
-      toast(err.message || 'تعذّر تحديث بيانات الدخول');
+      toast(err.message || 'تعذّر تحديث بيانات الدخول', 'error');
     }
   });
 }

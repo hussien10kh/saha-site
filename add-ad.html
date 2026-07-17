@@ -257,7 +257,7 @@
         uploadedImages.push(dataUrl);
         renderPreviews();
         updatePreview();
-      }).catch(()=> toast('تعذّر معالجة إحدى الصور، حاول برفعها مجدداً'));
+      }).catch(()=> toast('تعذّر معالجة إحدى الصور، حاول برفعها مجدداً', 'error'));
     });
     fileInput.value = '';
   });
@@ -343,7 +343,7 @@
     }
 
     if(isPostingTooFast()){
-      toast('لقد نشرت عدة إعلانات خلال وقت قصير، الرجاء الانتظار قليلاً قبل نشر إعلان جديد');
+      toast('لقد نشرت عدة إعلانات خلال وقت قصير، الرجاء الانتظار قليلاً قبل نشر إعلان جديد', 'error');
       return;
     }
 
@@ -389,23 +389,23 @@
     const contactMethod = phoneToggle.checked ? 'phone' : 'replies';
 
     if(!title || !city || !desc || (hasPrice && !price)){
-      toast('الرجاء تعبئة جميع الحقول المطلوبة');
+      toast('الرجاء تعبئة جميع الحقول المطلوبة', 'error');
       return;
     }
     if(title.length < 8 || title.length > 80){
-      toast('عنوان الإعلان يجب أن يكون بين 8 و80 حرفاً');
+      toast('عنوان الإعلان يجب أن يكون بين 8 و80 حرفاً', 'error');
       return;
     }
     if(desc.length < 30 || desc.length > 2000){
-      toast('وصف الإعلان يجب أن يكون بين 30 و2000 حرف');
+      toast('وصف الإعلان يجب أن يكون بين 30 و2000 حرف', 'error');
       return;
     }
     if(looksLikeGibberish(title) || looksLikeGibberish(desc)){
-      toast('يبدو أن العنوان أو الوصف غير واضح، الرجاء كتابة نص حقيقي ومفهوم');
+      toast('يبدو أن العنوان أو الوصف غير واضح، الرجاء كتابة نص حقيقي ومفهوم', 'error');
       return;
     }
     if(await isDuplicateAd(title, desc, editingAd ? editingAd.id : null)){
-      toast('يوجد إعلان آخر بنفس العنوان والوصف تماماً');
+      toast('يوجد إعلان آخر بنفس العنوان والوصف تماماً', 'error');
       return;
     }
 
