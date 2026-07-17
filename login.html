@@ -162,7 +162,7 @@
 
     try{
       if(activeTab === 'signup'){
-        const data = await signUpWithEmail(contact, pass, nameVal || contact);
+        const data = await signUpWithEmail(contact, pass, nameVal || emailPrefix(contact));
         if(!data.session){
           toast('تم إنشاء حسابك! افتح بريدك الإلكتروني واضغط رابط التفعيل حتى تقدر تسجّل الدخول.');
           return; // no session yet — nothing to redirect into
@@ -197,8 +197,17 @@
     google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: async (response)=>{
-        const { error } = await sb.auth.signInWithIdToken({ provider:'google', token: response.credential });
+        const { data, error } = await sb.auth.signInWithIdToken({ provider:'google', token: response.credential });
         if(error){ toast('تعذّر تسجيل الدخول عبر جوجل', 'error'); return; }
+        // first Google login for this account — profiles.name starts empty,
+        // so fill it from Google's own name (never leave it as the raw email)
+        const { data: profile } = await sb.from('profiles').select('name').eq('id', data.user.id).maybeSingle();
+        if(!profile || !profile.name){
+          const meta = data.user.user_metadata || {};
+          const googleName = meta.full_name || meta.name || emailPrefix(data.user.email);
+          const googleAvatar = meta.avatar_url || meta.picture || null;
+          await updateProfile({ name: googleName, avatar: googleAvatar });
+        }
         toast('تم تسجيل الدخول عبر جوجل بنجاح');
         goToRedirect();
       },

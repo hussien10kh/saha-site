@@ -278,6 +278,10 @@ function markNotificationsSeen(notes){
    exists for every account, created automatically by a DB
    trigger the moment the auth user is created.
    --------------------------------------------------------- */
+/* Falls back to the part before "@" (never the raw email) so a name never
+   silently ends up looking like an email address anywhere on the site. */
+function emailPrefix(email){ return email ? email.split('@')[0] : ''; }
+
 async function getCurrentUser(){
   const { data: { session } } = await sb.auth.getSession();
   if(!session) return null;
@@ -285,7 +289,7 @@ async function getCurrentUser(){
   return {
     id: session.user.id,
     email: session.user.email || null,
-    name: (profile && profile.name) || session.user.email || 'مستخدم',
+    name: (profile && profile.name) || emailPrefix(session.user.email) || 'مستخدم',
     phone: profile ? profile.phone : null,
     avatar: profile ? profile.avatar_url : null,
     isAdmin: !!(profile && profile.is_admin),
