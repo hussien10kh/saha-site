@@ -900,36 +900,17 @@ async function renderFooter(){
   mount.innerHTML = `
   <footer class="site-footer">
     <div class="container footer-top">
-      <div class="footer-about-col">
-        <div class="footer-logo">ساحة</div>
-        <div class="footer-promo-grid">
-          <div class="social-row">
-            <a href="https://www.facebook.com/saahasyria" target="_blank" rel="noopener" aria-label="فيسبوك">${ICONS.fb}</a>
-            <a href="https://www.instagram.com/saahasyria/" target="_blank" rel="noopener" aria-label="إنستغرام">${ICONS.ig}</a>
-            <a href="https://x.com/saahasyria" target="_blank" rel="noopener" aria-label="تويتر">${ICONS.tw}</a>
-            <a href="contact.html" aria-label="تواصل معنا">${ICONS.mail}</a>
-          </div>
-          <div class="footer-app-promo">
-            <div class="footer-app-header">
-              <div class="footer-app-text">
-                <strong>حمّل تطبيق ساحة</strong>
-                <span>تجربة أسرع وإشعارات فورية</span>
-              </div>
-              <div class="footer-app-icon">${ICONS.device}</div>
-            </div>
-            <button type="button" class="btn btn-primary footer-app-btn install-app-btn" style="display:none">${ICONS.download}<span>تثبيت التطبيق</span></button>
-          </div>
+      <div class="footer-logo">ساحة</div>
+      <div class="footer-columns-row">
+        <div class="footer-col">
+          <h4>الدعم</h4>
+          <ul>
+            <li><a href="faq.html">الأسئلة الشائعة</a></li>
+            <li><a href="privacy.html">سياسة الخصوصية</a></li>
+            <li><a href="terms.html">شروط الاستخدام</a></li>
+            <li><a href="contact.html">الإبلاغ عن مشكلة</a></li>
+          </ul>
         </div>
-      </div>
-      <div class="footer-col footer-categories-col">
-        <h4>التصنيفات</h4>
-        <ul>
-          <li><a href="index.html?cat=realestate">عقار</a></li>
-          <li><a href="index.html?cat=cars">سيارات</a></li>
-          <li><a href="index.html?cat=misc">غير مصنف</a></li>
-        </ul>
-      </div>
-      <div class="footer-links-pair">
         <div class="footer-col">
           <h4>روابط سريعة</h4>
           <ul>
@@ -939,14 +920,29 @@ async function renderFooter(){
             <li><a href="contact.html">تواصل معنا</a></li>
           </ul>
         </div>
-        <div class="footer-col">
-          <h4>الدعم</h4>
+        <div class="footer-col footer-categories-col">
+          <h4>التصنيفات</h4>
           <ul>
-            <li><a href="faq.html">الأسئلة الشائعة</a></li>
-            <li><a href="privacy.html">سياسة الخصوصية</a></li>
-            <li><a href="terms.html">شروط الاستخدام</a></li>
-            <li><a href="contact.html">الإبلاغ عن مشكلة</a></li>
+            <li><a href="index.html?cat=realestate">عقار</a></li>
+            <li><a href="index.html?cat=cars">سيارات</a></li>
+            <li><a href="index.html?cat=misc">غير مصنف</a></li>
           </ul>
+        </div>
+        <div class="social-row">
+          <a href="https://www.facebook.com/saahasyria" target="_blank" rel="noopener" aria-label="فيسبوك">${ICONS.fb}</a>
+          <a href="https://www.instagram.com/saahasyria/" target="_blank" rel="noopener" aria-label="إنستغرام">${ICONS.ig}</a>
+          <a href="https://x.com/saahasyria" target="_blank" rel="noopener" aria-label="تويتر">${ICONS.tw}</a>
+          <a href="contact.html" aria-label="تواصل معنا">${ICONS.mail}</a>
+        </div>
+        <div class="footer-app-promo">
+          <div class="footer-app-header">
+            <div class="footer-app-text">
+              <strong>حمّل تطبيق ساحة</strong>
+              <span>تجربة أسرع وإشعارات فورية</span>
+            </div>
+            <div class="footer-app-icon">${ICONS.device}</div>
+          </div>
+          <button type="button" class="btn btn-primary footer-app-btn install-app-btn" style="display:none">${ICONS.download}<span>تثبيت التطبيق</span></button>
         </div>
       </div>
     </div>

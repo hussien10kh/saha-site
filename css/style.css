@@ -802,19 +802,8 @@ textarea {
 }
 
 .footer-top {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
-  gap: 32px;
   padding: 48px 0 32px;
   padding-right: 24px;
-}
-
-.footer-about-col {
-  grid-column: 1 / -1;
-}
-
-.footer-links-pair {
-  display: contents;
 }
 
 .footer-logo {
@@ -822,7 +811,13 @@ textarea {
   font-size: 26px;
   font-weight: 900;
   color: #fff;
-  margin-bottom: 12px;
+  margin-bottom: 24px;
+}
+
+.footer-columns-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
 }
 
 .footer-col h4 {
@@ -844,14 +839,6 @@ textarea {
 
 .footer-col a:hover {
   color: #fff;
-}
-
-.footer-promo-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-  margin: 14px 0;
-  align-items: start;
 }
 
 .footer-app-promo {
@@ -923,10 +910,6 @@ textarea {
 }
 
 @media (max-width:420px) {
-  .footer-promo-grid {
-    gap: 18px;
-  }
-
   .footer-app-btn {
     padding: 8px 12px;
     font-size: 11.5px;
@@ -1872,8 +1855,8 @@ textarea {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .footer-top {
-    grid-template-columns: 1fr 1fr;
+  .footer-columns-row {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -2006,9 +1989,13 @@ textarea {
   }
 
   .footer-top {
-    grid-template-columns: 1fr;
     padding: 24px 0 16px;
     padding-right: 24px;
+  }
+
+  .footer-columns-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
   }
 
   .footer-categories-col {
@@ -2022,12 +2009,6 @@ textarea {
      padding reset, regardless of source order. */
   .container.footer-bottom {
     padding-bottom: 110px;
-  }
-
-  .footer-links-pair {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
   }
 
   .detail-panel {
@@ -2193,8 +2174,9 @@ textarea {
     font-size: 22px;
   }
 
-  .footer-links-pair {
-    gap: 12px;
+  .footer-columns-row {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .footer-bottom {
