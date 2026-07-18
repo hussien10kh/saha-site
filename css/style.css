@@ -3,6 +3,7 @@
    Design tokens
    ========================================================= */
 :root {
+  color-scheme: light dark;
   --footer: #15264a;
   --footer-light: #233866;
   --footer-lighter: #324a7e;
