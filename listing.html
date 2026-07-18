@@ -148,7 +148,7 @@
 
         <div class="gallery-main"><img id="mainImg" src="${ad.images[0]}" alt="${title}"></div>
         <div class="gallery-thumbs" id="thumbs">
-          ${ad.images.map((src,i)=>`<img src="${src}" class="${i===0?'active':''}" data-i="${i}">`).join('')}
+          ${ad.images.map((src,i)=>`<img src="${src}" class="${i===0?'active':''}" data-i="${i}" alt="${title} - صورة ${i+1}">`).join('')}
         </div>
 
         <div class="share-section">

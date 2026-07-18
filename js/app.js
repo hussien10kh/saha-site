@@ -163,7 +163,23 @@ const PLACEHOLDER_IMG = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
   <text x="450" y="530" text-anchor="middle" font-family="Cairo, Tajawal, Arial, sans-serif" font-size="30" font-weight="900" fill="#b9c0cf">ساحة</text>
 </svg>`);
 
-const CITIES = ['دمشق','ريف دمشق','حلب','حمص','حماة','اللاذقية','طرطوس','درعا','السويداء','دير الزور'];
+const CITY_GROUPS = [
+  { governorate: 'دمشق', cities: ['دمشق'] },
+  { governorate: 'ريف دمشق', cities: ['دوما','حرستا','التل','قدسيا','الزبداني','النبك','يبرود','قطنا','دير عطية','صحنايا'] },
+  { governorate: 'حلب', cities: ['حلب','منبج','الباب','عفرين','أعزاز','جرابلس','السفيرة'] },
+  { governorate: 'حمص', cities: ['حمص','تدمر','القصير','الرستن','تلكلخ'] },
+  { governorate: 'حماة', cities: ['حماة','السلمية','مصياف','محردة','صوران'] },
+  { governorate: 'اللاذقية', cities: ['اللاذقية','جبلة','القرداحة','الحفة'] },
+  { governorate: 'طرطوس', cities: ['طرطوس','بانياس','صافيتا','دريكيش','الشيخ بدر'] },
+  { governorate: 'درعا', cities: ['درعا','إزرع','الصنمين','نوى','بصرى الشام','جاسم'] },
+  { governorate: 'السويداء', cities: ['السويداء','شهبا','صلخد','عريقة'] },
+  { governorate: 'دير الزور', cities: ['دير الزور','الميادين','البوكمال','الشحيل'] },
+  { governorate: 'الحسكة', cities: ['الحسكة','القامشلي','رأس العين','المالكية','تل تمر'] },
+  { governorate: 'الرقة', cities: ['الرقة','تل أبيض','الطبقة','معدان'] },
+  { governorate: 'إدلب', cities: ['إدلب','معرة النعمان','جسر الشغور','أريحا','سراقب'] },
+  { governorate: 'القنيطرة', cities: ['القنيطرة','خان أرنبة','مسعدة'] },
+];
+const CITIES = CITY_GROUPS.flatMap(g => g.cities);
 
 const AD_EXPIRY_DAYS = 90;
 
@@ -522,6 +538,17 @@ async function getFavoriteAds(){
    --------------------------------------------------------- */
 function randomId(){ return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10); }
 
+/* Turns an ad title into a readable, URL-safe filename fragment —
+   keeps the Arabic (or whatever script) as-is, just strips characters
+   that break storage keys/URLs and collapses whitespace to hyphens. */
+function slugifyTitle(title){
+  return (title || 'ad')
+    .trim()
+    .replace(/[\/\\?%*:|"<>#،؛؟!]/g, '')
+    .replace(/\s+/g, '-')
+    .slice(0, 60) || 'ad';
+}
+
 async function uploadMedia(blob, path, contentType){
   const { error } = await sb.storage.from(MEDIA_BUCKET).upload(path, blob, { contentType, upsert:true });
   if(error) throw error;
@@ -530,13 +557,19 @@ async function uploadMedia(blob, path, contentType){
 }
 /* Uploads any base64 data: URLs in `images` to Storage and returns the
    final URL list; anything that's already a real URL (e.g. untouched
-   photos on an ad being edited) is passed through unchanged. */
-async function uploadAdImages(images, ownerId){
+   photos on an ad being edited) is passed through unchanged. Filenames
+   are derived from the ad title (readable + good for SEO), with a
+   short random suffix so two ads with the same title never collide. */
+async function uploadAdImages(images, ownerId, title){
   const out = [];
+  const slug = slugifyTitle(title);
+  const suffix = Math.random().toString(36).slice(2,6);
+  let i = 0;
   for(const img of images){
+    i++;
     if(!img || img===PLACEHOLDER_IMG || !img.startsWith('data:')){ out.push(img); continue; }
     const blob = await (await fetch(img)).blob();
-    const path = `${ownerId}/ads/${randomId()}.webp`;
+    const path = `${ownerId}/ads/${slug}-${i}-${suffix}.webp`;
     out.push(await uploadMedia(blob, path, 'image/webp'));
   }
   return out;
@@ -741,8 +774,12 @@ async function renderHeader(activeCategory){
   const cityDropdown = document.getElementById('cityDropdown');
   let selectedCity = new URLSearchParams(location.search).get('city') || '';
   if(cityBtn && cityDropdown){
-    const allCities = ['كل المدن', ...CITIES];
-    cityDropdown.innerHTML = allCities.map(c=>`<button type="button" data-city="${c}">${c}</button>`).join('');
+    cityDropdown.innerHTML = `<button type="button" data-city="كل المدن">كل المدن</button>` +
+      CITY_GROUPS.map(g => `
+        <div class="city-group">
+          <div class="city-group-title">${g.governorate}</div>
+          ${g.cities.map(c=>`<button type="button" data-city="${c}">${c}</button>`).join('')}
+        </div>`).join('');
     if(selectedCity) document.getElementById('cityLabel').textContent = selectedCity;
     cityBtn.addEventListener('click', e=>{
       e.stopPropagation();
