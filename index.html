@@ -58,6 +58,8 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/app.js"></script>
 <script>
+  restoreLastPageIfLaunchedAsApp();
+
   const params = new URLSearchParams(location.search);
   const cat = params.get('cat') || '';
   const q = (params.get('q') || '').trim();

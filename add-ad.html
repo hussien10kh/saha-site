@@ -35,6 +35,12 @@
           عبّئ بيانات إعلانك وشاهد شكله النهائي مباشرة في المعاينة قبل النشر.
         </p>
 
+        <div id="draftRestoreBox" style="display:none;background:var(--primary-light);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:18px;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:13.5px;font-weight:600;flex:1 1 200px;">عندك مسودة إعلان محفوظة من قبل، تريد استكمالها؟</span>
+          <button type="button" class="btn btn-primary" id="draftRestoreBtn" style="padding:8px 16px;font-size:13px;">استكمال المسودة</button>
+          <button type="button" class="btn btn-outline" id="draftDismissBtn" style="padding:8px 16px;font-size:13px;">تجاهل</button>
+        </div>
+
         <form id="adForm" class="add-ad-grid">
           <div class="aa-fields">
             <div class="field full">
@@ -310,7 +316,42 @@
     };
   }
 
+  /* Autosaves the in-progress form (separate from the sessionStorage
+     login-redirect draft above) so a forced reload — say, from the
+     background app update — or an accidental tab close never costs you
+     a half-written ad. Best-effort: if storage is full (large photos),
+     it silently just won't persist that one time. */
+  const AD_DRAFT_KEY = 'sahat_ad_draft';
+  const AD_DRAFT_MAX_AGE = 2 * 24 * 60 * 60 * 1000;
+  function saveAdDraft(){
+    if(editingAd) return;
+    const title = document.getElementById('titleInput').value.trim();
+    const desc = document.getElementById('descInput').value.trim();
+    if(!title && !desc && !uploadedImages.length) return; // nothing worth persisting yet — don't clobber a real draft
+    try{
+      localStorage.setItem(AD_DRAFT_KEY, JSON.stringify({
+        ts: Date.now(), category: selectedCat,
+        title: document.getElementById('titleInput').value,
+        hasPrice: priceToggle.checked, price: document.getElementById('priceInput').value,
+        city: document.getElementById('cityInput').value,
+        desc: document.getElementById('descInput').value,
+        phone: document.getElementById('phoneInput').value,
+        contactMethod: phoneToggle.checked ? 'phone' : 'replies',
+        images: uploadedImages,
+      }));
+    }catch(e){}
+  }
+  function clearAdDraft(){ localStorage.removeItem(AD_DRAFT_KEY); }
+  function loadAdDraft(){
+    try{
+      const d = JSON.parse(localStorage.getItem(AD_DRAFT_KEY) || 'null');
+      if(!d || Date.now() - d.ts > AD_DRAFT_MAX_AGE) return null;
+      return d;
+    }catch(e){ return null; }
+  }
+
   async function updatePreview(){
+    saveAdDraft();
     document.getElementById('previewCard').innerHTML = adCardHTML(await currentDraft());
     // preview card shows image on top, details below — and shouldn't navigate away
     document.querySelectorAll('#previewCard .ad-card').forEach(c=>{
@@ -376,6 +417,7 @@
       contactMethod,
       ownerId: user.id,
     });
+    clearAdDraft();
     showPublishedModal(newAd);
   }
 
@@ -431,9 +473,11 @@
   });
 
   // returning from login/signup/guest with a saved draft — restore it and publish immediately
+  let restoredFromPendingLogin = false;
   if(await isLoggedIn()){
     const pending = loadPendingDraft();
     if(pending){
+      restoredFromPendingLogin = true;
       clearPendingDraft();
 
       selectedCat = pending.category;
@@ -454,6 +498,35 @@
       await publishOrSaveDraft({
         title: pending.title, hasPrice: pending.hasPrice, price: pending.price,
         city: pending.city, desc: pending.desc, phone: pending.phone, contactMethod: pending.contactMethod,
+      });
+    }
+  }
+
+  if(!editingAd && !restoredFromPendingLogin){
+    const draft = loadAdDraft();
+    if(draft){
+      const draftBox = document.getElementById('draftRestoreBox');
+      draftBox.style.display = 'flex';
+      document.getElementById('draftRestoreBtn').addEventListener('click', ()=>{
+        selectedCat = draft.category;
+        document.querySelectorAll('.cat-chip').forEach(c=> c.classList.toggle('active', c.dataset.cat===selectedCat));
+        document.getElementById('titleInput').value = draft.title || '';
+        document.getElementById('cityInput').value = draft.city || '';
+        document.getElementById('descInput').value = draft.desc || '';
+        priceToggle.checked = draft.hasPrice;
+        syncPriceField();
+        if(draft.hasPrice) document.getElementById('priceInput').value = draft.price || '';
+        phoneToggle.checked = draft.contactMethod === 'phone';
+        if(phoneToggle.checked) document.getElementById('phoneInput').value = draft.phone || '';
+        syncPhoneField();
+        uploadedImages = draft.images || [];
+        renderPreviews();
+        updatePreview();
+        draftBox.style.display = 'none';
+      });
+      document.getElementById('draftDismissBtn').addEventListener('click', ()=>{
+        clearAdDraft();
+        draftBox.style.display = 'none';
       });
     }
   }

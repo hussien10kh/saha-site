@@ -15,6 +15,71 @@ if ('serviceWorker' in navigator) {
       console.warn('SW registration failed:', err);
     });
   });
+
+  /* Every deploy updates the service worker + cache fully automatically
+     in the background (no button, no prompt) — the only thing a page
+     genuinely can't do on its own is hot-swap its own already-running
+     HTML/JS/CSS. So the one time we say anything is right after a new
+     worker actually takes over an existing session: a small, dismissible
+     notice offering a reload. Ignore it and just keep using the site or
+     close the tab — next time you open it, everything is already current
+     (and you land back on the same page, see restoreLastPage below). */
+  const SW_SEEN_KEY = 'sahat_sw_seen';
+  if (navigator.serviceWorker.controller) {
+    localStorage.setItem(SW_SEEN_KEY, '1');
+  }
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (localStorage.getItem(SW_SEEN_KEY)) {
+      showUpdateNotice();
+    }
+    localStorage.setItem(SW_SEEN_KEY, '1');
+  });
+}
+
+function showUpdateNotice(){
+  if (document.querySelector('.update-notice')) return;
+  const el = document.createElement('div');
+  el.className = 'update-notice';
+  el.innerHTML = `
+    <span>تم تحديث الموقع ✅ — أعد تحميل الصفحة للاستفادة من كل الميزات الجديدة</span>
+    <button type="button" class="update-notice-reload">تحديث الآن</button>
+    <button type="button" class="update-notice-close" aria-label="إغلاق">${ICONS.close}</button>
+  `;
+  document.body.appendChild(el);
+  requestAnimationFrame(()=> el.classList.add('show'));
+  el.querySelector('.update-notice-reload').addEventListener('click', ()=> location.reload());
+  el.querySelector('.update-notice-close').addEventListener('click', ()=> el.remove());
+}
+
+/* ---------------------------------------------------------
+   Last visited page — remembered for 3 days so opening the installed
+   app (from the home-screen icon, i.e. actually launching the PWA
+   rather than following a specific shared link) picks up where you
+   left off instead of always restarting at the homepage.
+   --------------------------------------------------------- */
+const LAST_PAGE_KEY = 'sahat_last_page';
+const LAST_PAGE_MAX_AGE = 3 * 24 * 60 * 60 * 1000;
+const LAST_PAGE_EXCLUDED = ['login.html', 'admin.html', 'admin-login.html', 'reset-password.html'];
+
+function trackLastPage(){
+  const page = location.pathname.split('/').pop() || 'index.html';
+  if (LAST_PAGE_EXCLUDED.includes(page)) return;
+  try {
+    localStorage.setItem(LAST_PAGE_KEY, JSON.stringify({ url: location.pathname + location.search, ts: Date.now() }));
+  } catch(e){}
+}
+trackLastPage();
+
+/* Called only from index.html — the PWA's start_url — since that's the
+   one place a fresh app launch actually lands. */
+function restoreLastPageIfLaunchedAsApp(){
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (!isStandalone) return;
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem(LAST_PAGE_KEY) || 'null'); } catch(e){ return; }
+  if (!saved || Date.now() - saved.ts > LAST_PAGE_MAX_AGE) return;
+  if (saved.url === location.pathname + location.search) return;
+  location.replace(saved.url);
 }
 
 /* ---------------------------------------------------------
@@ -44,6 +109,7 @@ function syncInstallButtons(){
       b.classList.add('mnav-install-pop');
     }
   });
+  document.querySelectorAll('.mnav-install-label').forEach(l => { l.style.display = show ? 'block' : 'none'; });
 }
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -921,6 +987,7 @@ async function renderMobileNav(active){
       <a href="${accountHref}" class="${active==='account'?'active':''}">${ICONS.user}<span>حسابي</span></a>
     </div>
     <a href="${addAdHref()}" class="fab">${ICONS.plus}</a>
+    <span class="mnav-install-label" id="mnavInstallLabel" style="display:none">حمّل تطبيقنا</span>
     <button type="button" class="install-app-btn mnav-install-fab" id="mnavInstallBtn" aria-label="ثبّت التطبيق" style="display:none">${ICONS.download}</button>
   </nav>
   <div class="mnav-popup" id="mnavSearchBox">
