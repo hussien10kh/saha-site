@@ -218,6 +218,7 @@ const ICONS = {
   warning:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.9 18.5a1.7 1.7 0 0 0 1.5 2.6h17.2a1.7 1.7 0 0 0 1.5-2.6L13.7 3.9a1.7 1.7 0 0 0-3.4 0Z"/></svg>`,
   upload:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>`,
   download:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>`,
+  device:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>`,
   fb:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.6h2.6l.4-3h-3v-1.9c0-.9.2-1.5 1.6-1.5h1.6V4.3C15.9 4.2 14.9 4 13.8 4c-2.4 0-4 1.5-4 4.1v2.3H7.2v3h2.6V21h3.7Z"/></svg>`,
   ig:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>`,
   tw:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 0 0-7 3.7A11.6 11.6 0 0 1 3.4 4.6a4.1 4.1 0 0 0 1.3 5.5c-.7 0-1.3-.2-1.9-.5v.1c0 2 1.4 3.6 3.3 4a4.2 4.2 0 0 1-1.9.1 4.1 4.1 0 0 0 3.8 2.9A8.3 8.3 0 0 1 2 18.4a11.6 11.6 0 0 0 6.3 1.9c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.2Z"/></svg>`,
@@ -902,6 +903,14 @@ async function renderFooter(){
       <div class="footer-about-col">
         <div class="footer-logo">ساحة</div>
         <p class="footer-about">منصة إعلانات مبوبة تجمع بين العقارات والسيارات وكل ما تحتاجه في مكان واحد. بيع واشترِ بسهولة وأمان من مستخدمين حقيقيين في منطقتك.</p>
+        <div class="footer-app-promo">
+          <div class="footer-app-icon">${ICONS.device}</div>
+          <div class="footer-app-text">
+            <strong>حمّل تطبيق ساحة</strong>
+            <span>تجربة أسرع وإشعارات فورية</span>
+          </div>
+          <button type="button" class="btn btn-primary footer-app-btn install-app-btn" style="display:none">${ICONS.download}<span>تثبيت التطبيق</span></button>
+        </div>
         <div class="social-row">
           <a href="https://www.facebook.com/people/%D8%B3%D8%A7%D8%AD%D8%A9-%D8%A7%D8%B9%D9%84%D8%A7%D9%86%D8%A7%D8%AA-%D9%85%D8%A8%D9%88%D8%A8%D8%A9/61591966771852/" target="_blank" rel="noopener" aria-label="فيسبوك">${ICONS.fb}</a>
           <a href="https://www.instagram.com/saahasyria/" target="_blank" rel="noopener" aria-label="إنستغرام">${ICONS.ig}</a>
@@ -942,6 +951,7 @@ async function renderFooter(){
       <span>© ${new Date().getFullYear()} ساحة. جميع الحقوق محفوظة.</span>
     </div>
   </footer>`;
+  syncInstallButtons();
 }
 
 /* Builds the bottom nav bar's outline as a real SVG path with a round,
