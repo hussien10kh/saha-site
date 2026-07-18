@@ -35,7 +35,15 @@ function isStandaloneApp(){
 
 function syncInstallButtons(){
   const show = !isStandaloneApp() && (deferredInstallPrompt || isIOS());
-  document.querySelectorAll('.install-app-btn').forEach(b => { b.style.display = show ? 'flex' : 'none'; });
+  document.querySelectorAll('.install-app-btn').forEach(b => {
+    const wasShown = b.style.display === 'flex';
+    b.style.display = show ? 'flex' : 'none';
+    if(show && !wasShown){
+      b.classList.remove('mnav-install-pop');
+      void b.offsetWidth; // restart the animation each time it reappears
+      b.classList.add('mnav-install-pop');
+    }
+  });
 }
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -617,9 +625,6 @@ async function renderHeader(activeCategory){
             </div>
           </div>` : ''}
           <a class="btn btn-primary cta-auth" href="${auth.href}">${auth.label}</a>
-          <button class="install-app-btn header-install-btn" id="headerInstallBtn" type="button" aria-label="ثبّت التطبيق" style="display:none">
-            ${ICONS.download}
-          </button>
           <div class="hamburger-wrap">
             <button class="hamburger" id="hamburgerBtn" aria-label="القائمة">${ICONS.menu}</button>
             <div class="hamburger-dropdown" id="hamburgerDropdown">
@@ -822,16 +827,15 @@ async function renderMobileNav(active){
     <div class="mnav-items">
       <a href="index.html" class="${active==='home'?'active':''}">${ICONS.home}<span>الرئيسية</span></a>
       <button type="button" class="mnav-icon-btn" id="mnavSearchBtn">${ICONS.search}<span>بحث</span></button>
-      <button type="button" class="mnav-icon-btn install-app-btn" id="mnavInstallBtn" style="display:none">${ICONS.download}<span>تثبيت</span></button>
       <div></div>
       <button type="button" class="mnav-icon-btn" id="mnavAlertsBtn">
         ${ICONS.bell}${badgeOn ? '<span class="mnav-badge"></span>' : ''}
         <span>إشعارات</span>
       </button>
       <a href="${accountHref}" class="${active==='account'?'active':''}">${ICONS.user}<span>حسابي</span></a>
-      <div></div>
     </div>
     <a href="${addAdHref()}" class="fab">${ICONS.plus}</a>
+    <button type="button" class="install-app-btn mnav-install-fab" id="mnavInstallBtn" aria-label="ثبّت التطبيق" style="display:none">${ICONS.download}</button>
   </nav>
   <div class="mnav-popup" id="mnavSearchBox">
     <form id="mnavSearchForm" style="display:flex;gap:8px;">
