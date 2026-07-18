@@ -147,9 +147,16 @@
           <span class="price-tag">${formatPrice(ad.price)}</span>
         </div>
 
-        <div class="gallery-main"><img id="mainImg" src="${ad.images[0]}" alt="${title}"></div>
+        <div class="gallery-main"><img id="mainImg" src="${ad.images[0]}" alt="${title}" style="cursor:zoom-in;"></div>
         <div class="gallery-thumbs" id="thumbs">
           ${ad.images.map((src,i)=>`<img src="${src}" class="${i===0?'active':''}" data-i="${i}" alt="${title} - صورة ${i+1}">`).join('')}
+        </div>
+
+        <div class="lightbox-overlay" id="lightboxOverlay">
+          <button type="button" class="lightbox-close" id="lightboxClose" aria-label="إغلاق">${ICONS.close}</button>
+          <button type="button" class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="الصورة السابقة">${ICONS.chevron}</button>
+          <img class="lightbox-img" id="lightboxImg" src="" alt="">
+          <button type="button" class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="الصورة التالية">${ICONS.chevron}</button>
         </div>
 
         <div class="share-section">
@@ -187,6 +194,45 @@
       document.getElementById('mainImg').src = img.src;
       document.querySelectorAll('#thumbs img').forEach(t=>t.classList.remove('active'));
       img.classList.add('active');
+    });
+
+    // lightbox — tap the main photo to view it full-screen (and step through
+    // the rest of the gallery from there, if there's more than one photo)
+    const lightboxOverlay = document.getElementById('lightboxOverlay');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxPrev = document.getElementById('lightboxPrev');
+    const lightboxNext = document.getElementById('lightboxNext');
+    let lightboxIndex = 0;
+
+    function openLightbox(i){
+      lightboxIndex = i;
+      lightboxImg.src = ad.images[lightboxIndex];
+      lightboxOverlay.classList.add('open');
+      const multi = ad.images.length > 1;
+      lightboxPrev.style.display = multi ? 'flex' : 'none';
+      lightboxNext.style.display = multi ? 'flex' : 'none';
+    }
+    function closeLightbox(){ lightboxOverlay.classList.remove('open'); }
+    function stepLightbox(delta){
+      lightboxIndex = (lightboxIndex + delta + ad.images.length) % ad.images.length;
+      lightboxImg.src = ad.images[lightboxIndex];
+    }
+
+    document.getElementById('mainImg').addEventListener('click', ()=>{
+      const activeThumb = document.querySelector('#thumbs img.active');
+      openLightbox(activeThumb ? +activeThumb.dataset.i : 0);
+    });
+    document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+    document.getElementById('lightboxPrev').addEventListener('click', ()=> stepLightbox(-1));
+    document.getElementById('lightboxNext').addEventListener('click', ()=> stepLightbox(1));
+    lightboxOverlay.addEventListener('click', e=>{
+      if(e.target === lightboxOverlay) closeLightbox();
+    });
+    document.addEventListener('keydown', e=>{
+      if(!lightboxOverlay.classList.contains('open')) return;
+      if(e.key === 'Escape') closeLightbox();
+      if(e.key === 'ArrowLeft') stepLightbox(1);
+      if(e.key === 'ArrowRight') stepLightbox(-1);
     });
 
     // contact — only present when the advertiser chose "reply" as the contact method
