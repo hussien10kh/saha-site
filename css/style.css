@@ -247,7 +247,7 @@ textarea {
   cursor: pointer;
 }
 
-.install-app-btn {
+.header-install-btn {
   width: 40px;
   height: 40px;
   border: none;
@@ -259,11 +259,11 @@ textarea {
   flex-shrink: 0;
 }
 
-.install-app-btn:hover {
+.header-install-btn:hover {
   background: var(--border);
 }
 
-.install-app-btn svg {
+.header-install-btn svg {
   width: 20px;
   height: 20px;
   color: var(--primary);
@@ -860,10 +860,10 @@ textarea {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   align-items: center;
   justify-items: center;
-  padding: 0 22px;
+  padding: 0 10px;
 }
 
 .mobile-nav.mnav-hidden {
