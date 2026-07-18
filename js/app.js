@@ -694,17 +694,28 @@ async function isDuplicateAd(title, description, excludeId){
   );
 }
 
-/* Blocks posting more than 3 new ads within a 10-minute window per browser. */
+/* Blocks posting more than 3 new ads within a 10-minute window per browser.
+   Read-only check — only recordSuccessfulPost() below actually spends one
+   of the 3 slots, so failed/retried attempts (network errors, etc.) don't
+   count against a genuine spammer's limit. */
+const POSTING_LIMIT_KEY = 'sahat_recent_posts', POSTING_LIMIT_WINDOW_MS = 10 * 60 * 1000, POSTING_LIMIT_MAX = 3;
+
 function isPostingTooFast(){
-  const key = 'sahat_recent_posts', windowMs = 10 * 60 * 1000, maxPosts = 3;
   const now = Date.now();
   let list = [];
-  try{ list = JSON.parse(localStorage.getItem(key) || '[]'); }catch(e){}
-  list = list.filter(ts => now - ts < windowMs);
-  const limited = list.length >= maxPosts;
-  if(!limited) list.push(now);
-  localStorage.setItem(key, JSON.stringify(list));
-  return limited;
+  try{ list = JSON.parse(localStorage.getItem(POSTING_LIMIT_KEY) || '[]'); }catch(e){}
+  list = list.filter(ts => now - ts < POSTING_LIMIT_WINDOW_MS);
+  localStorage.setItem(POSTING_LIMIT_KEY, JSON.stringify(list));
+  return list.length >= POSTING_LIMIT_MAX;
+}
+
+function recordSuccessfulPost(){
+  const now = Date.now();
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(POSTING_LIMIT_KEY) || '[]'); }catch(e){}
+  list = list.filter(ts => now - ts < POSTING_LIMIT_WINDOW_MS);
+  list.push(now);
+  localStorage.setItem(POSTING_LIMIT_KEY, JSON.stringify(list));
 }
 
 /* ---------------------------------------------------------

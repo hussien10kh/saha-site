@@ -407,17 +407,24 @@
       return;
     }
 
-    const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id, title) : [DEFAULT_IMG];
-    const newAd = await addAd({
-      category: selectedCat,
-      title, price, city,
-      description: desc,
-      images,
-      seller: user.name,
-      phone,
-      contactMethod,
-      ownerId: user.id,
-    });
+    let newAd;
+    try{
+      const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id, title) : [DEFAULT_IMG];
+      newAd = await addAd({
+        category: selectedCat,
+        title, price, city,
+        description: desc,
+        images,
+        seller: user.name,
+        phone,
+        contactMethod,
+        ownerId: user.id,
+      });
+    }catch(e){
+      toast('تعذر نشر الإعلان، تأكد من اتصالك بالإنترنت وحاول مجدداً', 'error');
+      return;
+    }
+    recordSuccessfulPost();
     clearAdDraft();
     showPublishedModal(newAd);
   }
