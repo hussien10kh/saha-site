@@ -98,6 +98,20 @@ function isStandaloneApp(){
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
+/* Android browsers other than Chrome itself (Samsung Internet, Firefox,
+   Edge, Opera...) each package the "install" step their own way — some,
+   like Samsung Internet's own WebAPK generator, trip Play Protect with a
+   scary "unsafe app" warning that has nothing to do with this site. Chrome's
+   own install flow is the one that's actually smooth, so we nudge toward it
+   rather than silently letting people hit that warning. */
+function isAndroidNonChrome(){
+  const ua = navigator.userAgent;
+  if(!/Android/i.test(ua)) return false;
+  const isOtherKnownBrowser = /SamsungBrowser|Firefox|OPR\/|Edg\//i.test(ua);
+  const isRealChrome = /Chrome\//.test(ua) && !isOtherKnownBrowser;
+  return !isRealChrome;
+}
+
 function syncInstallButtons(){
   const show = !isStandaloneApp() && (deferredInstallPrompt || isIOS());
   document.querySelectorAll('.install-app-btn').forEach(b => {
@@ -127,6 +141,9 @@ document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.install-app-btn');
   if(!btn) return;
   if(deferredInstallPrompt){
+    if(isAndroidNonChrome()){
+      toast('يفضّل استخدام متصفح Chrome لتثبيت التطبيق لتجربة أسهل وأكثر استقراراً', null, 5000);
+    }
     deferredInstallPrompt.prompt();
     await deferredInstallPrompt.userChoice;
     deferredInstallPrompt = null;
