@@ -902,7 +902,6 @@ async function renderFooter(){
     <div class="container footer-top">
       <div class="footer-about-col">
         <div class="footer-logo">ساحة</div>
-        <p class="footer-about">منصة إعلانات مبوبة تجمع بين العقارات والسيارات وكل ما تحتاجه في مكان واحد. بيع واشترِ بسهولة وأمان من مستخدمين حقيقيين في منطقتك.</p>
         <div class="footer-promo-grid">
           <div class="social-row">
             <a href="https://www.facebook.com/saahasyria" target="_blank" rel="noopener" aria-label="فيسبوك">${ICONS.fb}</a>

@@ -809,6 +809,10 @@ textarea {
   padding-right: 24px;
 }
 
+.footer-about-col {
+  grid-column: 1 / -1;
+}
+
 .footer-links-pair {
   display: contents;
 }
@@ -819,13 +823,6 @@ textarea {
   font-weight: 900;
   color: #fff;
   margin-bottom: 12px;
-}
-
-.footer-about {
-  font-size: 13.5px;
-  line-height: 1.9;
-  color: #94a0b8;
-  max-width: 320px;
 }
 
 .footer-col h4 {
@@ -1283,6 +1280,101 @@ textarea {
 .gallery-thumbs img.active {
   border-color: var(--primary);
   opacity: 1;
+}
+
+/* ---------- Lightbox ---------- */
+.lightbox-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .92);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-overlay.open {
+  display: flex;
+}
+
+.lightbox-img {
+  max-width: 92vw;
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.lightbox-close,
+.lightbox-nav {
+  position: absolute;
+  border: none;
+  background: rgba(255, 255, 255, .15);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.lightbox-close:hover,
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, .3);
+}
+
+.lightbox-close {
+  top: 16px;
+  left: 16px;
+  width: 40px;
+  height: 40px;
+}
+
+.lightbox-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.lightbox-nav {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+}
+
+.lightbox-nav svg {
+  width: 22px;
+  height: 22px;
+}
+
+.lightbox-prev {
+  right: 16px;
+}
+
+.lightbox-prev svg {
+  transform: rotate(90deg);
+}
+
+.lightbox-next {
+  left: 16px;
+}
+
+.lightbox-next svg {
+  transform: rotate(-90deg);
+}
+
+@media (max-width:720px) {
+  .lightbox-nav {
+    width: 40px;
+    height: 40px;
+  }
+
+  .lightbox-prev {
+    right: 8px;
+  }
+
+  .lightbox-next {
+    left: 8px;
+  }
 }
 
 .price-tag {
@@ -1917,10 +2009,6 @@ textarea {
     grid-template-columns: 1fr;
     padding: 24px 0 16px;
     padding-right: 24px;
-  }
-
-  .footer-about {
-    display: none;
   }
 
   .footer-categories-col {
