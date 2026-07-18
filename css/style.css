@@ -383,15 +383,36 @@ textarea {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 180px;
-  background: #fff;
+  min-width: 200px;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
   padding: 8px;
   z-index: 50;
-  max-height: 280px;
+  max-height: 360px;
   overflow-y: auto;
+}
+
+.city-group {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.city-group:first-child {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.city-group-title {
+  padding: 8px 12px 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .3px;
 }
 
 .city-dropdown.open {

@@ -279,8 +279,9 @@
   });
 
   function renderPreviews(){
+    const titleNow = escapeHTML(document.getElementById('titleInput').value.trim() || 'صورة المعاينة');
     document.getElementById('uploadPreviews').innerHTML = uploadedImages.map((src,i)=>`
-      <div class="up-thumb"><img src="${src}"><button type="button" data-i="${i}">✕</button></div>`).join('');
+      <div class="up-thumb"><img src="${src}" alt="${titleNow} - صورة ${i+1}"><button type="button" data-i="${i}">✕</button></div>`).join('');
     document.querySelectorAll('.up-thumb button').forEach(b=>{
       b.addEventListener('click', ()=>{
         uploadedImages.splice(+b.dataset.i,1);
@@ -346,7 +347,7 @@
     }
 
     if(editingAd){
-      const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id) : [DEFAULT_IMG];
+      const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id, title) : [DEFAULT_IMG];
       await updateAd(editingAd.id, {
         category: selectedCat, title, price, city,
         description: desc,
@@ -363,7 +364,7 @@
       return;
     }
 
-    const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id) : [DEFAULT_IMG];
+    const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id, title) : [DEFAULT_IMG];
     const newAd = await addAd({
       category: selectedCat,
       title, price, city,
