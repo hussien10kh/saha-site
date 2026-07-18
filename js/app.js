@@ -912,11 +912,11 @@ async function renderFooter(){
           </div>
           <div class="footer-app-promo">
             <div class="footer-app-header">
-              <div class="footer-app-icon">${ICONS.device}</div>
               <div class="footer-app-text">
                 <strong>حمّل تطبيق ساحة</strong>
                 <span>تجربة أسرع وإشعارات فورية</span>
               </div>
+              <div class="footer-app-icon">${ICONS.device}</div>
             </div>
             <button type="button" class="btn btn-primary footer-app-btn install-app-btn" style="display:none">${ICONS.download}<span>تثبيت التطبيق</span></button>
           </div>

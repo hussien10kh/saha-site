@@ -867,7 +867,7 @@ textarea {
 
 .footer-app-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   min-width: 0;
 }
@@ -928,10 +928,6 @@ textarea {
 @media (max-width:420px) {
   .footer-promo-grid {
     gap: 18px;
-  }
-
-  .footer-app-header {
-    flex-wrap: wrap;
   }
 
   .footer-app-btn {
