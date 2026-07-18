@@ -115,15 +115,8 @@ function isAndroidNonChrome(){
 function syncInstallButtons(){
   const show = !isStandaloneApp() && (deferredInstallPrompt || isIOS());
   document.querySelectorAll('.install-app-btn').forEach(b => {
-    const wasShown = b.style.display === 'flex';
     b.style.display = show ? 'flex' : 'none';
-    if(show && !wasShown){
-      b.classList.remove('mnav-install-pop');
-      void b.offsetWidth; // restart the animation each time it reappears
-      b.classList.add('mnav-install-pop');
-    }
   });
-  document.querySelectorAll('.mnav-install-label').forEach(l => { l.style.display = show ? 'block' : 'none'; });
 }
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -928,21 +921,21 @@ async function renderFooter(){
             <li><a href="index.html?cat=misc">غير مصنف</a></li>
           </ul>
         </div>
+        <div class="footer-app-promo">
+          <div class="footer-app-text">
+            <strong>حمّل تطبيق ساحة</strong>
+            <span>تجربة أسرع وإشعارات فورية</span>
+          </div>
+          <div class="footer-app-action">
+            <div class="footer-app-icon">${ICONS.device}</div>
+            <button type="button" class="btn btn-primary footer-app-btn install-app-btn" style="display:none">${ICONS.download}<span>تثبيت التطبيق</span></button>
+          </div>
+        </div>
         <div class="social-row">
           <a href="https://www.facebook.com/saahasyria" target="_blank" rel="noopener" aria-label="فيسبوك">${ICONS.fb}</a>
           <a href="https://www.instagram.com/saahasyria/" target="_blank" rel="noopener" aria-label="إنستغرام">${ICONS.ig}</a>
           <a href="https://x.com/saahasyria" target="_blank" rel="noopener" aria-label="تويتر">${ICONS.tw}</a>
           <a href="contact.html" aria-label="تواصل معنا">${ICONS.mail}</a>
-        </div>
-        <div class="footer-app-promo">
-          <div class="footer-app-header">
-            <div class="footer-app-text">
-              <strong>حمّل تطبيق ساحة</strong>
-              <span>تجربة أسرع وإشعارات فورية</span>
-            </div>
-            <div class="footer-app-icon">${ICONS.device}</div>
-          </div>
-          <button type="button" class="btn btn-primary footer-app-btn install-app-btn" style="display:none">${ICONS.download}<span>تثبيت التطبيق</span></button>
         </div>
       </div>
     </div>
@@ -1013,8 +1006,6 @@ async function renderMobileNav(active){
       <a href="${accountHref}" class="${active==='account'?'active':''}">${ICONS.user}<span>حسابي</span></a>
     </div>
     <a href="${addAdHref()}" class="fab">${ICONS.plus}</a>
-    <span class="mnav-install-label" id="mnavInstallLabel" style="display:none">حمّل تطبيقنا</span>
-    <button type="button" class="install-app-btn mnav-install-fab" id="mnavInstallBtn" aria-label="ثبّت التطبيق" style="display:none">${ICONS.download}</button>
   </nav>
   <div class="mnav-popup" id="mnavSearchBox">
     <form id="mnavSearchForm" style="display:flex;gap:8px;">
