@@ -61,6 +61,12 @@ const LAST_PAGE_KEY = 'sahat_last_page';
 const LAST_PAGE_MAX_AGE = 3 * 24 * 60 * 60 * 1000;
 const LAST_PAGE_EXCLUDED = ['login.html', 'admin.html', 'admin-login.html', 'reset-password.html'];
 
+/* Captured before trackLastPage() below overwrites LAST_PAGE_KEY with the
+   page currently loading — restoreLastPageIfLaunchedAsApp() needs the page
+   from BEFORE this visit, not this visit itself. */
+let PREVIOUS_LAST_PAGE = null;
+try { PREVIOUS_LAST_PAGE = JSON.parse(localStorage.getItem(LAST_PAGE_KEY) || 'null'); } catch(e){}
+
 function trackLastPage(){
   const page = location.pathname.split('/').pop() || 'index.html';
   if (LAST_PAGE_EXCLUDED.includes(page)) return;
@@ -75,8 +81,7 @@ trackLastPage();
 function restoreLastPageIfLaunchedAsApp(){
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   if (!isStandalone) return;
-  let saved;
-  try { saved = JSON.parse(localStorage.getItem(LAST_PAGE_KEY) || 'null'); } catch(e){ return; }
+  const saved = PREVIOUS_LAST_PAGE;
   if (!saved || Date.now() - saved.ts > LAST_PAGE_MAX_AGE) return;
   if (saved.url === location.pathname + location.search) return;
   location.replace(saved.url);
@@ -359,7 +364,8 @@ async function updateAd(id, patch){
   return mapAdRow(data);
 }
 async function deleteAd(id){
-  await sb.from('ads').delete().eq('id', id);
+  const { error } = await sb.from('ads').delete().eq('id', id);
+  if(error) throw error;
 }
 async function renewAd(id){
   await updateAd(id, { createdAt: new Date().toISOString() });
@@ -408,7 +414,8 @@ async function saveComment(adId, c){
   if(error) throw error;
 }
 async function deleteComment(commentId){
-  await sb.from('comments').delete().eq('id', commentId);
+  const { error } = await sb.from('comments').delete().eq('id', commentId);
+  if(error) throw error;
 }
 async function getAllCommentsFlat(){
   const { data, error } = await sb.from('comments').select('*, ads(title)').order('created_at', {ascending:false});
@@ -596,10 +603,12 @@ async function toggleFavorite(id){
   const user = await getCurrentUser();
   if(!user){ toast('سجّل الدخول لحفظ المفضلة'); return CURRENT_FAVORITES.has(id); }
   if(CURRENT_FAVORITES.has(id)){
-    await sb.from('favorites').delete().eq('user_id', user.id).eq('ad_id', id);
+    const { error } = await sb.from('favorites').delete().eq('user_id', user.id).eq('ad_id', id);
+    if(error) throw error;
     CURRENT_FAVORITES.delete(id);
   } else {
-    await sb.from('favorites').insert({ user_id:user.id, ad_id:id });
+    const { error } = await sb.from('favorites').insert({ user_id:user.id, ad_id:id });
+    if(error) throw error;
     CURRENT_FAVORITES.add(id);
   }
   return CURRENT_FAVORITES.has(id);
@@ -1118,7 +1127,7 @@ function adCardHTML(ad){
       <img src="${ad.images[0]}" alt="${title}" loading="lazy">
     </div>
     <div class="ad-body">
-      <button class="fav-btn${isFavorite(ad.id)?' active':''}" type="button" onclick="event.preventDefault();toggleFavorite('${ad.id}').then(on=>this.classList.toggle('active',on));">${ICONS.heart}</button>
+      <button class="fav-btn${isFavorite(ad.id)?' active':''}" type="button" onclick="event.preventDefault();toggleFavorite('${ad.id}').then(on=>{this.classList.toggle('active',on);this.dispatchEvent(new CustomEvent('fav-toggled',{bubbles:true,detail:{on}}));}).catch(()=>toast('تعذّر تحديث المفضلة، تحقق من اتصالك بالإنترنت','error'));">${ICONS.heart}</button>
       <h3 class="ad-title">${title}</h3>
       <p class="ad-desc">${desc}</p>
       <div class="ad-meta">
@@ -1188,7 +1197,15 @@ function getSessions(){
   try{ return JSON.parse(localStorage.getItem('sahat_sessions') || '{}'); }
   catch(e){ return {}; }
 }
-function saveSessions(s){ localStorage.setItem('sahat_sessions', JSON.stringify(s)); }
+/* Unbounded growth guard — a browser that keeps visiting the site for
+   months would otherwise accumulate one entry per session forever. */
+const SESSIONS_MAX_AGE = 90 * 24 * 60 * 60 * 1000;
+function saveSessions(s){
+  const cutoff = Date.now() - SESSIONS_MAX_AGE;
+  const pruned = {};
+  Object.keys(s).forEach(id => { if(s[id].lastSeen >= cutoff) pruned[id] = s[id]; });
+  localStorage.setItem('sahat_sessions', JSON.stringify(pruned));
+}
 
 function classifyTrafficSource(referrer){
   if(!referrer) return 'مباشر';

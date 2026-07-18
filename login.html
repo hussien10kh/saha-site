@@ -241,6 +241,10 @@
       toast('تسجيل الدخول عبر جوجل يحتاج إعداد Client ID أولاً', 'error');
       return;
     }
+    if(typeof google === 'undefined' || !google.accounts){
+      toast('لسا عم يتم تحميل خدمة جوجل، انتظر لحظة وحاول مجدداً', 'error');
+      return;
+    }
     setRememberPref(document.getElementById('rememberMe').checked);
     google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,

@@ -191,9 +191,13 @@ function wireAdsTableActions(scope){
       const id = btn.closest('tr').dataset.id;
       const ad = await getAdById(id);
       if(confirm(`هل أنت متأكد من حذف الإعلان "${ad ? ad.title : ''}"؟`)){
-        await deleteAd(id);
-        toast('تم حذف الإعلان');
-        renderTab();
+        try{
+          await deleteAd(id);
+          toast('تم حذف الإعلان');
+          renderTab();
+        }catch(e){
+          toast('تعذّر حذف الإعلان، تحقق من اتصالك بالإنترنت', 'error');
+        }
       }
     });
   });
@@ -256,16 +260,21 @@ async function saveAdFromModal(){
     return;
   }
 
-  if(editingAdId){
-    await updateAd(editingAdId, { title, price, city, description, seller, category, images:[imageUrl] });
-    toast('تم حفظ التعديلات');
-  } else {
-    await addAd({
-      title, price, city, description, seller, category,
-      images:[imageUrl], contactMethod:'replies', views:0,
-      ownerId: adminUser.id,
-    });
-    toast('تم نشر الإعلان');
+  try{
+    if(editingAdId){
+      await updateAd(editingAdId, { title, price, city, description, seller, category, images:[imageUrl] });
+      toast('تم حفظ التعديلات');
+    } else {
+      await addAd({
+        title, price, city, description, seller, category,
+        images:[imageUrl], contactMethod:'replies', views:0,
+        ownerId: adminUser.id,
+      });
+      toast('تم نشر الإعلان');
+    }
+  }catch(e){
+    toast('تعذّر حفظ الإعلان، تحقق من اتصالك بالإنترنت', 'error');
+    return;
   }
   closeAdModal();
   renderTab();
@@ -417,9 +426,13 @@ async function renderCommentsTable(){
     btn.addEventListener('click', async ()=>{
       const tr = btn.closest('tr');
       if(confirm('هل تريد حذف هذا التعليق؟')){
-        await deleteComment(tr.dataset.id);
-        toast('تم حذف التعليق');
-        renderCommentsTable();
+        try{
+          await deleteComment(tr.dataset.id);
+          toast('تم حذف التعليق');
+          renderCommentsTable();
+        }catch(e){
+          toast('تعذّر حذف التعليق، تحقق من اتصالك بالإنترنت', 'error');
+        }
       }
     });
   });

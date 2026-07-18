@@ -280,7 +280,12 @@
   }
 
   fileInput.addEventListener('change', ()=>{
-    [...fileInput.files].slice(0, 6 - uploadedImages.length).forEach(file=>{
+    const files = [...fileInput.files];
+    const room = 6 - uploadedImages.length;
+    if(files.length > room){
+      toast(room > 0 ? `يمكن رفع 6 صور كحد أقصى — تم أخذ أول ${room} فقط` : 'وصلت للحد الأقصى (6 صور)، احذف صورة لإضافة غيرها', 'error');
+    }
+    files.slice(0, room).forEach(file=>{
       processImage(file).then(dataUrl=>{
         uploadedImages.push(dataUrl);
         renderPreviews();
@@ -373,13 +378,17 @@
      the moment they come back with a session (full login, sign-up, or the
      lightweight "guest" option: name + phone only). */
   const PENDING_KEY = 'sahat_pending_ad';
+  const PENDING_MAX_AGE = 30 * 60 * 1000; // bridges the login redirect only — not a long-term draft
   function savePendingDraft(draft){
-    try{ sessionStorage.setItem(PENDING_KEY, JSON.stringify(draft)); }
+    try{ sessionStorage.setItem(PENDING_KEY, JSON.stringify({ ...draft, ts: Date.now() })); }
     catch(e){ /* storage quota exceeded (e.g. too many large photos) — draft just won't survive the redirect */ }
   }
   function loadPendingDraft(){
-    try{ return JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null'); }
+    let d;
+    try{ d = JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null'); }
     catch(e){ return null; }
+    if(!d || !d.ts || Date.now() - d.ts > PENDING_MAX_AGE) return null;
+    return d;
   }
   function clearPendingDraft(){ sessionStorage.removeItem(PENDING_KEY); }
 
@@ -394,13 +403,18 @@
     }
 
     if(editingAd){
-      const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id, title) : [DEFAULT_IMG];
-      await updateAd(editingAd.id, {
-        category: selectedCat, title, price, city,
-        description: desc,
-        images,
-        seller: user.name, phone, contactMethod,
-      });
+      try{
+        const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id, title) : [DEFAULT_IMG];
+        await updateAd(editingAd.id, {
+          category: selectedCat, title, price, city,
+          description: desc,
+          images,
+          seller: user.name, phone, contactMethod,
+        });
+      }catch(e){
+        toast('تعذّر حفظ التعديلات، تأكد من اتصالك بالإنترنت وحاول مجدداً', 'error');
+        return;
+      }
       toast('تم حفظ التعديلات بنجاح');
       setTimeout(()=> location.href = 'listing.html?id=' + editingAd.id, 700);
       return;

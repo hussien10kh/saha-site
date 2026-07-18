@@ -184,7 +184,8 @@
 
     // favorite
     document.getElementById('detailFavBtn').addEventListener('click', function(){
-      toggleFavorite(ad.id).then(on=> this.classList.toggle('active', on));
+      toggleFavorite(ad.id).then(on=> this.classList.toggle('active', on))
+        .catch(()=> toast('تعذّر تحديث المفضلة، تحقق من اتصالك بالإنترنت', 'error'));
     });
 
     // gallery
@@ -280,7 +281,12 @@
         const box = document.getElementById('commentInput');
         const text = box.value.trim();
         if(!text) return;
-        await saveComment(ad.id, {name:user.name, text});
+        try{
+          await saveComment(ad.id, {name:user.name, text});
+        }catch(e){
+          toast('تعذّر إضافة تعليقك، تحقق من اتصالك بالإنترنت', 'error');
+          return;
+        }
         box.value='';
         await renderComments();
         toast('تم إضافة تعليقك');

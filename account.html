@@ -168,7 +168,12 @@
   document.getElementById('saveNameBtn').addEventListener('click', async ()=>{
     const newName = editNameInput.value.trim();
     if(!newName){ toast('الرجاء إدخال اسم صحيح', 'error'); return; }
-    await updateProfile({ name: newName });
+    try{
+      await updateProfile({ name: newName });
+    }catch(e){
+      toast('تعذّر تحديث الاسم، تحقق من اتصالك بالإنترنت', 'error');
+      return;
+    }
     document.getElementById('accountName').textContent = newName;
     editNameRow.style.display = 'none';
     accountHint.style.display = 'block';
@@ -190,19 +195,23 @@
     reader.onload = ev=>{
       const img = new Image();
       img.onload = async ()=>{
-        const size = 240;
-        const canvas = document.createElement('canvas');
-        canvas.width = size; canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        const scale = Math.max(size/img.width, size/img.height);
-        const w = img.width*scale, h = img.height*scale;
-        ctx.drawImage(img, (size-w)/2, (size-h)/2, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        const blob = await (await fetch(dataUrl)).blob();
-        const url = await uploadMedia(blob, `${user.id}/avatar.jpg`, 'image/jpeg');
-        await updateProfile({ avatar: url });
-        document.getElementById('avatarImg').src = url;
-        toast('تم تحديث صورتك الشخصية');
+        try{
+          const size = 240;
+          const canvas = document.createElement('canvas');
+          canvas.width = size; canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          const scale = Math.max(size/img.width, size/img.height);
+          const w = img.width*scale, h = img.height*scale;
+          ctx.drawImage(img, (size-w)/2, (size-h)/2, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          const blob = await (await fetch(dataUrl)).blob();
+          const url = await uploadMedia(blob, `${user.id}/avatar.jpg`, 'image/jpeg');
+          await updateProfile({ avatar: url });
+          document.getElementById('avatarImg').src = url;
+          toast('تم تحديث صورتك الشخصية');
+        }catch(e){
+          toast('تعذّر تحديث صورتك، تحقق من اتصالك بالإنترنت وحاول مجدداً', 'error');
+        }
       };
       img.src = ev.target.result;
     };
@@ -240,17 +249,25 @@
     const delBtn = e.target.closest('[data-delete]');
     if(delBtn){
       if(confirm('هل أنت متأكد من حذف هذا الإعلان؟')){
-        await deleteAd(delBtn.dataset.delete);
-        await renderMyAds();
-        toast('تم حذف الإعلان');
+        try{
+          await deleteAd(delBtn.dataset.delete);
+          await renderMyAds();
+          toast('تم حذف الإعلان');
+        }catch(e){
+          toast('تعذّر حذف الإعلان، تحقق من اتصالك بالإنترنت', 'error');
+        }
       }
       return;
     }
     const renewBtn = e.target.closest('[data-renew]');
     if(renewBtn){
-      await renewAd(renewBtn.dataset.renew);
-      await renderMyAds();
-      toast('تم تجديد نشر الإعلان');
+      try{
+        await renewAd(renewBtn.dataset.renew);
+        await renderMyAds();
+        toast('تم تجديد نشر الإعلان');
+      }catch(e){
+        toast('تعذّر تجديد الإعلان، تحقق من اتصالك بالإنترنت', 'error');
+      }
     }
   });
 
@@ -267,10 +284,8 @@
   }
   await renderFavorites();
 
-  document.getElementById('favAds').addEventListener('click', e=>{
-    const btn = e.target.closest('.fav-btn');
-    if(!btn) return;
-    if(!btn.classList.contains('active')) btn.closest('.ad-card').remove();
+  document.getElementById('favAds').addEventListener('fav-toggled', e=>{
+    if(!e.detail.on) e.target.closest('.ad-card').remove();
   });
 })();
 </script>

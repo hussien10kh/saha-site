@@ -40,14 +40,13 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (req.mode === 'navigate') {
+    const networked = fetch(req).then((res) => {
+      const copy = res.clone();
+      return caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {}).then(() => res);
+    });
+    event.waitUntil(networked.catch(() => {}));
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-          return res;
-        })
-        .catch(() => caches.match(req).then((cached) => cached || caches.match('/index.html')))
+      networked.catch(() => caches.match(req).then((cached) => cached || caches.match('/index.html')))
     );
     return;
   }
@@ -55,14 +54,19 @@ self.addEventListener('fetch', (event) => {
   // Stale-while-revalidate: serve the cached copy immediately for speed,
   // but always refetch in the background so the next load has the latest
   // file — a plain cache-first here would keep serving a file from the
-  // very first install forever, even after later deploys change it.
+  // very first install forever, even after later deploys change it. The
+  // cache write is chained INTO the network promise (not left dangling)
+  // and that whole chain is passed to event.waitUntil() — otherwise the
+  // browser can suspend/kill this worker right after responding, before
+  // the write finishes, and the cache would silently never catch up to a
+  // new deploy on some devices.
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req).then((res) => {
         const copy = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-        return res;
+        return caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {}).then(() => res);
       }).catch(() => cached);
+      event.waitUntil(network.catch(() => {}));
       return cached || network;
     })
   );
