@@ -848,31 +848,6 @@ textarea {
   min-width: 0;
 }
 
-.footer-app-action {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-.footer-app-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: var(--footer-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.footer-app-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
 .footer-app-text {
   display: flex;
   flex-direction: column;
@@ -892,11 +867,11 @@ textarea {
 }
 
 .footer-app-btn {
+  width: 100%;
   padding: 9px 12px;
   font-size: 12.5px;
   gap: 6px;
   border-radius: 10px;
-  flex: 1 1 135px;
   min-width: 0;
   white-space: normal;
   text-align: center;
@@ -953,7 +928,7 @@ textarea {
 }
 
 .footer-bottom {
-  border-top: 1px solid #1e2a44;
+  border-top: 2px solid var(--footer-lighter);
   padding: 18px 24px;
   font-size: 13px;
   color: #7c869a;
@@ -1966,6 +1941,19 @@ textarea {
     display: none;
   }
 
+  /* On mobile the widget+social pair reads better above the support+links
+     pair, but the desktop 5-column order (support, links, categories,
+     widget, social) must stay untouched — so reorder visually here only,
+     leaving the underlying DOM order alone. */
+  .footer-app-promo,
+  .social-row {
+    order: 1;
+  }
+
+  .footer-col {
+    order: 2;
+  }
+
   /* extra empty room below the real footer content so the floating nav
      pill only ever overlaps this padding — never the footer's links,
      social icons, or copyright line — once you scroll to the very bottom.
@@ -2136,11 +2124,6 @@ textarea {
 
   .footer-logo {
     font-size: 22px;
-  }
-
-  .footer-columns-row {
-    grid-template-columns: 1fr;
-    gap: 20px;
   }
 
   .footer-bottom {

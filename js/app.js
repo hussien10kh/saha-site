@@ -926,10 +926,7 @@ async function renderFooter(){
             <strong>حمّل تطبيق ساحة</strong>
             <span>تجربة أسرع وإشعارات فورية</span>
           </div>
-          <div class="footer-app-action">
-            <div class="footer-app-icon">${ICONS.device}</div>
-            <button type="button" class="btn btn-primary footer-app-btn install-app-btn" style="display:none">${ICONS.download}<span>تثبيت التطبيق</span></button>
-          </div>
+          <button type="button" class="btn btn-primary footer-app-btn install-app-btn" style="display:none">${ICONS.download}<span>تثبيت التطبيق</span></button>
         </div>
         <div class="social-row">
           <a href="https://www.facebook.com/saahasyria" target="_blank" rel="noopener" aria-label="فيسبوك">${ICONS.fb}</a>
