@@ -694,6 +694,7 @@ async function renderHeader(activeCategory){
       <div class="header-top">
         <a class="logo" href="index.html">ساحة</a>
         <div class="header-actions">
+          <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="تبديل الوضع الليلي"></button>
           <a class="btn btn-outline cta-add" href="${addAdHref()}">أضف إعلانك</a>
           ${notes.length ? `
           <div class="header-bell-wrap">
@@ -705,7 +706,6 @@ async function renderHeader(activeCategory){
             </div>
           </div>` : ''}
           <a class="btn btn-primary cta-auth" href="${auth.href}">${auth.label}</a>
-          <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="تبديل الوضع الليلي"></button>
           <div class="hamburger-wrap">
             <button class="hamburger" id="hamburgerBtn" aria-label="القائمة">${ICONS.menu}</button>
             <div class="hamburger-dropdown" id="hamburgerDropdown">
