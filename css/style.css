@@ -852,7 +852,7 @@ textarea {
 .footer-promo-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 28px;
   margin: 14px 0;
   align-items: start;
 }
@@ -927,7 +927,7 @@ textarea {
 
 @media (max-width:420px) {
   .footer-promo-grid {
-    gap: 10px;
+    gap: 18px;
   }
 
   .footer-app-header {
