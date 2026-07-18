@@ -5,13 +5,14 @@
    untouched so auth/data calls behave normally.
    ========================================================= */
 
-const CACHE_NAME = 'saaha-v2';
+const CACHE_NAME = 'saaha-v3';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/css/style.css',
   '/js/app.js',
   '/js/supabase-client.js',
+  '/js/vendor/supabase.js',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
@@ -39,14 +40,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Cache writes always happen in their own promise, handed to
+  // event.waitUntil() so the browser can't suspend/kill this worker before
+  // the write finishes — but that promise is NEVER what the response
+  // itself waits on, so a page load is never delayed by how long the
+  // cache write takes.
   if (req.mode === 'navigate') {
-    const networked = fetch(req).then((res) => {
-      const copy = res.clone();
-      return caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {}).then(() => res);
-    });
-    event.waitUntil(networked.catch(() => {}));
     event.respondWith(
-      networked.catch(() => caches.match(req).then((cached) => cached || caches.match('/index.html')))
+      fetch(req).then((res) => {
+        const copy = res.clone();
+        event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {}));
+        return res;
+      }).catch(() => caches.match(req).then((cached) => cached || caches.match('/index.html')))
     );
     return;
   }
@@ -54,19 +59,14 @@ self.addEventListener('fetch', (event) => {
   // Stale-while-revalidate: serve the cached copy immediately for speed,
   // but always refetch in the background so the next load has the latest
   // file — a plain cache-first here would keep serving a file from the
-  // very first install forever, even after later deploys change it. The
-  // cache write is chained INTO the network promise (not left dangling)
-  // and that whole chain is passed to event.waitUntil() — otherwise the
-  // browser can suspend/kill this worker right after responding, before
-  // the write finishes, and the cache would silently never catch up to a
-  // new deploy on some devices.
+  // very first install forever, even after later deploys change it.
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req).then((res) => {
         const copy = res.clone();
-        return caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {}).then(() => res);
+        event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {}));
+        return res;
       }).catch(() => cached);
-      event.waitUntil(network.catch(() => {}));
       return cached || network;
     })
   );

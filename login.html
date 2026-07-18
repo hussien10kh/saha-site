@@ -80,7 +80,7 @@
 <div id="site-footer"></div>
 <div id="mobile-nav"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/vendor/supabase.js"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -214,21 +214,8 @@
     }
   });
 
-  forgotPassBtn.addEventListener('click', async ()=>{
-    hideAuthError();
-    const contact = document.getElementById('contactInput').value.trim();
-    if(!contact || !isValidEmail(contact)){
-      toast('اكتب بريدك الإلكتروني بخانة البريد أولاً حتى نرسل لك رابط الاستعادة', 'error');
-      return;
-    }
-    forgotPassBtn.disabled = true;
-    try{
-      await sendPasswordReset(contact);
-      toast('تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني');
-    }catch(err){
-      toast('تعذّر إرسال رابط الاستعادة، تحقق من البريد وحاول مجدداً', 'error');
-    }
-    forgotPassBtn.disabled = false;
+  forgotPassBtn.addEventListener('click', ()=>{
+    location.href = 'forgot-password.html' + location.search;
   });
 
   /* Google sign-in: fully wired to Google Identity Services, but needs a

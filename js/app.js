@@ -59,7 +59,7 @@ function showUpdateNotice(){
    --------------------------------------------------------- */
 const LAST_PAGE_KEY = 'sahat_last_page';
 const LAST_PAGE_MAX_AGE = 3 * 24 * 60 * 60 * 1000;
-const LAST_PAGE_EXCLUDED = ['login.html', 'admin.html', 'admin-login.html', 'reset-password.html'];
+const LAST_PAGE_EXCLUDED = ['login.html', 'admin.html', 'admin-login.html', 'reset-password.html', 'forgot-password.html'];
 
 /* Captured before trackLastPage() below overwrites LAST_PAGE_KEY with the
    page currently loading — restoreLastPageIfLaunchedAsApp() needs the page
