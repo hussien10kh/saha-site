@@ -434,6 +434,11 @@ async function signInWithEmail(email, password){
   if(error) throw error;
   return data;
 }
+async function sendPasswordReset(email){
+  const redirectTo = new URL('reset-password.html', location.href).href;
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+  if(error) throw error;
+}
 async function signInAsGuest(name, phone){
   const { data, error } = await sb.auth.signInAnonymously();
   if(error) throw error;
@@ -598,11 +603,6 @@ function looksLikeGibberish(text){
   if(t.length > 14 && !t.includes(' ')) return true; // one long blob, no spaces
   if(/(.)\1{4,}/.test(t)) return true;                // same char 5+ times in a row
   if(/(.{2,4})\1{3,}/.test(t)) return true;            // short pattern repeated 4+ times
-  const letters = t.replace(/\s+/g, '');
-  if(letters.length >= 12){
-    const uniqueRatio = new Set(letters.split('')).size / letters.length;
-    if(uniqueRatio < 0.28) return true;                // too little variety to be real text
-  }
   return false;
 }
 
@@ -642,7 +642,7 @@ function formatPrice(n){
    instead of 0123... — convert those to plain ASCII digits and drop
    anything else, so every phone number stored/shown/dialed is consistent
    regardless of what keyboard the person typed it on. */
-function normalizePhone(v){
+function toAsciiDigits(v){
   if(!v) return '';
   const map = {
     '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9',
@@ -650,6 +650,7 @@ function normalizePhone(v){
   };
   return v.replace(/[٠-٩۰-۹]/g, d => map[d]).replace(/\D/g, '');
 }
+function normalizePhone(v){ return toAsciiDigits(v); }
 
 /* Converts a local Syrian mobile number (e.g. "0999 123 456") to the
    international digits-only format WhatsApp deep links require. */
