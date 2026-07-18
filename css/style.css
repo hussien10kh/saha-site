@@ -16,6 +16,7 @@
   --bg: #f4f6fa;
   --surface: #ffffff;
   --border: #e6e9f0;
+  --border-hover: #d7defb;
   --success: #1a9c5e;
   --danger: #e0453d;
   --radius-sm: 8px;
@@ -26,6 +27,49 @@
   --shadow-md: 0 6px 20px rgba(20, 30, 60, .08);
   --shadow-lg: 0 16px 40px rgba(20, 30, 60, .14);
   --header-h: 72px;
+}
+
+/* Dark palette — applies automatically when the OS/browser prefers dark
+   and the visitor hasn't manually overridden it, or when they've picked
+   dark explicitly via the header toggle (data-theme wins either way). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary: #7c8cf5;
+    --primary-dark: #a4b1f8;
+    --primary-light: #1c2440;
+    --accent: #8b98f7;
+    --text: #e8ebf3;
+    --muted: #9aa3b8;
+    --muted-2: #6f7890;
+    --bg: #0e1219;
+    --surface: #1a1f2b;
+    --border: #2b3244;
+    --border-hover: #3a4468;
+    --success: #3ecb85;
+    --danger: #ef5b52;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .5);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, .45);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, .55);
+  }
+}
+
+:root[data-theme="dark"] {
+  --primary: #7c8cf5;
+  --primary-dark: #a4b1f8;
+  --primary-light: #1c2440;
+  --accent: #8b98f7;
+  --text: #e8ebf3;
+  --muted: #9aa3b8;
+  --muted-2: #6f7890;
+  --bg: #0e1219;
+  --surface: #1a1f2b;
+  --border: #2b3244;
+  --border-hover: #3a4468;
+  --success: #3ecb85;
+  --danger: #ef5b52;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .5);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, .45);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, .55);
 }
 
 @font-face {
@@ -120,7 +164,7 @@ textarea {
 }
 
 .btn-outline {
-  background: #fff;
+  background: var(--surface);
   color: var(--primary);
   border-color: var(--primary);
 }
@@ -147,7 +191,7 @@ textarea {
 
 /* ---------- Header ---------- */
 .site-header {
-  background: #fff;
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -208,7 +252,7 @@ textarea {
   top: calc(100% + 10px);
   left: 0;
   min-width: 190px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
@@ -229,6 +273,25 @@ textarea {
   font-weight: 700;
   font-size: 14px;
   color: var(--text);
+}
+
+.theme-toggle-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.theme-toggle-btn svg {
+  width: 16px;
+  height: 16px;
+  color: var(--primary);
 }
 
 .header-bell-wrap {
@@ -273,7 +336,7 @@ textarea {
   max-width: 80vw;
   max-height: 60vh;
   overflow-y: auto;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
@@ -384,7 +447,7 @@ textarea {
   top: calc(100% + 8px);
   right: 0;
   min-width: 180px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
@@ -457,7 +520,7 @@ textarea {
   gap: 8px;
   min-width: 80px;
   padding: 10px 10px;
-  background: #fff;
+  background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: 22px;
   font-weight: 700;
@@ -495,7 +558,7 @@ textarea {
 }
 
 .panel {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 18px;
@@ -568,7 +631,7 @@ textarea {
   flex-direction: row-reverse;
   align-items: flex-start;
   gap: 18px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 16px;
@@ -579,7 +642,7 @@ textarea {
 
 .ad-card:hover {
   box-shadow: var(--shadow-md);
-  border-color: #d7defb;
+  border-color: var(--border-hover);
 }
 
 .ad-thumb {
@@ -669,7 +732,7 @@ textarea {
   position: absolute;
   top: 14px;
   left: 14px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   width: 36px;
   height: 36px;
@@ -829,7 +892,7 @@ textarea {
 }
 
 .mnav-svg path {
-  fill: #fff;
+  fill: var(--surface);
   stroke: var(--border);
   stroke-width: 1;
 }
@@ -896,7 +959,7 @@ textarea {
   right: 14px;
   max-height: 60vh;
   overflow-y: auto;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: var(--shadow-lg);
@@ -1059,7 +1122,7 @@ textarea {
 .detail-desc {
   font-size: 15px;
   line-height: 1.9;
-  color: #3a4356;
+  color: var(--text);
   margin-bottom: 20px;
 }
 
@@ -1131,7 +1194,7 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  background: #fff;
+  background: var(--surface);
 }
 
 .similar-card img {
@@ -1209,7 +1272,7 @@ textarea {
 
 .comment-text {
   font-size: 14px;
-  color: #3a4356;
+  color: var(--text);
   margin: 4px 0 4px;
   line-height: 1.7;
 }
@@ -1272,7 +1335,7 @@ textarea {
   border-radius: 10px;
   padding: 12px 14px;
   font-size: 14.5px;
-  background: #fff;
+  background: var(--surface);
   color: var(--text);
 }
 
@@ -1327,7 +1390,7 @@ textarea {
   text-align: center;
   color: var(--muted);
   cursor: pointer;
-  background: #fbfcfe;
+  background: var(--surface);
 }
 
 .upload-box svg {
@@ -1907,7 +1970,7 @@ textarea {
 }
 
 .auth-tabs button.active {
-  background: #fff;
+  background: var(--surface);
   color: var(--primary);
   box-shadow: var(--shadow-sm);
 }
@@ -2025,7 +2088,7 @@ textarea {
 }
 
 .stat-card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 18px;
@@ -2066,7 +2129,7 @@ textarea {
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
@@ -2116,7 +2179,7 @@ textarea {
   height: 32px;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2169,7 +2232,7 @@ textarea {
 }
 
 .modal-box {
-  background: #fff;
+  background: var(--surface);
   border-radius: 16px;
   max-width: 560px;
   width: 100%;
@@ -2298,7 +2361,7 @@ textarea {
   height: 20px;
   left: 3px;
   top: 3px;
-  background: #fff;
+  background: var(--surface);
   border-radius: 50%;
   box-shadow: var(--shadow-sm);
   transition: .2s;
@@ -2393,7 +2456,7 @@ textarea {
   height: 40px;
   border-radius: 50%;
   border: 1.5px solid var(--border);
-  background: #fff;
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;

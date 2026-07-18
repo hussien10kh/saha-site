@@ -70,6 +70,51 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+/* ---------------------------------------------------------
+   Dark mode — follows the OS/browser preference automatically;
+   the header toggle stores an explicit choice in localStorage
+   that overrides the system preference from then on.
+   --------------------------------------------------------- */
+function getStoredTheme(){
+  try { return localStorage.getItem('theme'); } catch(e){ return null; }
+}
+
+function getEffectiveTheme(){
+  const stored = getStoredTheme();
+  if(stored === 'light' || stored === 'dark') return stored;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function updateThemeToggleIcon(){
+  const effective = getEffectiveTheme();
+  document.querySelectorAll('.theme-toggle-btn').forEach(b => {
+    b.innerHTML = effective === 'dark' ? ICONS.sun : ICONS.moon;
+  });
+}
+
+function applyTheme(theme){
+  if(theme === 'light' || theme === 'dark'){
+    document.documentElement.setAttribute('data-theme', theme);
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  updateThemeToggleIcon();
+}
+
+function toggleTheme(){
+  const next = getEffectiveTheme() === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('theme', next); } catch(e){}
+  applyTheme(next);
+}
+
+document.addEventListener('click', (e) => {
+  if(e.target.closest('.theme-toggle-btn')) toggleTheme();
+});
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if(!getStoredTheme()) updateThemeToggleIcon();
+});
+
 const ICONS = {
   home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>`,
   building:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/></svg>`,
@@ -99,6 +144,8 @@ const ICONS = {
   link:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.5-1.5"/></svg>`,
   share:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-3.9M8.6 13.5l6.8 3.9"/></svg>`,
   bell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5.5 2 7.5 2 7.5H4S6 13.5 6 8Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>`,
+  sun:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
+  moon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>`,
 };
 
 const CATEGORY_LABELS = {realestate:'عقار', cars:'سيارات', misc:'غير مصنف'};
@@ -625,6 +672,7 @@ async function renderHeader(activeCategory){
             </div>
           </div>` : ''}
           <a class="btn btn-primary cta-auth" href="${auth.href}">${auth.label}</a>
+          <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="تبديل الوضع الليلي"></button>
           <div class="hamburger-wrap">
             <button class="hamburger" id="hamburgerBtn" aria-label="القائمة">${ICONS.menu}</button>
             <div class="hamburger-dropdown" id="hamburgerDropdown">
@@ -658,6 +706,7 @@ async function renderHeader(activeCategory){
   });
 
   syncInstallButtons();
+  updateThemeToggleIcon();
 
   const hamb = document.getElementById('hamburgerBtn');
   const hambDropdown = document.getElementById('hamburgerDropdown');
