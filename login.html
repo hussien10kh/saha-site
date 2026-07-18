@@ -30,6 +30,17 @@
       <button id="tabSignup">حساب جديد</button>
       <button id="tabGuest">كضيف</button>
     </div>
+
+    <button type="button" class="btn btn-outline btn-block btn-lg" id="googleBtn" style="gap:10px;">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.8-.1-1.5-.2-2.2H12v4.3h5.9c-.3 1.4-1 2.5-2.2 3.3v2.7h3.6c2.1-1.9 3.2-4.8 3.2-8.1Z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.1-4.5H2.2v2.8C4.1 20.5 7.8 23 12 23Z"/><path fill="#FBBC05" d="M5.9 14.2c-.2-.7-.3-1.4-.3-2.2s.1-1.5.3-2.2V7H2.2C1.4 8.6 1 10.3 1 12s.4 3.4 1.2 5l3.7-2.8Z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2C17.4 2 15 1 12 1 7.8 1 4.1 3.5 2.2 7l3.7 2.8c.8-2.6 3.2-4.4 6.1-4.4Z"/></svg>
+      <span>الدخول عبر جوجل</span>
+    </button>
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted-2);font-size:13px;">
+      <div style="flex:1;height:1px;background:var(--border);"></div>أو<div style="flex:1;height:1px;background:var(--border);"></div>
+    </div>
+
+    <div id="authErrorBox" style="display:none;background:#fdeceb;color:var(--danger);border:1px solid #f5c6c2;border-radius:10px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:16px;"></div>
+
     <form id="authForm">
       <div class="field full" id="nameField" style="display:none;">
         <label>الاسم الكامل</label>
@@ -56,16 +67,9 @@
         <input type="checkbox" id="rememberMe" checked style="width:16px;height:16px;">
         <label for="rememberMe" style="margin:0;font-weight:600;font-size:13.5px;">تذكرني على هذا الجهاز</label>
       </div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg" id="authSubmit">تسجيل الدخول</button>
+      <button type="submit" class="btn btn-primary btn-block" id="authSubmit">تسجيل الدخول</button>
+      <button type="button" class="btn btn-outline btn-block" id="forgotPassBtn" style="margin-top:10px;">نسيت كلمة المرور؟</button>
     </form>
-
-    <div style="display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--muted-2);font-size:13px;">
-      <div style="flex:1;height:1px;background:var(--border);"></div>أو<div style="flex:1;height:1px;background:var(--border);"></div>
-    </div>
-    <button type="button" class="btn btn-outline btn-block btn-lg" id="googleBtn" style="gap:10px;">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.8-.1-1.5-.2-2.2H12v4.3h5.9c-.3 1.4-1 2.5-2.2 3.3v2.7h3.6c2.1-1.9 3.2-4.8 3.2-8.1Z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.1-4.5H2.2v2.8C4.1 20.5 7.8 23 12 23Z"/><path fill="#FBBC05" d="M5.9 14.2c-.2-.7-.3-1.4-.3-2.2s.1-1.5.3-2.2V7H2.2C1.4 8.6 1 10.3 1 12s.4 3.4 1.2 5l3.7-2.8Z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2C17.4 2 15 1 12 1 7.8 1 4.1 3.5 2.2 7l3.7 2.8c.8-2.6 3.2-4.4 6.1-4.4Z"/></svg>
-      <span>الدخول عبر جوجل</span>
-    </button>
 
     <p style="text-align:center;color:var(--muted);font-size:13px;margin-top:16px;">
       حسابك محفوظ فعلياً وتقدر تسجّل دخولك فيه من أي جهاز.
@@ -94,15 +98,25 @@
   const passField = document.getElementById('passField');
   const guestPhoneField = document.getElementById('guestPhoneField');
   const submitBtn = document.getElementById('authSubmit');
+  const forgotPassBtn = document.getElementById('forgotPassBtn');
+  const authErrorBox = document.getElementById('authErrorBox');
   let activeTab = 'login';
+
+  function hideAuthError(){ authErrorBox.style.display = 'none'; authErrorBox.innerHTML = ''; }
+  function showAuthError(html){
+    authErrorBox.innerHTML = html;
+    authErrorBox.style.display = 'block';
+  }
 
   function setActiveTab(tab){
     activeTab = tab;
+    hideAuthError();
     [tabLogin, tabSignup, tabGuest].forEach(t=>t.classList.remove('active'));
     nameField.style.display = (tab==='signup' || tab==='guest') ? 'block' : 'none';
     contactField.style.display = (tab==='login' || tab==='signup') ? 'block' : 'none';
     passField.style.display = (tab==='login' || tab==='signup') ? 'block' : 'none';
     guestPhoneField.style.display = tab==='guest' ? 'block' : 'none';
+    forgotPassBtn.style.display = tab==='login' ? 'block' : 'none';
     if(tab==='login'){ tabLogin.classList.add('active'); submitBtn.textContent='تسجيل الدخول'; }
     if(tab==='signup'){ tabSignup.classList.add('active'); submitBtn.textContent='إنشاء حساب'; }
     if(tab==='guest'){ tabGuest.classList.add('active'); submitBtn.textContent='متابعة كضيف'; }
@@ -133,6 +147,7 @@
 
   document.getElementById('authForm').addEventListener('submit', async e=>{
     e.preventDefault();
+    hideAuthError();
     setRememberPref(document.getElementById('rememberMe').checked);
 
     if(activeTab === 'guest'){
@@ -183,13 +198,37 @@
       }
       goToRedirect();
     }catch(err){
+      if(err.message === 'Invalid login credentials' && activeTab === 'login'){
+        showAuthError('البريد الإلكتروني أو كلمة المرور غير صحيحة — <a href="#" id="inlineForgotLink" style="color:var(--danger);text-decoration:underline;font-weight:800;">اضغط هنا لاستعادة كلمة المرور</a>');
+        document.getElementById('inlineForgotLink').addEventListener('click', e=>{
+          e.preventDefault();
+          forgotPassBtn.click();
+        });
+        return;
+      }
       const FRIENDLY = {
-        'Invalid login credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
         'Email not confirmed': 'لازم تفعّل بريدك أولاً — تحقق من صندوق الوارد واضغط رابط التفعيل.',
         'User already registered': 'هذا البريد مسجّل مسبقاً، جرّب تسجيل الدخول بدلاً من إنشاء حساب.',
       };
       toast(FRIENDLY[err.message] || err.message || 'حدث خطأ، حاول مجدداً', 'error');
     }
+  });
+
+  forgotPassBtn.addEventListener('click', async ()=>{
+    hideAuthError();
+    const contact = document.getElementById('contactInput').value.trim();
+    if(!contact || !isValidEmail(contact)){
+      toast('اكتب بريدك الإلكتروني بخانة البريد أولاً حتى نرسل لك رابط الاستعادة', 'error');
+      return;
+    }
+    forgotPassBtn.disabled = true;
+    try{
+      await sendPasswordReset(contact);
+      toast('تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني');
+    }catch(err){
+      toast('تعذّر إرسال رابط الاستعادة، تحقق من البريد وحاول مجدداً', 'error');
+    }
+    forgotPassBtn.disabled = false;
   });
 
   /* Google sign-in: fully wired to Google Identity Services, but needs a

@@ -52,8 +52,8 @@
             <div class="form-grid">
               <div class="field full">
                 <label for="titleInput">عنوان الإعلان <span class="req">*</span></label>
-                <input type="text" id="titleInput" placeholder="مثال: شقة فاخرة للبيع في المزة فيلات" minlength="8" maxlength="80" required>
-                <p class="field-hint" id="titleHint">من 8 إلى 80 حرفاً.</p>
+                <input type="text" id="titleInput" placeholder="مثال: شقة فاخرة للبيع في المزة فيلات" maxlength="80" required>
+                <p class="field-hint" id="titleHint">حتى 80 حرفاً.</p>
               </div>
 
               <div class="field">
@@ -64,7 +64,7 @@
                     <span class="switch-slider"></span>
                   </label>
                 </div>
-                <input type="number" id="priceInput" placeholder="مثال: 135000000" min="0">
+                <input type="text" inputmode="numeric" id="priceInput" placeholder="مثال: 135,000,000">
                 <p class="field-hint">إضافة السعر تمنح إعلانك مزيد من الظهور وتواصل أسرع من المهتمين.</p>
               </div>
               <div class="field">
@@ -74,8 +74,8 @@
 
               <div class="field full">
                 <label for="descInput">الوصف <span class="req">*</span></label>
-                <textarea id="descInput" placeholder="اكتب وصفاً واضحاً وتفصيلياً لإعلانك..." minlength="30" maxlength="2000" required></textarea>
-                <p class="field-hint" id="descHint">من 30 إلى 2000 حرف.</p>
+                <textarea id="descInput" placeholder="اكتب وصفاً واضحاً وتفصيلياً لإعلانك..." maxlength="2000" required></textarea>
+                <p class="field-hint" id="descHint">حتى 2000 حرف.</p>
               </div>
 
               <div class="field full">
@@ -176,7 +176,7 @@
     if(editingAd.price===null || editingAd.price===undefined){
       document.getElementById('priceToggle').checked = false;
     } else {
-      document.getElementById('priceInput').value = editingAd.price;
+      document.getElementById('priceInput').value = Number(editingAd.price).toLocaleString('en-US');
     }
     if(editingAd.contactMethod==='replies'){
       document.getElementById('phoneToggle').checked = false;
@@ -201,6 +201,10 @@
   }
   priceToggle.addEventListener('change', syncPriceField);
   syncPriceField();
+  priceInput.addEventListener('input', ()=>{
+    const digits = toAsciiDigits(priceInput.value);
+    priceInput.value = digits ? Number(digits).toLocaleString('en-US') : '';
+  });
 
   const phoneToggle = document.getElementById('phoneToggle');
   const phoneToggleLabel = document.getElementById('phoneToggleLabel');
@@ -305,7 +309,7 @@
 
   async function currentDraft(){
     const title = document.getElementById('titleInput').value.trim() || 'عنوان إعلانك سيظهر هنا';
-    const price = priceToggle.checked ? (document.getElementById('priceInput').value || null) : null;
+    const price = priceToggle.checked ? (toAsciiDigits(document.getElementById('priceInput').value) || null) : null;
     const city = document.getElementById('cityInput').value.trim() || 'المدينة';
     const desc = document.getElementById('descInput').value.trim() || 'سيظهر وصف إعلانك هنا بمجرد أن تبدأ الكتابة.';
     const user = await getCurrentUser();
@@ -450,7 +454,7 @@
     e.preventDefault();
     const title = document.getElementById('titleInput').value.trim();
     const hasPrice = priceToggle.checked;
-    const price = hasPrice ? Number(document.getElementById('priceInput').value) : null;
+    const price = hasPrice ? Number(toAsciiDigits(document.getElementById('priceInput').value)) : null;
     const city = document.getElementById('cityInput').value.trim();
     const desc = document.getElementById('descInput').value.trim();
     const phone = normalizePhone(document.getElementById('phoneInput').value);
@@ -460,12 +464,12 @@
       toast('الرجاء تعبئة جميع الحقول المطلوبة', 'error');
       return;
     }
-    if(title.length < 8 || title.length > 80){
-      toast('عنوان الإعلان يجب أن يكون بين 8 و80 حرفاً', 'error');
+    if(title.length > 80){
+      toast('عنوان الإعلان يجب ألا يتجاوز 80 حرفاً', 'error');
       return;
     }
-    if(desc.length < 30 || desc.length > 2000){
-      toast('وصف الإعلان يجب أن يكون بين 30 و2000 حرف', 'error');
+    if(desc.length > 2000){
+      toast('وصف الإعلان يجب ألا يتجاوز 2000 حرف', 'error');
       return;
     }
     if(looksLikeGibberish(title) || looksLikeGibberish(desc)){
@@ -495,7 +499,7 @@
       document.getElementById('descInput').value = pending.desc;
       priceToggle.checked = pending.hasPrice;
       syncPriceField();
-      if(pending.hasPrice) document.getElementById('priceInput').value = pending.price;
+      if(pending.hasPrice) document.getElementById('priceInput').value = Number(pending.price).toLocaleString('en-US');
       phoneToggle.checked = pending.contactMethod === 'phone';
       if(phoneToggle.checked) document.getElementById('phoneInput').value = pending.phone || '';
       syncPhoneField();
