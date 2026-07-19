@@ -103,7 +103,7 @@
                 <div class="upload-box" id="uploadBox">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
                   <p style="margin:0;font-weight:700;">اضغط لرفع صور الإعلان</p>
-                  <p style="margin:4px 0 0;font-size:12.5px;">بدون رفع صور سيتم استخدام صورة افتراضية تلقائياً</p>
+                  <p style="margin:4px 0 0;font-size:12.5px;">اختياري — إعلانك بينشر حتى بدون صور</p>
                   <input type="file" id="fileInput" accept="image/*" multiple hidden>
                 </div>
                 <p class="field-hint">إضافة صور واضحة وحقيقية للمنتج تزيد من فرص بيعه بشكل أسرع.</p>
@@ -150,13 +150,33 @@
 <script>
 (async function main(){
   const editId = new URLSearchParams(location.search).get('edit');
-  const editingAd = editId ? await getAdById(editId) : null;
+
+  /* If loading the ad-to-edit fails (network hiccup), never silently fall
+     through to "new ad" mode — that would let a visitor accidentally
+     publish a duplicate instead of updating their original ad. */
+  let editingAd = null, editLoadFailed = false;
+  if(editId){
+    try{
+      editingAd = await getAdById(editId);
+    }catch(e){
+      console.error('getAdById (edit) failed:', e);
+      editLoadFailed = true;
+    }
+  }
+  if(editLoadFailed){
+    toast('تعذّر تحميل بيانات الإعلان، تحقق من اتصالك بالإنترنت وحاول مجدداً', 'error');
+    setTimeout(()=> location.href = 'account.html', 1500);
+    return;
+  }
 
   /* Editing an existing ad still requires being signed in (only an owner
      reaches this via the edit link in the first place). Publishing a new
      ad, however, is open to everyone — login/guest details are only asked
      for at the final "نشر" step, see the submit handler below. */
-  if(editingAd && !(await isLoggedIn())){
+  let userIsLoggedIn = false;
+  try{ userIsLoggedIn = await isLoggedIn(); }
+  catch(e){ console.error('isLoggedIn check failed:', e); }
+  if(editingAd && !userIsLoggedIn){
     location.href = 'login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
     return;
   }

@@ -95,17 +95,31 @@
   if(city) trackFilterEvent('city', city);
 
   async function loadFeed(){
-    await loadFavorites();
-    let ads = await getActiveAds();
+    try{ await loadFavorites(); }
+    catch(e){ console.error('loadFavorites failed:', e); }
+
+    const feed = document.getElementById('feed');
+    const empty = document.getElementById('emptyState');
+    const info = document.getElementById('resultsInfo');
+
+    let ads;
+    try{
+      ads = await getActiveAds();
+    }catch(e){
+      console.error('loadFeed failed:', e);
+      feed.style.display = 'none';
+      empty.style.display = 'block';
+      document.getElementById('emptyTitle').textContent = 'تعذّر تحميل الإعلانات';
+      document.getElementById('emptyText').innerHTML = 'تحقق من اتصالك بالإنترنت وحاول مجدداً. <button type="button" class="btn btn-primary" style="margin-top:10px;display:inline-flex;" onclick="location.reload()">إعادة المحاولة</button>';
+      return;
+    }
+
     if(cat) ads = ads.filter(a=>a.category===cat);
     if(city) ads = ads.filter(a=> (a.city||'').includes(city));
     if(q){
       const needle = q.toLowerCase();
       ads = ads.filter(a=> (a.title+a.description+a.city).toLowerCase().includes(needle));
     }
-    const feed = document.getElementById('feed');
-    const empty = document.getElementById('emptyState');
-    const info = document.getElementById('resultsInfo');
 
     if(cat || q || city){
       info.style.display='block';

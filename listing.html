@@ -68,13 +68,34 @@
 <script>
 (async function main(){
   const id = new URLSearchParams(location.search).get('id');
-  const ad = await getAdById(id);
 
+  /* Navigation renders first and independently of the ad load below —
+     a failed/slow fetch for this one ad must never take the header,
+     footer, and mobile nav down with it. */
   await renderHeader('');
   renderFooter();
   renderMobileNav('home');
   renderFeaturedSidebar(id);
-  await loadFavorites();
+  try{ await loadFavorites(); }catch(e){ console.error('loadFavorites failed:', e); }
+
+  let ad, loadFailed = false;
+  try{
+    ad = await getAdById(id);
+  }catch(e){
+    console.error('getAdById failed:', e);
+    loadFailed = true;
+  }
+
+  if(loadFailed){
+    document.getElementById('detailRoot').innerHTML = `
+      <div class="panel empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>
+        <h3>تعذّر تحميل الإعلان</h3>
+        <p>تحقق من اتصالك بالإنترنت وحاول مجدداً.</p>
+        <button type="button" class="btn btn-primary" style="margin-top:12px;" onclick="location.reload()">إعادة المحاولة</button>
+      </div>`;
+    return;
+  }
 
   if(!ad){
     document.getElementById('detailRoot').innerHTML = `

@@ -244,22 +244,31 @@
     google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: async (response)=>{
-        const { data, error } = await sb.auth.signInWithIdToken({ provider:'google', token: response.credential });
-        if(error){ toast('تعذّر تسجيل الدخول عبر جوجل', 'error'); return; }
-        // first Google login for this account — profiles.name starts empty,
-        // so fill it from Google's own name (never leave it as the raw email)
-        const { data: profile } = await sb.from('profiles').select('name').eq('id', data.user.id).maybeSingle();
-        if(!profile || !profile.name){
-          const meta = data.user.user_metadata || {};
-          const googleName = meta.full_name || meta.name || emailPrefix(data.user.email);
-          const googleAvatar = meta.avatar_url || meta.picture || null;
-          await updateProfile({ name: googleName, avatar: googleAvatar });
+        try{
+          const { data, error } = await sb.auth.signInWithIdToken({ provider:'google', token: response.credential });
+          if(error){ console.error('Google signInWithIdToken failed:', error); toast('تعذّر تسجيل الدخول عبر جوجل', 'error'); return; }
+          // first Google login for this account — profiles.name starts empty,
+          // so fill it from Google's own name (never leave it as the raw email)
+          const { data: profile } = await sb.from('profiles').select('name').eq('id', data.user.id).maybeSingle();
+          if(!profile || !profile.name){
+            const meta = data.user.user_metadata || {};
+            const googleName = meta.full_name || meta.name || emailPrefix(data.user.email);
+            const googleAvatar = meta.avatar_url || meta.picture || null;
+            await updateProfile({ name: googleName, avatar: googleAvatar });
+          }
+          toast('تم تسجيل الدخول عبر جوجل بنجاح');
+          goToRedirect();
+        }catch(err){
+          console.error('Google sign-in flow failed:', err);
+          toast('تعذّر تسجيل الدخول عبر جوجل، تحقق من اتصالك بالإنترنت وحاول مجدداً', 'error');
         }
-        toast('تم تسجيل الدخول عبر جوجل بنجاح');
-        goToRedirect();
       },
     });
-    google.accounts.id.prompt();
+    google.accounts.id.prompt(notification=>{
+      if(notification.isNotDisplayed() || notification.isSkippedMoment()){
+        toast('تعذّر فتح نافذة جوجل — تحقق من إعدادات الخصوصية بالمتصفح (حظر النوافذ المنبثقة أو الكوكيز)، أو جرّب متصفحاً آخر', 'error', 6000);
+      }
+    });
   });
 </script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>

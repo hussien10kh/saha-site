@@ -79,8 +79,11 @@
 <script src="js/app.js"></script>
 <script>
 (async function main(){
-  // if already logged in, skip straight to the dashboard
-  if(await isAdminLoggedIn()){ location.href = 'admin.html'; return; }
+  // if already logged in, skip straight to the dashboard — but a failed
+  // check must not block the login form itself from working
+  try{
+    if(await isAdminLoggedIn()){ location.href = 'admin.html'; return; }
+  }catch(e){ console.error('isAdminLoggedIn check failed:', e); }
 
   document.getElementById('adminLoginForm').addEventListener('submit', async e=>{
     e.preventDefault();

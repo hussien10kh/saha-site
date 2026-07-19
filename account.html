@@ -111,8 +111,18 @@
 <script src="js/app.js"></script>
 <script>
 (async function main(){
-  const user = await getCurrentUser();
-  if(!user){
+  /* A failed check must never be treated the same as "not logged in" —
+     that would bounce an actually-logged-in visitor to the login page
+     just because of a transient network hiccup. */
+  let user, checkFailed = false;
+  try{
+    user = await getCurrentUser();
+  }catch(e){
+    console.error('getCurrentUser failed:', e);
+    checkFailed = true;
+  }
+
+  if(!checkFailed && !user){
     location.href = 'login.html?redirect=' + encodeURIComponent('account.html');
     return;
   }
@@ -120,8 +130,14 @@
   await renderHeader('');
   renderFooter();
   renderMobileNav('account');
+
+  if(checkFailed){
+    toast('تعذّر تحميل حسابك، تحقق من اتصالك بالإنترنت وحاول تحديث الصفحة', 'error', 6000);
+    return;
+  }
+
   renderFeaturedSidebar();
-  await loadFavorites();
+  try{ await loadFavorites(); }catch(e){ console.error('loadFavorites failed:', e); }
 
   const DEFAULT_AVATAR = 'data:image/svg+xml;utf8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72"><rect width="72" height="72" fill="#e8eaf0"/><circle cx="36" cy="28" r="14" fill="#b9c0cf"/><path d="M10 64c4-14 16-22 26-22s22 8 26 22" fill="#b9c0cf"/></svg>'
@@ -195,7 +211,8 @@
   });
 
   document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-    await logout();
+    try{ await logout(); }
+    catch(e){ console.error('logout failed:', e); }
     location.href = 'index.html';
   });
 
@@ -246,8 +263,19 @@
   }
 
   async function renderMyAds(){
-    const mine = await getAdsByOwner(user.id);
     const mount = document.getElementById('myAds');
+    let mine;
+    try{
+      mine = await getAdsByOwner(user.id);
+    }catch(e){
+      console.error('renderMyAds failed:', e);
+      mount.innerHTML = `<div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>
+          <h3>تعذّر تحميل إعلاناتك</h3>
+          <p>تحقق من اتصالك بالإنترنت وحاول تحديث الصفحة.</p>
+        </div>`;
+      return;
+    }
     mount.innerHTML = mine.length
       ? mine.map(myAdCardHTML).join('')
       : `<div class="empty-state">
@@ -288,8 +316,19 @@
   });
 
   async function renderFavorites(){
-    const favs = await getFavoriteAds();
     const mount = document.getElementById('favAds');
+    let favs;
+    try{
+      favs = await getFavoriteAds();
+    }catch(e){
+      console.error('renderFavorites failed:', e);
+      mount.innerHTML = `<div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>
+          <h3>تعذّر تحميل المفضلة</h3>
+          <p>تحقق من اتصالك بالإنترنت وحاول تحديث الصفحة.</p>
+        </div>`;
+      return;
+    }
     mount.innerHTML = favs.length
       ? favs.map(adCardHTML).join('')
       : `<div class="empty-state">

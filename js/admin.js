@@ -28,8 +28,15 @@ let editingAdId = null;
 let adminUser = null;
 
 async function initAdmin(){
-  if(!(await requireAdmin())) return;
-  adminUser = await getCurrentUser();
+  try{
+    if(!(await requireAdmin())) return;
+    adminUser = await getCurrentUser();
+  }catch(e){
+    console.error('initAdmin failed:', e);
+    document.getElementById('adminContent').innerHTML =
+      '<div class="admin-empty">تعذّر تحميل لوحة التحكم، تحقق من اتصالك بالإنترنت وحاول تحديث الصفحة.</div>';
+    return;
+  }
   renderSidebar();
   renderTopbar();
   renderTab();
@@ -183,13 +190,18 @@ function wireAdsTableActions(scope){
   scope.querySelectorAll('.edit-ad-btn').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const id = btn.closest('tr').dataset.id;
-      openAdModal(await getAdById(id));
+      let ad;
+      try{ ad = await getAdById(id); }
+      catch(e){ console.error('admin getAdById (edit) failed:', e); toast('تعذّر تحميل بيانات الإعلان، تحقق من اتصالك بالإنترنت', 'error'); return; }
+      openAdModal(ad);
     });
   });
   scope.querySelectorAll('.delete-ad-btn').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const id = btn.closest('tr').dataset.id;
-      const ad = await getAdById(id);
+      let ad;
+      try{ ad = await getAdById(id); }
+      catch(e){ console.error('admin getAdById (delete) failed:', e); toast('تعذّر تحميل بيانات الإعلان، تحقق من اتصالك بالإنترنت', 'error'); return; }
       if(confirm(`هل أنت متأكد من حذف الإعلان "${ad ? ad.title : ''}"؟`)){
         try{
           await deleteAd(id);

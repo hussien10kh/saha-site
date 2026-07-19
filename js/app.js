@@ -368,22 +368,29 @@ function adFieldsToRow(fields){
 /* ---------------------------------------------------------
    Ads
    --------------------------------------------------------- */
+/* Throws on real failures (network down, Supabase error) instead of
+   silently returning [] — callers must tell "genuinely no ads" apart
+   from "couldn't load ads" and show a different message for each;
+   collapsing them into the same empty state is misleading. */
 async function getActiveAds(){
   const cutoff = new Date(Date.now() - AD_EXPIRY_DAYS*24*60*60*1000).toISOString();
   const { data, error } = await sb.from('ads').select('*').gte('created_at', cutoff).order('created_at', {ascending:false});
-  if(error){ console.error(error); return []; }
+  if(error) throw error;
   return data.map(mapAdRow);
 }
 async function getAdsByOwner(ownerId){
   const { data, error } = await sb.from('ads').select('*, profiles!ads_owner_id_fkey(created_at)').eq('owner_id', ownerId).order('created_at', {ascending:false});
-  if(error){ console.error(error); return []; }
+  if(error) throw error;
   return data.map(mapAdRow);
 }
+/* Throws on a real failure; only returns null for a genuine "no such
+   ad" (no error, no row) — callers need to tell those apart so a
+   network hiccup doesn't get reported as "this ad was deleted". */
 async function getAdById(id){
   if(!id) return null;
   const { data, error } = await sb.from('ads').select('*, profiles!ads_owner_id_fkey(created_at)').eq('id', id).maybeSingle();
-  if(error || !data) return null;
-  return mapAdRow(data);
+  if(error) throw error;
+  return data ? mapAdRow(data) : null;
 }
 async function addAd(fields){
   const { data, error } = await sb.from('ads').insert(adFieldsToRow(fields)).select('*').single();
@@ -419,7 +426,15 @@ function engagementScore(ad, commentCounts){
   return (ad.views||0) + ((commentCounts && commentCounts[ad.id]) || 0) * 3;
 }
 async function getSimilarAds(ad){
-  const [ads, commentCounts] = await Promise.all([getActiveAds(), getCommentCounts()]);
+  /* Supplementary content — on failure just show no similar ads rather
+     than breaking the whole listing page over a non-essential section. */
+  let ads, commentCounts;
+  try{
+    [ads, commentCounts] = await Promise.all([getActiveAds(), getCommentCounts()]);
+  }catch(e){
+    console.error('getSimilarAds failed:', e);
+    return [];
+  }
   return ads
     .filter(a=>a.category===ad.category && a.id!==ad.id)
     .sort((a,b)=>{
@@ -558,7 +573,10 @@ async function sendPasswordReset(email){
 async function signInAsGuest(name, phone){
   const { data, error } = await sb.auth.signInAnonymously();
   if(error) throw error;
-  if(data.user) await sb.from('profiles').update({ name, phone }).eq('id', data.user.id);
+  if(data.user){
+    const { error: profileError } = await sb.from('profiles').update({ name, phone }).eq('id', data.user.id);
+    if(profileError) throw profileError;
+  }
   return data;
 }
 async function updateProfile(patch){
@@ -568,7 +586,8 @@ async function updateProfile(patch){
   if(patch.name !== undefined) row.name = patch.name;
   if(patch.phone !== undefined) row.phone = patch.phone;
   if(patch.avatar !== undefined) row.avatar_url = patch.avatar;
-  await sb.from('profiles').update(row).eq('id', user.id);
+  const { error } = await sb.from('profiles').update(row).eq('id', user.id);
+  if(error) throw error;
 }
 async function logout(){ await sb.auth.signOut(); }
 
@@ -649,7 +668,7 @@ async function getFavoriteAds(){
   const user = await getCurrentUser();
   if(!user) return [];
   const { data, error } = await sb.from('favorites').select('created_at, ads(*, profiles!ads_owner_id_fkey(created_at))').eq('user_id', user.id).order('created_at', {ascending:false});
-  if(error) return [];
+  if(error) throw error;
   return data.map(r=> mapAdRow(r.ads)).filter(Boolean);
 }
 
@@ -813,11 +832,30 @@ function toast(msg, type, duration){
 /* ---------------------------------------------------------
    Header / Footer / Mobile nav
    --------------------------------------------------------- */
+/* renderHeader/renderFooter/renderMobileNav below never let a failed
+   login/notifications check (Supabase hiccup, offline, etc.) stop
+   navigation from rendering — that would strand the visitor with no
+   header, no footer, and no bottom nav on an otherwise-working page.
+   Worst case on failure: briefly shows "تسجيل الدخول" instead of
+   "حسابي", which self-corrects on the next successful page load. */
+async function safeAuthLinkHTML(){
+  try{ return await authLinkHTML(); }
+  catch(e){ console.error('authLinkHTML failed:', e); return { href:'login.html', label:'تسجيل الدخول' }; }
+}
+async function safeIsLoggedIn(){
+  try{ return await isLoggedIn(); }
+  catch(e){ console.error('isLoggedIn failed:', e); return false; }
+}
+async function safeGetUserNotifications(){
+  try{ return await getUserNotifications(); }
+  catch(e){ console.error('getUserNotifications failed:', e); return []; }
+}
+
 async function renderHeader(activeCategory){
   const mount = document.getElementById('site-header');
   if(!mount) return;
-  const auth = await authLinkHTML();
-  const notes = await getUserNotifications();
+  const auth = await safeAuthLinkHTML();
+  const notes = await safeGetUserNotifications();
   mount.innerHTML = `
   <header class="site-header">
     <div class="container">
@@ -942,7 +980,7 @@ async function renderHeader(activeCategory){
 async function renderFooter(){
   const mount = document.getElementById('site-footer');
   if(!mount) return;
-  const auth = await authLinkHTML();
+  const auth = await safeAuthLinkHTML();
   mount.innerHTML = `
   <footer class="site-footer">
     <div class="container footer-top">
@@ -1036,10 +1074,10 @@ function renderMnavNotch(navEl){
 async function renderMobileNav(active){
   const mount = document.getElementById('mobile-nav');
   if(!mount) return;
-  const loggedIn = await isLoggedIn();
+  const loggedIn = await safeIsLoggedIn();
   const accountHref = loggedIn ? 'account.html' : ('login.html?redirect=' + encodeURIComponent('account.html'));
   const accountLabel = loggedIn ? 'حسابي' : 'دخول';
-  const notes = await getUserNotifications();
+  const notes = await safeGetUserNotifications();
 
   let badgeOn = notes.length > 0;
 
@@ -1191,7 +1229,16 @@ function featuredItemHTML(ad){
 async function renderFeaturedSidebar(excludeId){
   const mount = document.getElementById('featuredList');
   if(!mount) return;
-  const [ads, commentCounts] = await Promise.all([getActiveAds(), getCommentCounts()]);
+  /* Supplementary content — on failure just clear the loading skeleton
+     rather than leaving it shimmering forever with nothing ever arriving. */
+  let ads, commentCounts;
+  try{
+    [ads, commentCounts] = await Promise.all([getActiveAds(), getCommentCounts()]);
+  }catch(e){
+    console.error('renderFeaturedSidebar failed:', e);
+    mount.innerHTML = '';
+    return;
+  }
   const list = ads
     .filter(a=>a.id!==excludeId)
     .sort((a,b)=> engagementScore(b,commentCounts) - engagementScore(a,commentCounts) || (new Date(b.createdAt)) - (new Date(a.createdAt)))
