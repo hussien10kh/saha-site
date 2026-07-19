@@ -137,8 +137,15 @@ function isAndroidNonChrome(){
   return !isRealChrome;
 }
 
+/* Always visible (it's an inline footer button, not an intrusive floating
+   one) whenever the app isn't already installed — Chrome's own
+   beforeinstallprompt timing is inconsistent across devices, so waiting for
+   it before showing the button meant some visitors never saw it at all even
+   though Chrome itself considered the site installable. The click handler
+   below falls back to a helpful hint on browsers where we never captured
+   the native prompt. */
 function syncInstallButtons(){
-  const show = !isStandaloneApp() && (deferredInstallPrompt || isIOS());
+  const show = !isStandaloneApp();
   document.querySelectorAll('.install-app-btn').forEach(b => {
     b.style.display = show ? 'flex' : 'none';
   });
@@ -168,6 +175,11 @@ document.addEventListener('click', async (e) => {
     syncInstallButtons();
   } else if(isIOS()){
     toast('اضغط زر المشاركة ⬆ من الأسفل، ثم اختر "إضافة إلى الشاشة الرئيسية"', null, 5000);
+  } else {
+    /* The browser never handed us a native install prompt (timing, or a
+       browser that doesn't support beforeinstallprompt at all) — point the
+       visitor at the menu path, which works independently of our button. */
+    toast('افتح قائمة المتصفح (⋮ فوق يمين) واختر "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية"', null, 6000);
   }
 });
 
