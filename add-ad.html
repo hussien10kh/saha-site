@@ -165,7 +165,6 @@
   renderFooter();
   renderMobileNav('add');
 
-  const DEFAULT_IMG = PLACEHOLDER_IMG;
   let selectedCat = editingAd ? editingAd.category : 'realestate';
   let uploadedImages = editingAd ? [...editingAd.images] : [];
 
@@ -329,7 +328,7 @@
     const name = (user && user.name) || 'اسمك';
     return {
       id:'draft', category:selectedCat, title, price, city, description:desc,
-      images: uploadedImages.length ? uploadedImages : [DEFAULT_IMG],
+      images: uploadedImages.length ? uploadedImages : [],
       seller:name, postedAgo:'الآن', isNew:true,
     };
   }
@@ -412,7 +411,7 @@
 
     if(editingAd){
       try{
-        const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id, title) : [DEFAULT_IMG];
+        const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id, title) : [];
         await updateAd(editingAd.id, {
           category: selectedCat, title, price, city,
           description: desc,
@@ -436,7 +435,7 @@
 
     let newAd;
     try{
-      const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id, title) : [DEFAULT_IMG];
+      const images = uploadedImages.length ? await uploadAdImages(uploadedImages, user.id, title) : [];
       newAd = await addAd({
         category: selectedCat,
         title, price, city,

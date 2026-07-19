@@ -159,7 +159,7 @@ function adsTableHTML(ads, showActions){
     <tbody>
       ${ads.map(ad=>`
         <tr data-id="${ad.id}">
-          <td><img src="${ad.images[0]}" alt=""></td>
+          <td><img src="${ad.images[0] || PLACEHOLDER_IMG}" alt=""></td>
           <td class="cell-title">${escapeHTML(ad.title)}</td>
           <td><span class="admin-badge">${escapeHTML(CATEGORY_LABELS[ad.category]||ad.category)}</span></td>
           <td>${formatPrice(ad.price)}</td>
@@ -254,7 +254,7 @@ async function saveAdFromModal(){
   const description = document.getElementById('mDesc').value.trim();
   const seller = document.getElementById('mSeller').value.trim();
   const category = document.getElementById('mCategory').value;
-  const imageUrl = document.getElementById('mImage').value.trim() || PLACEHOLDER_IMG;
+  const imageUrl = document.getElementById('mImage').value.trim();
 
   if(!title || !price || !city || !description || !seller){
     toast('الرجاء تعبئة جميع الحقول', 'error');
@@ -263,12 +263,12 @@ async function saveAdFromModal(){
 
   try{
     if(editingAdId){
-      await updateAd(editingAdId, { title, price, city, description, seller, category, images:[imageUrl] });
+      await updateAd(editingAdId, { title, price, city, description, seller, category, images: imageUrl ? [imageUrl] : [] });
       toast('تم حفظ التعديلات');
     } else {
       await addAd({
         title, price, city, description, seller, category,
-        images:[imageUrl], contactMethod:'replies', views:0,
+        images: imageUrl ? [imageUrl] : [], contactMethod:'replies', views:0,
         ownerId: adminUser.id,
       });
       toast('تم نشر الإعلان');
@@ -319,7 +319,7 @@ async function renderVisitorsTab(mount){
       <tbody>
         ${ads.map(ad=>`
           <tr>
-            <td><img src="${ad.images[0]}" alt=""></td>
+            <td><img src="${ad.images[0] || PLACEHOLDER_IMG}" alt=""></td>
             <td class="cell-title">${escapeHTML(ad.title)}</td>
             <td><span class="admin-badge">${escapeHTML(CATEGORY_LABELS[ad.category]||ad.category)}</span></td>
             <td>${(ad.views||0).toLocaleString('en-US')}</td>

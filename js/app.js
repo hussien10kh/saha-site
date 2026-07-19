@@ -343,7 +343,7 @@ function mapAdRow(row){
     description: row.description,
     price: row.price,
     city: row.city,
-    images: (row.images && row.images.length) ? row.images : [PLACEHOLDER_IMG],
+    images: (row.images && row.images.length) ? row.images : [],
     seller: row.seller_name,
     phone: row.phone,
     contactMethod: row.contact_method,
@@ -1153,12 +1153,14 @@ async function renderMobileNav(active){
 function adCardHTML(ad){
   const title = escapeHTML(ad.title), desc = escapeHTML(ad.description);
   const seller = escapeHTML(ad.seller), city = escapeHTML(ad.city);
+  const hasImage = ad.images && ad.images.length > 0;
   return `
   <a class="ad-card" href="listing.html?id=${ad.id}">
+    ${hasImage ? `
     <div class="ad-thumb">
       ${ad.isNew ? `<span class="badge-new">جديد</span>`:''}
       <img src="${ad.images[0]}" alt="${title}" loading="lazy">
-    </div>
+    </div>` : (ad.isNew ? `<span class="badge-new">جديد</span>` : '')}
     <div class="ad-body">
       <button class="fav-btn${isFavorite(ad.id)?' active':''}" type="button" onclick="event.preventDefault();toggleFavorite('${ad.id}').then(on=>{this.classList.toggle('active',on);this.dispatchEvent(new CustomEvent('fav-toggled',{bubbles:true,detail:{on}}));}).catch(()=>toast('تعذّر تحديث المفضلة، تحقق من اتصالك بالإنترنت','error'));">${ICONS.heart}</button>
       <h3 class="ad-title">${title}</h3>
@@ -1175,9 +1177,10 @@ function adCardHTML(ad){
 
 function featuredItemHTML(ad){
   const title = escapeHTML(ad.title);
+  const hasImage = ad.images && ad.images.length > 0;
   return `
   <a class="featured-item" href="listing.html?id=${ad.id}">
-    <img src="${ad.images[0]}" alt="${title}">
+    ${hasImage ? `<img src="${ad.images[0]}" alt="${title}">` : ''}
     <div>
       <p class="fi-title">${title}</p>
       <span class="fi-price">${formatPrice(ad.price)}</span>
@@ -1198,9 +1201,10 @@ async function renderFeaturedSidebar(excludeId){
 
 function similarCardHTML(ad){
   const title = escapeHTML(ad.title);
+  const hasImage = ad.images && ad.images.length > 0;
   return `
   <a class="similar-card" href="listing.html?id=${ad.id}">
-    <img src="${ad.images[0]}" alt="${title}">
+    ${hasImage ? `<img src="${ad.images[0]}" alt="${title}">` : ''}
     <div class="sc-body">
       <p class="sc-title">${title}</p>
       <span class="sc-price">${formatPrice(ad.price)}</span>

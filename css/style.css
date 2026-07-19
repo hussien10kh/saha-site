@@ -705,7 +705,7 @@ textarea {
   height: auto;
 }
 
-.ad-thumb .badge-new {
+.ad-card .badge-new {
   position: absolute;
   top: 8px;
   right: 8px;
