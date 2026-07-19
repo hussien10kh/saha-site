@@ -111,7 +111,12 @@ function restoreLastPageIfLaunchedAsApp(){
 let deferredInstallPrompt = null;
 
 function isIOS(){
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream) return true;
+  /* iPadOS 13+ Safari sends a desktop-Mac user agent by default, so the
+     check above misses real iPads entirely. A genuine Mac has no touch
+     screen (maxTouchPoints 0); an iPad reporting as "MacIntel" always has
+     one — that combination is the standard way to tell them apart. */
+  return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
 }
 
 function isStandaloneApp(){
