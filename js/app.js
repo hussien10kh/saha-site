@@ -1171,18 +1171,45 @@ async function renderMobileNav(active){
     navEl.classList.add('mnav-hidden');
     closePopups();
   }
+  const restoreNavForScroll = tabsEl
+    ? ()=>{
+        const r = tabsEl.getBoundingClientRect();
+        const tabsVisible = r.bottom > 0 && r.top < window.innerHeight;
+        if(tabsVisible) hideNav(); else showNav();
+      }
+    : showNav; // no category tabs on this page — just show the nav
+
   if(tabsEl){
-    const checkTabsVisibility = ()=>{
-      const r = tabsEl.getBoundingClientRect();
-      const tabsVisible = r.bottom > 0 && r.top < window.innerHeight;
-      if(tabsVisible) hideNav(); else showNav();
-    };
-    window.addEventListener('scroll', checkTabsVisibility, { passive:true });
-    checkTabsVisibility(); // set the correct initial state right away
-  } else {
-    // no category tabs on this page — just show the nav
-    showNav();
+    window.addEventListener('scroll', restoreNavForScroll, { passive:true });
   }
+  restoreNavForScroll(); // set the correct initial state right away
+
+  /* Keyboard-aware: on a phone, the on-screen keyboard opening leaves this
+     fixed bottom nav floating over the middle of the visible area (often
+     covering close to half the screen). Hide it while any page field is
+     focused and restore whatever the scroll-based state should be once
+     focus leaves — never just force it back on, or it'd fight a visitor
+     scrolled to a position where it's meant to stay hidden. The nav's own
+     search input (mnavSearchInput, inside this same mount) is deliberately
+     excluded — that's the one case where the keyboard opens but the nav
+     itself is exactly what the visitor is interacting with. */
+  const isTextField = el => el && (el.tagName==='INPUT' || el.tagName==='TEXTAREA' || el.isContentEditable);
+  let keyboardBlurTimer = null;
+  document.addEventListener('focusin', e=>{
+    if(!isTextField(e.target) || mount.contains(e.target)) return;
+    clearTimeout(keyboardBlurTimer);
+    hideNav();
+  });
+  document.addEventListener('focusout', e=>{
+    if(!isTextField(e.target) || mount.contains(e.target)) return;
+    clearTimeout(keyboardBlurTimer);
+    keyboardBlurTimer = setTimeout(restoreNavForScroll, 100);
+  });
+  // safety net: if a blur never fires cleanly (backgrounding the app, etc.)
+  // this re-syncs the nav to the correct state as soon as the page is visible again
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') restoreNavForScroll();
+  });
 }
 
 /* ---------------------------------------------------------
