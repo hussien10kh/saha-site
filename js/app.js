@@ -67,6 +67,16 @@ const LAST_PAGE_EXCLUDED = ['login.html', 'admin.html', 'admin-login.html', 'res
 let PREVIOUS_LAST_PAGE = null;
 try { PREVIOUS_LAST_PAGE = JSON.parse(localStorage.getItem(LAST_PAGE_KEY) || 'null'); } catch(e){}
 
+/* sessionStorage clears when the app/tab is actually closed, but survives
+   ordinary in-app navigation — so "was this flag already set" tells us
+   whether this is a genuine fresh launch or just another page load within
+   an already-open session. Captured before we set it for THIS page, same
+   before/after pattern as PREVIOUS_LAST_PAGE above. */
+const SESSION_SEEN_KEY = 'sahat_session_seen';
+let SESSION_ALREADY_ACTIVE = false;
+try { SESSION_ALREADY_ACTIVE = sessionStorage.getItem(SESSION_SEEN_KEY) === '1'; } catch(e){}
+try { sessionStorage.setItem(SESSION_SEEN_KEY, '1'); } catch(e){}
+
 function trackLastPage(){
   const page = location.pathname.split('/').pop() || 'index.html';
   if (LAST_PAGE_EXCLUDED.includes(page)) return;
@@ -81,6 +91,11 @@ trackLastPage();
 function restoreLastPageIfLaunchedAsApp(){
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   if (!isStandalone) return;
+  /* Without this guard, every ordinary trip back to index.html (e.g. tapping
+     "الرئيسية" from add-ad.html) looked identical to a fresh app launch and
+     bounced the visitor straight back to whatever page they were just on —
+     trapping them there no matter how many times they tried to leave. */
+  if (SESSION_ALREADY_ACTIVE) return;
   const saved = PREVIOUS_LAST_PAGE;
   if (!saved || Date.now() - saved.ts > LAST_PAGE_MAX_AGE) return;
   if (saved.url === location.pathname + location.search) return;

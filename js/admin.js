@@ -196,6 +196,7 @@ function wireAdsTableActions(scope){
           toast('تم حذف الإعلان');
           renderTab();
         }catch(e){
+          console.error('admin delete ad failed:', e);
           toast('تعذّر حذف الإعلان، تحقق من اتصالك بالإنترنت', 'error');
         }
       }
@@ -273,6 +274,7 @@ async function saveAdFromModal(){
       toast('تم نشر الإعلان');
     }
   }catch(e){
+    console.error('admin save ad failed:', e);
     toast('تعذّر حفظ الإعلان، تحقق من اتصالك بالإنترنت', 'error');
     return;
   }
@@ -431,6 +433,7 @@ async function renderCommentsTable(){
           toast('تم حذف التعليق');
           renderCommentsTable();
         }catch(e){
+          console.error('admin delete comment failed:', e);
           toast('تعذّر حذف التعليق، تحقق من اتصالك بالإنترنت', 'error');
         }
       }

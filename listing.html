@@ -193,7 +193,7 @@
     // favorite
     document.getElementById('detailFavBtn').addEventListener('click', function(){
       toggleFavorite(ad.id).then(on=> this.classList.toggle('active', on))
-        .catch(()=> toast('تعذّر تحديث المفضلة، تحقق من اتصالك بالإنترنت', 'error'));
+        .catch((e)=> { console.error('toggle favorite failed:', e); toast('تعذّر تحديث المفضلة، تحقق من اتصالك بالإنترنت', 'error'); });
     });
 
     // gallery
@@ -292,6 +292,7 @@
         try{
           await saveComment(ad.id, {name:user.name, text});
         }catch(e){
+          console.error('add comment failed:', e);
           toast('تعذّر إضافة تعليقك، تحقق من اتصالك بالإنترنت', 'error');
           return;
         }

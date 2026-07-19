@@ -420,6 +420,7 @@
           seller: user.name, phone, contactMethod,
         });
       }catch(e){
+        console.error('updateAd failed:', e);
         toast('تعذّر حفظ التعديلات، تأكد من اتصالك بالإنترنت وحاول مجدداً', 'error');
         return;
       }
@@ -447,6 +448,7 @@
         ownerId: user.id,
       });
     }catch(e){
+      console.error('addAd failed:', e);
       toast('تعذر نشر الإعلان، تأكد من اتصالك بالإنترنت وحاول مجدداً', 'error');
       return;
     }

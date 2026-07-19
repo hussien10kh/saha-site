@@ -179,6 +179,7 @@
     try{
       await updateProfile({ name: newName });
     }catch(e){
+      console.error('update name failed:', e);
       toast('تعذّر تحديث الاسم، تحقق من اتصالك بالإنترنت', 'error');
       return;
     }
@@ -218,6 +219,7 @@
           document.getElementById('avatarImg').src = url;
           toast('تم تحديث صورتك الشخصية');
         }catch(e){
+          console.error('update avatar failed:', e);
           toast('تعذّر تحديث صورتك، تحقق من اتصالك بالإنترنت وحاول مجدداً', 'error');
         }
       };
@@ -262,6 +264,7 @@
           await renderMyAds();
           toast('تم حذف الإعلان');
         }catch(e){
+          console.error('delete ad failed:', e);
           toast('تعذّر حذف الإعلان، تحقق من اتصالك بالإنترنت', 'error');
         }
       }
@@ -274,6 +277,7 @@
         await renderMyAds();
         toast('تم تجديد نشر الإعلان');
       }catch(e){
+        console.error('renew ad failed:', e);
         toast('تعذّر تجديد الإعلان، تحقق من اتصالك بالإنترنت', 'error');
       }
     }
