@@ -172,10 +172,13 @@
   /* Editing an existing ad still requires being signed in (only an owner
      reaches this via the edit link in the first place). Publishing a new
      ad, however, is open to everyone — login/guest details are only asked
-     for at the final "نشر" step, see the submit handler below. */
-  let userIsLoggedIn = false;
-  try{ userIsLoggedIn = await isLoggedIn(); }
-  catch(e){ console.error('isLoggedIn check failed:', e); }
+     for at the final "نشر" step, see the submit handler below. Also used
+     below to tag the autosaved draft with whoever wrote it, so switching
+     accounts on the same device never resurfaces someone else's draft. */
+  let currentUserForDraft = null;
+  try{ currentUserForDraft = await getCurrentUser(); }
+  catch(e){ console.error('getCurrentUser check failed:', e); }
+  const userIsLoggedIn = !!currentUserForDraft;
   if(editingAd && !userIsLoggedIn){
     location.href = 'login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
     return;
@@ -367,7 +370,7 @@
     if(!title && !desc && !uploadedImages.length) return; // nothing worth persisting yet — don't clobber a real draft
     try{
       localStorage.setItem(AD_DRAFT_KEY, JSON.stringify({
-        ts: Date.now(), category: selectedCat,
+        ts: Date.now(), userId: currentUserForDraft ? currentUserForDraft.id : null, category: selectedCat,
         title: document.getElementById('titleInput').value,
         hasPrice: priceToggle.checked, price: document.getElementById('priceInput').value,
         city: document.getElementById('cityInput').value,
@@ -559,7 +562,14 @@
 
   if(!editingAd && !restoredFromPendingLogin){
     const draft = loadAdDraft();
-    if(draft){
+    /* A draft saved under a different account (or while logged out, now
+       logged in as someone) must never resurface here — silently drop it
+       instead of offering to restore content that isn't this visitor's. */
+    const draftUserId = draft ? (draft.userId || null) : null;
+    const currentIdForCheck = currentUserForDraft ? currentUserForDraft.id : null;
+    if(draft && draftUserId !== currentIdForCheck){
+      clearAdDraft();
+    } else if(draft){
       const draftBox = document.getElementById('draftRestoreBox');
       draftBox.style.display = 'flex';
       document.getElementById('draftRestoreBtn').addEventListener('click', ()=>{
