@@ -1006,6 +1006,7 @@ async function renderMobileNav(active){
   if(!mount) return;
   const loggedIn = await isLoggedIn();
   const accountHref = loggedIn ? 'account.html' : ('login.html?redirect=' + encodeURIComponent('account.html'));
+  const accountLabel = loggedIn ? 'حسابي' : 'دخول';
   const notes = await getUserNotifications();
 
   let badgeOn = notes.length > 0;
@@ -1021,7 +1022,7 @@ async function renderMobileNav(active){
         ${ICONS.bell}${badgeOn ? '<span class="mnav-badge"></span>' : ''}
         <span>إشعارات</span>
       </button>
-      <a href="${accountHref}" class="${active==='account'?'active':''}">${ICONS.user}<span>حسابي</span></a>
+      <a href="${accountHref}" class="${active==='account'?'active':''}">${ICONS.user}<span>${accountLabel}</span></a>
     </div>
     <a href="${addAdHref()}" class="fab">${ICONS.plus}</a>
   </nav>
