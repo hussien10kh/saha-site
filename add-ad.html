@@ -394,8 +394,16 @@
      to matter. Separate from the sessionStorage login-redirect draft above. */
   const AD_DRAFT_KEY = 'sahat_ad_draft';
   const AD_DRAFT_MAX_AGE = 2 * 24 * 60 * 60 * 1000;
+  /* Set true the moment this form's content is safely handled some other
+     way — published, saved as an edit, or handed off to the login-redirect
+     pending draft — so nothing downstream (the exit warning, the
+     safety-net save) mistakes it for still-unsaved work. Without this,
+     even the success modal's own "تم" button counts as "leaving the page"
+     and re-triggers both the warning and a fresh (stale, already-published)
+     draft save, right on top of a just-published ad. */
+  let contentAlreadySaved = false;
   function hasDraftableContent(){
-    if(editingAd) return false;
+    if(editingAd || contentAlreadySaved) return false;
     const title = document.getElementById('titleInput').value.trim();
     const desc = document.getElementById('descInput').value.trim();
     return !!(title || desc || uploadedImages.length);
@@ -489,6 +497,7 @@
     const user = await getCurrentUser();
     if(!user){
       savePendingDraft({ category:selectedCat, title, hasPrice, price, city, desc, phone, contactMethod, images:uploadedImages });
+      contentAlreadySaved = true; // safely carried via the pending-draft redirect below, not abandoned
       location.href = 'login.html?redirect=' + encodeURIComponent('add-ad.html');
       return;
     }
@@ -507,6 +516,7 @@
         toast('تعذّر حفظ التعديلات، تأكد من اتصالك بالإنترنت وحاول مجدداً', 'error');
         return;
       }
+      contentAlreadySaved = true;
       toast('تم حفظ التعديلات بنجاح');
       setTimeout(()=> location.href = 'listing.html?id=' + editingAd.id, 700);
       return;
@@ -535,6 +545,7 @@
       toast('تعذر نشر الإعلان، تأكد من اتصالك بالإنترنت وحاول مجدداً', 'error');
       return;
     }
+    contentAlreadySaved = true;
     recordSuccessfulPost();
     clearAdDraft();
     showPublishedModal(newAd);
