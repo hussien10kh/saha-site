@@ -1874,6 +1874,8 @@ textarea {
     gap: 8px;
     flex-wrap: nowrap;
     position: relative;
+    padding-top: 15px;
+    padding-bottom: 3px;
   }
 
   .header-actions {
