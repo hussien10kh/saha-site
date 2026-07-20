@@ -1721,6 +1721,41 @@ textarea {
   color: #ff6b5e;
 }
 
+/* Upload-limit banner — deliberately distinct from .toast: anchored to the
+   TOP of the screen (never near the bottom action buttons), pinned white
+   glass regardless of the site's theme, and held longer, since this
+   specifically needs to be noticed rather than glanced at and forgotten. */
+.upload-limit-banner {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  width: min(92vw, 420px);
+  background: rgba(255,255,255,.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #182333;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
+  box-shadow: 0 12px 32px rgba(0,0,0,.2);
+  z-index: 600;
+  opacity: 0;
+  transform: translateX(-50%) translateY(-14px);
+  transition: .25s;
+  pointer-events: none;
+}
+
+.upload-limit-banner.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 /* ---------- Update notice ---------- */
 .update-notice {
   position: fixed;

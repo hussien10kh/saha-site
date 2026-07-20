@@ -266,6 +266,25 @@
     fileInput.click();
   });
 
+  /* Distinct from toast(): the OS's own photo picker has no way for a
+     website to cap or gray out selections inside it, so this has to be
+     noticed the moment control returns to the page — pinned near the top
+     (never the bottom, clear of the نشر/إلغاء buttons), held longer than a
+     normal toast, and dismissed early only if the visitor taps it. */
+  function showUploadLimitBanner(message){
+    let el = document.querySelector('.upload-limit-banner');
+    if(!el){
+      el = document.createElement('div');
+      el.className = 'upload-limit-banner';
+      el.addEventListener('click', ()=> el.classList.remove('show'));
+      document.body.appendChild(el);
+    }
+    el.textContent = message;
+    requestAnimationFrame(()=> el.classList.add('show'));
+    clearTimeout(el._t);
+    el._t = setTimeout(()=> el.classList.remove('show'), 7000);
+  }
+
   /* Keeps every uploaded photo at its own natural aspect ratio — portrait,
      landscape, or square — only capping it at a maximum size (never
      upscaling smaller photos), so nothing is ever cropped or padded with a
@@ -323,7 +342,9 @@
     const files = [...fileInput.files];
     const room = MAX_PHOTOS - uploadedImages.length;
     if(files.length > room){
-      toast(room > 0 ? `يمكن رفع ${MAX_PHOTOS} صور كحد أقصى — تم أخذ أول ${room} فقط` : `وصلت للحد الأقصى (${MAX_PHOTOS} صور)، احذف صورة لإضافة غيرها`, 'error');
+      showUploadLimitBanner(room > 0
+        ? `اخترت ${files.length} صور — مسموح ${room} ${room===1?'صورة':'صور'} فقط الآن، تم اختيار أول ${room}`
+        : `وصلت للحد الأقصى (${MAX_PHOTOS} صور) — احذف صورة لإضافة غيرها`);
     }
     files.slice(0, room).forEach(file=>{
       processImage(file).then(dataUrl=>{
