@@ -711,19 +711,20 @@ async function uploadMedia(blob, path, contentType){
    photos on an ad being edited) is passed through unchanged. Filenames
    are derived from the ad title (readable + good for SEO), with a
    short random suffix so two ads with the same title never collide. */
+/* Uploads all photos concurrently (not one at a time) — with up to 6
+   photos, doing them sequentially meant waiting on 6x round-trips back
+   to back, which is exactly what made publishing feel like it was
+   hanging on a slower connection. Promise.all preserves each photo's
+   position in the returned array regardless of which one finishes first. */
 async function uploadAdImages(images, ownerId, title){
-  const out = [];
   const slug = slugifyTitle(title);
   const suffix = Math.random().toString(36).slice(2,6);
-  let i = 0;
-  for(const img of images){
-    i++;
-    if(!img || img===PLACEHOLDER_IMG || !img.startsWith('data:')){ out.push(img); continue; }
-    const blob = await (await fetch(img)).blob();
-    const path = `${ownerId}/ads/${slug}-${i}-${suffix}.webp`;
-    out.push(await uploadMedia(blob, path, 'image/webp'));
-  }
-  return out;
+  return Promise.all(images.map((img, idx)=>{
+    if(!img || img===PLACEHOLDER_IMG || !img.startsWith('data:')) return img;
+    return fetch(img).then(r=> r.blob()).then(blob=>
+      uploadMedia(blob, `${ownerId}/ads/${slug}-${idx+1}-${suffix}.webp`, 'image/webp')
+    );
+  }));
 }
 
 /* ---------------------------------------------------------

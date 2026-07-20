@@ -60,7 +60,7 @@
             <div class="form-grid">
               <div class="field full">
                 <label for="titleInput">عنوان الإعلان <span class="req">*</span></label>
-                <input type="text" id="titleInput" placeholder="مثال: شقة فاخرة للبيع في المزة فيلات" maxlength="80" required>
+                <input type="text" id="titleInput" placeholder="مثال: شقة فاخرة للبيع في المزة فيلات" maxlength="80">
                 <p class="field-hint" id="titleHint">حتى 80 حرفاً.</p>
               </div>
 
@@ -77,12 +77,12 @@
               </div>
               <div class="field">
                 <label for="cityInput">المدينة / المنطقة <span class="req">*</span></label>
-                <input type="text" id="cityInput" placeholder="مثال: دمشق - المزة" required>
+                <input type="text" id="cityInput" placeholder="مثال: دمشق - المزة">
               </div>
 
               <div class="field full">
                 <label for="descInput">الوصف <span class="req">*</span></label>
-                <textarea id="descInput" placeholder="اكتب وصفاً واضحاً وتفصيلياً لإعلانك..." maxlength="2000" required></textarea>
+                <textarea id="descInput" placeholder="اكتب وصفاً واضحاً وتفصيلياً لإعلانك..." maxlength="2000"></textarea>
                 <p class="field-hint" id="descHint">حتى 2000 حرف.</p>
               </div>
 
@@ -102,8 +102,8 @@
                 <label>صور الإعلان</label>
                 <div class="upload-box" id="uploadBox">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
-                  <p style="margin:0;font-weight:700;">اضغط لرفع صور الإعلان</p>
-                  <p style="margin:4px 0 0;font-size:12.5px;">اختياري — إعلانك بينشر حتى بدون صور</p>
+                  <p style="margin:0;font-weight:700;" id="uploadBoxTitle">اضغط لرفع صور الإعلان</p>
+                  <p style="margin:4px 0 0;font-size:12.5px;" id="uploadBoxSub">اختياري، حتى 6 صور — إعلانك بينشر حتى بدون صور</p>
                   <input type="file" id="fileInput" accept="image/*" multiple hidden>
                 </div>
                 <p class="field-hint">إضافة صور واضحة وحقيقية للمنتج تزيد من فرص بيعه بشكل أسرع.</p>
@@ -254,7 +254,17 @@
 
   const uploadBox = document.getElementById('uploadBox');
   const fileInput = document.getElementById('fileInput');
-  uploadBox.addEventListener('click', ()=>fileInput.click());
+  const MAX_PHOTOS = 6;
+  function syncUploadBoxState(){
+    const atMax = uploadedImages.length >= MAX_PHOTOS;
+    uploadBox.classList.toggle('upload-box-disabled', atMax);
+    document.getElementById('uploadBoxTitle').textContent = atMax ? 'وصلت للحد الأقصى (6 صور)' : 'اضغط لرفع صور الإعلان';
+    document.getElementById('uploadBoxSub').textContent = atMax ? 'احذف صورة لإضافة صورة جديدة' : 'اختياري، حتى 6 صور — إعلانك بينشر حتى بدون صور';
+  }
+  uploadBox.addEventListener('click', ()=>{
+    if(uploadedImages.length >= MAX_PHOTOS) return;
+    fileInput.click();
+  });
 
   /* Keeps every uploaded photo at its own natural aspect ratio — portrait,
      landscape, or square — only capping it at a maximum size (never
@@ -311,9 +321,9 @@
 
   fileInput.addEventListener('change', ()=>{
     const files = [...fileInput.files];
-    const room = 6 - uploadedImages.length;
+    const room = MAX_PHOTOS - uploadedImages.length;
     if(files.length > room){
-      toast(room > 0 ? `يمكن رفع 6 صور كحد أقصى — تم أخذ أول ${room} فقط` : 'وصلت للحد الأقصى (6 صور)، احذف صورة لإضافة غيرها', 'error');
+      toast(room > 0 ? `يمكن رفع ${MAX_PHOTOS} صور كحد أقصى — تم أخذ أول ${room} فقط` : `وصلت للحد الأقصى (${MAX_PHOTOS} صور)، احذف صورة لإضافة غيرها`, 'error');
     }
     files.slice(0, room).forEach(file=>{
       processImage(file).then(dataUrl=>{
@@ -336,6 +346,7 @@
         updatePreview();
       });
     });
+    syncUploadBoxState();
   }
 
   ['titleInput','priceInput','cityInput','descInput'].forEach(id=>{
@@ -496,38 +507,73 @@
     };
   }
 
+  /* Gives real feedback that publishing is actually in progress (photo
+     uploads can take a few seconds) instead of the button just sitting
+     there looking clickable — which read as "stuck" and risked a second,
+     duplicate submit. Restores whatever text the button had before
+     (handles both the "نشر الإعلان"/new-ad and "حفظ التعديلات"/edit cases). */
+  const submitBtn = document.getElementById('submitBtn');
+  function setSubmitLoading(loading){
+    if(loading){
+      submitBtn.dataset.originalText = submitBtn.textContent;
+      submitBtn.textContent = 'جاري النشر...';
+      submitBtn.disabled = true;
+    } else {
+      submitBtn.textContent = submitBtn.dataset.originalText || submitBtn.textContent;
+      submitBtn.disabled = false;
+    }
+  }
+
+  /* Points directly at whichever field actually failed instead of a single
+     blanket "fill in all fields" toast — a visible red outline, scrolled
+     into view and focused, so there's no need to hunt for what's wrong.
+     Clears itself the moment the visitor starts fixing that field. */
+  function clearFieldErrors(){
+    document.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
+  }
+  function markFieldError(inputEl, message){
+    inputEl.classList.add('field-invalid');
+    inputEl.scrollIntoView({ behavior:'smooth', block:'center' });
+    inputEl.focus({ preventScroll:true });
+    toast(message, 'error');
+    const clear = ()=>{ inputEl.classList.remove('field-invalid'); inputEl.removeEventListener('input', clear); };
+    inputEl.addEventListener('input', clear);
+  }
+
   document.getElementById('adForm').addEventListener('submit', async e=>{
     e.preventDefault();
-    const title = document.getElementById('titleInput').value.trim();
+    clearFieldErrors();
+    const titleEl = document.getElementById('titleInput');
+    const cityEl = document.getElementById('cityInput');
+    const descEl = document.getElementById('descInput');
+    const priceEl = document.getElementById('priceInput');
+    const title = titleEl.value.trim();
     const hasPrice = priceToggle.checked;
-    const price = hasPrice ? Number(toAsciiDigits(document.getElementById('priceInput').value)) : null;
-    const city = document.getElementById('cityInput').value.trim();
-    const desc = document.getElementById('descInput').value.trim();
+    const price = hasPrice ? Number(toAsciiDigits(priceEl.value)) : null;
+    const city = cityEl.value.trim();
+    const desc = descEl.value.trim();
     const phone = normalizePhone(document.getElementById('phoneInput').value);
     const contactMethod = phoneToggle.checked ? 'phone' : 'replies';
 
-    if(!title || !city || !desc || (hasPrice && !price)){
-      toast('الرجاء تعبئة جميع الحقول المطلوبة', 'error');
-      return;
-    }
-    if(title.length > 80){
-      toast('عنوان الإعلان يجب ألا يتجاوز 80 حرفاً', 'error');
-      return;
-    }
-    if(desc.length > 2000){
-      toast('وصف الإعلان يجب ألا يتجاوز 2000 حرف', 'error');
-      return;
-    }
-    if(looksLikeGibberish(title) || looksLikeGibberish(desc)){
-      toast('يبدو أن العنوان أو الوصف غير واضح، الرجاء كتابة نص حقيقي ومفهوم', 'error');
-      return;
-    }
-    if(await isDuplicateAd(title, desc, editingAd ? editingAd.id : null)){
-      toast('يوجد إعلان آخر بنفس العنوان والوصف تماماً', 'error');
-      return;
-    }
+    if(!title){ markFieldError(titleEl, 'الرجاء كتابة عنوان الإعلان'); return; }
+    if(!city){ markFieldError(cityEl, 'الرجاء كتابة المدينة / المنطقة'); return; }
+    if(!desc){ markFieldError(descEl, 'الرجاء كتابة وصف الإعلان'); return; }
+    if(hasPrice && !price){ markFieldError(priceEl, 'الرجاء كتابة السعر، أو أطفئ خيار "أضف السعر" إذا ما بدك تحدده'); return; }
+    if(title.length > 80){ markFieldError(titleEl, 'عنوان الإعلان يجب ألا يتجاوز 80 حرفاً'); return; }
+    if(desc.length > 2000){ markFieldError(descEl, 'وصف الإعلان يجب ألا يتجاوز 2000 حرف'); return; }
+    if(looksLikeGibberish(title)){ markFieldError(titleEl, 'يبدو أن العنوان غير واضح، الرجاء كتابة نص حقيقي ومفهوم'); return; }
+    if(looksLikeGibberish(desc)){ markFieldError(descEl, 'يبدو أن الوصف غير واضح، الرجاء كتابة نص حقيقي ومفهوم'); return; }
 
-    await publishOrSaveDraft({ title, hasPrice, price, city, desc, phone, contactMethod });
+    setSubmitLoading(true);
+    try{
+      if(await isDuplicateAd(title, desc, editingAd ? editingAd.id : null)){
+        toast('يوجد إعلان آخر بنفس العنوان والوصف تماماً', 'error');
+        return;
+      }
+      await publishOrSaveDraft({ title, hasPrice, price, city, desc, phone, contactMethod });
+    } finally {
+      setSubmitLoading(false);
+    }
   });
 
   // returning from login/signup/guest with a saved draft — restore it and publish immediately
@@ -553,10 +599,15 @@
       renderPreviews();
       updatePreview();
 
-      await publishOrSaveDraft({
-        title: pending.title, hasPrice: pending.hasPrice, price: pending.price,
-        city: pending.city, desc: pending.desc, phone: pending.phone, contactMethod: pending.contactMethod,
-      });
+      setSubmitLoading(true);
+      try{
+        await publishOrSaveDraft({
+          title: pending.title, hasPrice: pending.hasPrice, price: pending.price,
+          city: pending.city, desc: pending.desc, phone: pending.phone, contactMethod: pending.contactMethod,
+        });
+      } finally {
+        setSubmitLoading(false);
+      }
     }
   }
 

@@ -1508,6 +1508,13 @@ textarea {
   border-color: var(--primary);
 }
 
+.field input.field-invalid,
+.field select.field-invalid,
+.field textarea.field-invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(224,69,61,.14);
+}
+
 .field input[type="number"]::-webkit-inner-spin-button,
 .field input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -1560,6 +1567,15 @@ textarea {
 
 .upload-box:hover {
   border-color: var(--primary);
+}
+
+.upload-box.upload-box-disabled {
+  cursor: default;
+  opacity: .55;
+}
+
+.upload-box.upload-box-disabled:hover {
+  border-color: var(--border);
 }
 
 .upload-previews {
