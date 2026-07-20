@@ -44,7 +44,7 @@
           عبّئ بيانات إعلانك وشاهد شكله النهائي مباشرة في المعاينة قبل النشر.
         </p>
 
-        <div id="draftRestoreBox" style="display:none;background:var(--primary-light);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:18px;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div id="draftRestoreBox" style="display:none;background:color-mix(in srgb, var(--accent) 12%, var(--surface));border:1.5px solid var(--accent);border-radius:10px;padding:12px 14px;margin-bottom:18px;align-items:center;gap:12px;flex-wrap:wrap;">
           <span style="font-size:13.5px;font-weight:600;flex:1 1 200px;">عندك مسودة إعلان محفوظة من قبل، تريد استكمالها؟</span>
           <button type="button" class="btn btn-primary" id="draftRestoreBtn" style="padding:8px 16px;font-size:13px;">استكمال المسودة</button>
           <button type="button" class="btn btn-outline" id="draftDismissBtn" style="padding:8px 16px;font-size:13px;">تجاهل</button>
@@ -388,18 +388,20 @@
     };
   }
 
-  /* Autosaves the in-progress form (separate from the sessionStorage
-     login-redirect draft above) so a forced reload — say, from the
-     background app update — or an accidental tab close never costs you
-     a half-written ad. Best-effort: if storage is full (large photos),
-     it silently just won't persist that one time. */
+  /* Saved only when the visitor actually tries to leave with unsaved work
+     (see the beforeunload handler below) — not continuously on every
+     keystroke, so nothing is written to storage until it's actually about
+     to matter. Separate from the sessionStorage login-redirect draft above. */
   const AD_DRAFT_KEY = 'sahat_ad_draft';
   const AD_DRAFT_MAX_AGE = 2 * 24 * 60 * 60 * 1000;
-  function saveAdDraft(){
-    if(editingAd) return;
+  function hasDraftableContent(){
+    if(editingAd) return false;
     const title = document.getElementById('titleInput').value.trim();
     const desc = document.getElementById('descInput').value.trim();
-    if(!title && !desc && !uploadedImages.length) return; // nothing worth persisting yet — don't clobber a real draft
+    return !!(title || desc || uploadedImages.length);
+  }
+  function saveAdDraft(){
+    if(!hasDraftableContent()) return; // nothing worth persisting — don't clobber a real draft
     try{
       localStorage.setItem(AD_DRAFT_KEY, JSON.stringify({
         ts: Date.now(), userId: currentUserForDraft ? currentUserForDraft.id : null, category: selectedCat,
@@ -422,8 +424,21 @@
     }catch(e){ return null; }
   }
 
-  async function updatePreview(){
+  /* Browsers only allow their own generic wording here — a custom "save
+     your draft?" dialog with real buttons isn't possible for an actual
+     page unload (refresh, back/forward, closing the tab, following any
+     link away from this page — this site has no client-side routing, so
+     every one of those is a real navigation). This still covers exactly
+     what was asked: a warning appears at the moment of leaving, and the
+     draft is captured as a safety net regardless of which choice is made. */
+  window.addEventListener('beforeunload', e=>{
+    if(!hasDraftableContent()) return;
     saveAdDraft();
+    e.preventDefault();
+    e.returnValue = '';
+  });
+
+  async function updatePreview(){
     document.getElementById('previewCard').innerHTML = adCardHTML(await currentDraft());
     // preview card shows image on top, details below — and shouldn't navigate away
     document.querySelectorAll('#previewCard .ad-card').forEach(c=>{
