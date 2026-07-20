@@ -316,9 +316,6 @@ function timeAgo(dateInput){
   const years = Math.floor(months/12);
   return `منذ ${years} ${years===1?'سنة':'سنوات'}`;
 }
-function isRecent(dateInput){
-  return Date.now() - new Date(dateInput).getTime() < 48*60*60*1000;
-}
 const ARABIC_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 function memberSinceLabel(dateInput){
   if(!dateInput) return '';
@@ -350,7 +347,6 @@ function mapAdRow(row){
     views: row.views || 0,
     createdAt: row.created_at,
     postedAgo: timeAgo(row.created_at),
-    isNew: isRecent(row.created_at),
     memberSince: row.profiles ? memberSinceLabel(row.profiles.created_at) : '',
   };
 }
@@ -1233,9 +1229,8 @@ function adCardHTML(ad){
   <a class="ad-card" href="listing.html?id=${ad.id}">
     ${hasImage ? `
     <div class="ad-thumb">
-      ${ad.isNew ? `<span class="badge-new">جديد</span>`:''}
       <img src="${ad.images[0]}" alt="${title}" loading="lazy">
-    </div>` : (ad.isNew ? `<span class="badge-new">جديد</span>` : '')}
+    </div>` : ''}
     <div class="ad-body">
       <button class="fav-btn${isFavorite(ad.id)?' active':''}" type="button" onclick="event.preventDefault();toggleFavorite('${ad.id}').then(on=>{this.classList.toggle('active',on);this.dispatchEvent(new CustomEvent('fav-toggled',{bubbles:true,detail:{on}}));}).catch(()=>toast('تعذّر تحديث المفضلة، تحقق من اتصالك بالإنترنت','error'));">${ICONS.heart}</button>
       <h3 class="ad-title">${title}</h3>
