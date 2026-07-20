@@ -438,6 +438,20 @@
     e.returnValue = '';
   });
 
+  /* beforeunload's dialog is fundamentally unreliable on mobile — many
+     mobile browsers, and the installed PWA app (same underlying engine),
+     don't show any confirmation at all for backgrounding, swiping the app
+     away, or the OS reclaiming it, unlike desktop tab-close. There's no
+     way to force a visible warning in that case, but visibilitychange and
+     pagehide DO still fire reliably when that happens, so the draft gets
+     captured silently either way — an accidental close still won't lose
+     it, even without a popup appearing first. */
+  function saveDraftSilently(){ if(hasDraftableContent()) saveAdDraft(); }
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'hidden') saveDraftSilently();
+  });
+  window.addEventListener('pagehide', saveDraftSilently);
+
   async function updatePreview(){
     document.getElementById('previewCard').innerHTML = adCardHTML(await currentDraft());
     // preview card shows image on top, details below — and shouldn't navigate away
