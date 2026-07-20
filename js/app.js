@@ -683,12 +683,21 @@ function randomId(){ return Date.now().toString(36) + '-' + Math.random().toStri
 /* Turns an ad title into a readable, URL-safe filename fragment —
    keeps the Arabic (or whatever script) as-is, just strips characters
    that break storage keys/URLs and collapses whitespace to hyphens. */
+/* Supabase Storage rejects non-ASCII object keys outright ("Invalid key"),
+   and almost every ad title here is Arabic — so this can't just strip a
+   few punctuation marks like a typical Latin-script slugify would. Any
+   non-ASCII-alphanumeric character (which is most of the title, always,
+   on this site) is dropped entirely rather than kept and sent to Storage;
+   falling back to 'ad' is the common, expected case, not an edge case. */
 function slugifyTitle(title){
-  return (title || 'ad')
+  const ascii = (title || '')
     .trim()
-    .replace(/[\/\\?%*:|"<>#،؛؟!]/g, '')
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .trim()
     .replace(/\s+/g, '-')
-    .slice(0, 60) || 'ad';
+    .replace(/-+/g, '-')
+    .slice(0, 60);
+  return ascii || 'ad';
 }
 
 async function uploadMedia(blob, path, contentType){
