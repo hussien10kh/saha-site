@@ -623,8 +623,11 @@
     if(hasPrice && !price){ markFieldError(priceEl, 'الرجاء كتابة السعر، أو أطفئ خيار "أضف السعر" إذا ما بدك تحدده'); return; }
     if(title.length > 80){ markFieldError(titleEl, 'عنوان الإعلان يجب ألا يتجاوز 80 حرفاً'); return; }
     if(desc.length > 2000){ markFieldError(descEl, 'وصف الإعلان يجب ألا يتجاوز 2000 حرف'); return; }
-    if(looksLikeGibberish(title)){ markFieldError(titleEl, 'يبدو أن العنوان غير واضح، الرجاء كتابة نص حقيقي ومفهوم'); return; }
-    if(looksLikeGibberish(desc)){ markFieldError(descEl, 'يبدو أن الوصف غير واضح، الرجاء كتابة نص حقيقي ومفهوم'); return; }
+    /* Gibberish check (looksLikeGibberish) removed from here — it kept
+       false-positiving on legitimate real content (e.g. short bulleted
+       feature lists like car specs), blocking real advertisers. The
+       function itself is still in app.js if a better heuristic replaces
+       this later; nothing calls it right now. */
 
     setSubmitLoading(true);
     try{
