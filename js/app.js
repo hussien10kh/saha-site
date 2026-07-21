@@ -1232,7 +1232,6 @@ function adCardHTML(ad){
       <img src="${ad.images[0]}" alt="${title}" loading="lazy">
     </div>` : ''}
     <div class="ad-body">
-      <button class="fav-btn${isFavorite(ad.id)?' active':''}" type="button" onclick="event.preventDefault();toggleFavorite('${ad.id}').then(on=>{this.classList.toggle('active',on);this.dispatchEvent(new CustomEvent('fav-toggled',{bubbles:true,detail:{on}}));}).catch(()=>toast('تعذّر تحديث المفضلة، تحقق من اتصالك بالإنترنت','error'));">${ICONS.heart}</button>
       <h3 class="ad-title">${title}</h3>
       <p class="ad-desc">${desc}</p>
       <div class="ad-meta">
