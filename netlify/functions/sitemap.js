@@ -9,7 +9,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_fKElveNWpcfKrcC9GBjo4Q_48S5m2EK';
 const AD_EXPIRY_DAYS = 90;
 
 const STATIC_PAGES = [
-  { loc: '/index.html', changefreq: 'hourly', priority: '1.0' },
+  { loc: '/', changefreq: 'hourly', priority: '1.0' },
+  { loc: '/?cat=realestate', changefreq: 'hourly', priority: '0.9' },
+  { loc: '/?cat=cars', changefreq: 'hourly', priority: '0.9' },
+  { loc: '/?cat=misc', changefreq: 'hourly', priority: '0.9' },
   { loc: '/add-ad.html', changefreq: 'monthly', priority: '0.6' },
   { loc: '/about.html', changefreq: 'monthly', priority: '0.4' },
   { loc: '/faq.html', changefreq: 'monthly', priority: '0.4' },

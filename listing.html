@@ -24,6 +24,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" id="canonicalLink" href="">
 <script type="application/ld+json" id="jsonLd"></script>
+<script type="application/ld+json" id="breadcrumbLd"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -133,6 +134,16 @@
       availability: 'https://schema.org/InStock',
       itemCondition: 'https://schema.org/UsedCondition',
     },
+  });
+  const catLabel = CATEGORY_LABELS[ad.category] || ad.category;
+  document.getElementById('breadcrumbLd').textContent = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: location.origin + '/' },
+      { '@type': 'ListItem', position: 2, name: catLabel, item: location.origin + '/index.html?cat=' + ad.category },
+      { '@type': 'ListItem', position: 3, name: ad.title, item: pageUrl },
+    ],
   });
   trackAdView(ad.id);
   await renderDetail();
