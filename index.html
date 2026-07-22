@@ -21,7 +21,30 @@
 <meta property="og:title" content="ساحة | إعلانات مبوبة في سوريا">
 <meta property="og:description" content="منصة إعلانات مبوبة مجانية لبيع وشراء العقارات والسيارات وكل ما تحتاجه في سوريا.">
 <meta property="og:locale" content="ar_AR">
-<link rel="canonical" href="https://saaha.net/index.html">
+<link rel="canonical" id="canonicalLink" href="https://saaha.net/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "ساحة",
+  "url": "https://saaha.net/",
+  "logo": "https://saaha.net/icon-512.png"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "ساحة",
+  "url": "https://saaha.net/",
+  "inLanguage": "ar",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://saaha.net/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -44,6 +67,7 @@
     <div class="layout">
 
       <section>
+        <h1 id="pageHeading" class="feed-heading">أحدث الإعلانات المبوبة في سوريا</h1>
         <div id="resultsInfo" style="display:none;margin-bottom:14px;color:var(--muted);font-size:14px;font-weight:600;"></div>
         <div class="feed" id="feed">
           <div class="ad-card skel-card"><div class="skel skel-thumb"></div><div class="skel-lines"><div class="skel skel-line skel-line-title"></div><div class="skel skel-line skel-line-sub"></div><div class="skel skel-line skel-line-price"></div></div></div>
@@ -83,6 +107,45 @@
   const cat = params.get('cat') || '';
   const q = (params.get('q') || '').trim();
   const city = params.get('city') || '';
+
+  const SEO_BY_CAT = {
+    realestate: {
+      title: 'عقارات للبيع والإيجار في سوريا من المالك | ساحة',
+      desc: 'تصفح إعلانات عقارات للبيع والإيجار في سوريا: شقق، بيوت، أراضي ومحلات، معظمها من المالك مباشرة بدون وسيط. انشر إعلان عقارك مجاناً على ساحة.',
+      h1: 'عقارات للبيع والإيجار في سوريا',
+    },
+    cars: {
+      title: 'سيارات للبيع في سوريا | ساحة',
+      desc: 'تصفح إعلانات سيارات للبيع في سوريا من أصحابها مباشرة. سيارات جديدة ومستعملة بكل الماركات والمحافظات، وانشر إعلان سيارتك مجاناً على ساحة.',
+      h1: 'سيارات للبيع في سوريا',
+    },
+    misc: {
+      title: 'إعلانات متنوعة للبيع في سوريا | ساحة',
+      desc: 'تصفح إعلانات متنوعة للبيع في سوريا: أثاث، إلكترونيات، وأغراض شخصية. منصة إعلانات مبوبة مجانية، انشر إعلانك خلال دقائق.',
+      h1: 'إعلانات متنوعة للبيع في سوريا',
+    },
+  };
+
+  (function applySeoTags(){
+    const canonicalLink = document.getElementById('canonicalLink');
+    const heading = document.getElementById('pageHeading');
+    if(q){
+      document.title = `نتائج البحث عن "${q}" | ساحة`;
+      heading.textContent = `نتائج البحث عن "${q}"`;
+      canonicalLink.href = cat ? `https://saaha.net/?cat=${encodeURIComponent(cat)}` : 'https://saaha.net/';
+    }else if(cat && SEO_BY_CAT[cat]){
+      const seo = SEO_BY_CAT[cat];
+      document.title = seo.title;
+      document.querySelector('meta[name="description"]').setAttribute('content', seo.desc);
+      document.querySelector('meta[property="og:title"]').setAttribute('content', seo.title);
+      document.querySelector('meta[property="og:description"]').setAttribute('content', seo.desc);
+      heading.textContent = city ? `${seo.h1} - ${city}` : seo.h1;
+      canonicalLink.href = `https://saaha.net/?cat=${encodeURIComponent(cat)}`;
+    }else if(city){
+      heading.textContent = `أحدث الإعلانات المبوبة في ${city}`;
+      canonicalLink.href = 'https://saaha.net/';
+    }
+  })();
 
   (async()=>{
     await renderHeader(cat);

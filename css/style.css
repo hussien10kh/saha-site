@@ -594,6 +594,13 @@ textarea {
   margin: 0 0 14px;
 }
 
+.feed-heading {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 14px;
+}
+
 /* Featured sidebar list */
 .featured-list {
   display: flex;
