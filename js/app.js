@@ -587,6 +587,30 @@ async function updateProfile(patch){
 }
 async function logout(){ await sb.auth.signOut(); }
 
+/* Display names are still never blocked outright (login is by email, not
+   by name, and lots of real people legitimately share a name) — but an
+   exact match against an existing name is exactly the case that confuses
+   buyers or lets someone impersonate a known seller, so this offers a
+   distinguishing alternative ("الاسم 2") instead. One query fetches every
+   name starting with the candidate, then the first free "name N" suffix
+   is picked locally — no per-candidate round trips. excludeUserId lets a
+   profile owner re-save their own unchanged name without tripping this. */
+async function findAvailableNameVariant(name, excludeUserId){
+  const trimmed = (name || '').trim();
+  if(!trimmed) return { taken: false, name: trimmed };
+  const normalize = s => (s || '').trim().toLowerCase();
+  const { data, error } = await sb.from('profiles').select('id,name').ilike('name', trimmed + '%');
+  if(error) return { taken: false, name: trimmed }; // fail open — never block signup on a lookup hiccup
+  const existing = (data || []).filter(p => p.id !== excludeUserId);
+  const existingNames = new Set(existing.map(p => normalize(p.name)));
+  if(!existingNames.has(normalize(trimmed))) return { taken: false, name: trimmed };
+  for(let i = 2; i <= 50; i++){
+    const candidate = `${trimmed} ${i}`;
+    if(!existingNames.has(normalize(candidate))) return { taken: true, suggested: candidate };
+  }
+  return { taken: true, suggested: null };
+}
+
 /* "أضف إعلانك" always opens the form directly — no login wall up front.
    The form itself only asks the visitor to sign in (or continue as a
    guest) at the moment they actually try to publish. */

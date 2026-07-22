@@ -160,7 +160,7 @@
     setRememberPref(document.getElementById('rememberMe').checked);
 
     if(activeTab === 'guest'){
-      const nameVal = document.getElementById('nameInput').value.trim();
+      let nameVal = document.getElementById('nameInput').value.trim();
       const phone = normalizePhone(document.getElementById('guestPhoneInput').value);
       if(!nameVal){
         toast('الرجاء إدخال اسمك', 'error');
@@ -171,6 +171,11 @@
         return;
       }
       try{
+        const nameCheck = await findAvailableNameVariant(nameVal);
+        if(nameCheck.taken && nameCheck.suggested){
+          nameVal = nameCheck.suggested;
+          toast(`الاسم "${document.getElementById('nameInput').value.trim()}" مستخدم من قبل — تم استخدام "${nameVal}" لتمييزك عن غيرك`, null, 5000);
+        }
         await signInAsGuest(nameVal, phone);
         toast('تم المتابعة كضيف بنجاح');
         goToRedirect();
@@ -182,7 +187,7 @@
 
     const contact = document.getElementById('contactInput').value.trim();
     const pass = document.getElementById('passInput').value;
-    const nameVal = document.getElementById('nameInput').value.trim();
+    let nameVal = document.getElementById('nameInput').value.trim();
 
     if(!contact || !isValidEmail(contact)){
       toast('الرجاء إدخال بريد إلكتروني صحيح', 'error');
@@ -195,7 +200,15 @@
 
     try{
       if(activeTab === 'signup'){
-        const data = await signUpWithEmail(contact, pass, nameVal || emailPrefix(contact));
+        const desiredName = nameVal || emailPrefix(contact);
+        const nameCheck = await findAvailableNameVariant(desiredName);
+        if(nameCheck.taken && nameCheck.suggested){
+          nameVal = nameCheck.suggested;
+          toast(`الاسم "${desiredName}" مستخدم من قبل — تم استخدام "${nameVal}" لتمييزك عن غيرك`, null, 5000);
+        } else {
+          nameVal = desiredName;
+        }
+        const data = await signUpWithEmail(contact, pass, nameVal);
         if(!data.session){
           toast('تم إنشاء حسابك! افتح بريدك الإلكتروني واضغط رابط التفعيل حتى تقدر تسجّل الدخول.');
           return; // no session yet — nothing to redirect into
@@ -253,7 +266,9 @@
           const { data: profile } = await sb.from('profiles').select('name').eq('id', data.user.id).maybeSingle();
           if(!profile || !profile.name){
             const meta = data.user.user_metadata || {};
-            const googleName = meta.full_name || meta.name || emailPrefix(data.user.email);
+            let googleName = meta.full_name || meta.name || emailPrefix(data.user.email);
+            const nameCheck = await findAvailableNameVariant(googleName, data.user.id);
+            if(nameCheck.taken && nameCheck.suggested) googleName = nameCheck.suggested;
             const googleAvatar = meta.avatar_url || meta.picture || null;
             await updateProfile({ name: googleName, avatar: googleAvatar });
           }

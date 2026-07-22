@@ -195,9 +195,14 @@
     editNameBtn.style.display = 'flex';
   });
   document.getElementById('saveNameBtn').addEventListener('click', async ()=>{
-    const newName = editNameInput.value.trim();
+    let newName = editNameInput.value.trim();
     if(!newName){ toast('الرجاء إدخال اسم صحيح', 'error'); return; }
     try{
+      const nameCheck = await findAvailableNameVariant(newName, user.id);
+      if(nameCheck.taken && nameCheck.suggested){
+        toast(`الاسم "${newName}" مستخدم من قبل — تم استخدام "${nameCheck.suggested}" لتمييزك عن غيرك`, null, 5000);
+        newName = nameCheck.suggested;
+      }
       await updateProfile({ name: newName });
     }catch(e){
       console.error('update name failed:', e);
