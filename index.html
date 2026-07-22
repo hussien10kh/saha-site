@@ -13,12 +13,12 @@
 </script>
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ساحة | إعلانات مبوبة في سوريا - عقارات، سيارات، والمزيد</title>
+<title>ساحة | عروض سوريا عقارات سيارات خدمات</title>
 <meta name="description" content="ساحة: منصة إعلانات مبوبة مجانية في سوريا لبيع وشراء العقارات والسيارات وكل ما تحتاجه. تصفح آلاف الإعلانات في دمشق وجميع المحافظات السورية، وانشر إعلانك مجاناً خلال دقائق.">
 <meta name="keywords" content="إعلانات مبوبة سوريا, بيع وشراء, عقارات للبيع, شقق للبيع دمشق, سيارات للبيع سوريا, إعلانات مجانية, سوق سوريا, ساحة">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ساحة">
-<meta property="og:title" content="ساحة | إعلانات مبوبة في سوريا">
+<meta property="og:title" content="ساحة | عروض سوريا عقارات سيارات خدمات">
 <meta property="og:description" content="منصة إعلانات مبوبة مجانية لبيع وشراء العقارات والسيارات وكل ما تحتاجه في سوريا.">
 <meta property="og:locale" content="ar_AR">
 <link rel="canonical" id="canonicalLink" href="https://saaha.net/">
@@ -110,16 +110,19 @@
 
   const SEO_BY_CAT = {
     realestate: {
+      noun: 'عقارات',
       title: 'عقارات للبيع والإيجار في سوريا من المالك | ساحة',
       desc: 'تصفح إعلانات عقارات للبيع والإيجار في سوريا: شقق، بيوت، أراضي ومحلات، معظمها من المالك مباشرة بدون وسيط. انشر إعلان عقارك مجاناً على ساحة.',
       h1: 'عقارات للبيع والإيجار في سوريا',
     },
     cars: {
+      noun: 'سيارات',
       title: 'سيارات للبيع في سوريا | ساحة',
       desc: 'تصفح إعلانات سيارات للبيع في سوريا من أصحابها مباشرة. سيارات جديدة ومستعملة بكل الماركات والمحافظات، وانشر إعلان سيارتك مجاناً على ساحة.',
       h1: 'سيارات للبيع في سوريا',
     },
     misc: {
+      noun: 'إعلانات متنوعة',
       title: 'إعلانات متنوعة للبيع في سوريا | ساحة',
       desc: 'تصفح إعلانات متنوعة للبيع في سوريا: أثاث، إلكترونيات، وأغراض شخصية. منصة إعلانات مبوبة مجانية، انشر إعلانك خلال دقائق.',
       h1: 'إعلانات متنوعة للبيع في سوريا',
@@ -129,21 +132,41 @@
   (function applySeoTags(){
     const canonicalLink = document.getElementById('canonicalLink');
     const heading = document.getElementById('pageHeading');
+    const descTag = document.querySelector('meta[name="description"]');
+    const ogTitleTag = document.querySelector('meta[property="og:title"]');
+    const ogDescTag = document.querySelector('meta[property="og:description"]');
+
     if(q){
       document.title = `نتائج البحث عن "${q}" | ساحة`;
       heading.textContent = `نتائج البحث عن "${q}"`;
       canonicalLink.href = cat ? `https://saaha.net/?cat=${encodeURIComponent(cat)}` : 'https://saaha.net/';
+    }else if(cat && SEO_BY_CAT[cat] && city){
+      const seo = SEO_BY_CAT[cat];
+      const title = `${seo.noun} للبيع في ${city} | ساحة`;
+      const desc = `تصفح أحدث إعلانات ${seo.noun} للبيع في ${city}، سوريا. ${seo.desc}`;
+      document.title = title;
+      descTag.setAttribute('content', desc);
+      ogTitleTag.setAttribute('content', title);
+      ogDescTag.setAttribute('content', desc);
+      heading.textContent = `${seo.noun} للبيع في ${city}`;
+      canonicalLink.href = `https://saaha.net/?cat=${encodeURIComponent(cat)}&city=${encodeURIComponent(city)}`;
     }else if(cat && SEO_BY_CAT[cat]){
       const seo = SEO_BY_CAT[cat];
       document.title = seo.title;
-      document.querySelector('meta[name="description"]').setAttribute('content', seo.desc);
-      document.querySelector('meta[property="og:title"]').setAttribute('content', seo.title);
-      document.querySelector('meta[property="og:description"]').setAttribute('content', seo.desc);
-      heading.textContent = city ? `${seo.h1} - ${city}` : seo.h1;
+      descTag.setAttribute('content', seo.desc);
+      ogTitleTag.setAttribute('content', seo.title);
+      ogDescTag.setAttribute('content', seo.desc);
+      heading.textContent = seo.h1;
       canonicalLink.href = `https://saaha.net/?cat=${encodeURIComponent(cat)}`;
     }else if(city){
+      const title = `أحدث الإعلانات المبوبة في ${city} | ساحة`;
+      const desc = `تصفح أحدث الإعلانات المبوبة في ${city}: عقارات، سيارات وإعلانات متنوعة. انشر إعلانك مجاناً على ساحة.`;
+      document.title = title;
+      descTag.setAttribute('content', desc);
+      ogTitleTag.setAttribute('content', title);
+      ogDescTag.setAttribute('content', desc);
       heading.textContent = `أحدث الإعلانات المبوبة في ${city}`;
-      canonicalLink.href = 'https://saaha.net/';
+      canonicalLink.href = `https://saaha.net/?city=${encodeURIComponent(city)}`;
     }
   })();
 

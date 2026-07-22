@@ -972,22 +972,30 @@ async function renderHeader(activeCategory){
   const cityDropdown = document.getElementById('cityDropdown');
   let selectedCity = new URLSearchParams(location.search).get('city') || '';
   if(cityBtn && cityDropdown){
-    cityDropdown.innerHTML = `<button type="button" data-city="كل المدن">كل المدن</button>` +
+    const cityHref = c => {
+      const url = new URL('index.html', location.href);
+      if(activeCategory) url.searchParams.set('cat', activeCategory);
+      if(c) url.searchParams.set('city', c);
+      return url.pathname + url.search;
+    };
+    cityDropdown.innerHTML = `<a href="${cityHref('')}" data-city="كل المدن">كل المدن</a>` +
       CITY_GROUPS.map(g => `
         <div class="city-group">
           <div class="city-group-title">${g.governorate}</div>
-          ${g.cities.map(c=>`<button type="button" data-city="${c}">${c}</button>`).join('')}
+          ${g.cities.map(c=>`<a href="${cityHref(c)}" data-city="${c}">${c}</a>`).join('')}
         </div>`).join('');
     if(selectedCity) document.getElementById('cityLabel').textContent = selectedCity;
     cityBtn.addEventListener('click', e=>{
+      if(e.target.closest('a')) return;
       e.stopPropagation();
       cityDropdown.classList.toggle('open');
     });
     cityDropdown.addEventListener('click', e=>{
-      const b = e.target.closest('button');
-      if(!b) return;
-      selectedCity = b.dataset.city==='كل المدن' ? '' : b.dataset.city;
-      document.getElementById('cityLabel').textContent = b.dataset.city;
+      const a = e.target.closest('a');
+      if(!a) return;
+      e.preventDefault();
+      selectedCity = a.dataset.city==='كل المدن' ? '' : a.dataset.city;
+      document.getElementById('cityLabel').textContent = a.dataset.city;
       cityDropdown.classList.remove('open');
     });
     document.addEventListener('click', ()=> cityDropdown.classList.remove('open'));
