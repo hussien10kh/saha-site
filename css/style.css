@@ -728,6 +728,7 @@ textarea {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  white-space: pre-line;
 }
 
 .ad-meta {
@@ -1175,6 +1176,7 @@ textarea {
   line-height: 1.9;
   color: var(--text);
   margin-bottom: 20px;
+  white-space: pre-line;
 }
 
 .gallery-main {
