@@ -8,11 +8,25 @@ const SUPABASE_URL = 'https://uijijqkbctemcfdzoxlg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_fKElveNWpcfKrcC9GBjo4Q_48S5m2EK';
 const AD_EXPIRY_DAYS = 90;
 
+const CATEGORIES = ['realestate', 'cars', 'misc'];
+
+/* Governorate capitals only (city name === governorate name in CITY_GROUPS,
+   js/app.js) — these are the highest-search-volume city terms. Smaller towns
+   are left out of the sitemap on purpose: most have zero or near-zero active
+   ads, and listing thin/empty pages risks Google treating them as low-quality. */
+const MAJOR_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 'درعا', 'السويداء', 'دير الزور', 'الحسكة', 'الرقة', 'إدلب', 'القنيطرة'];
+
+const CITY_PAGES = MAJOR_CITIES.flatMap(city => [
+  { loc: `/?city=${encodeURIComponent(city)}`, changefreq: 'daily', priority: '0.7' },
+  ...CATEGORIES.map(cat => ({ loc: `/?cat=${cat}&city=${encodeURIComponent(city)}`, changefreq: 'daily', priority: '0.75' })),
+]);
+
 const STATIC_PAGES = [
   { loc: '/', changefreq: 'hourly', priority: '1.0' },
   { loc: '/?cat=realestate', changefreq: 'hourly', priority: '0.9' },
   { loc: '/?cat=cars', changefreq: 'hourly', priority: '0.9' },
   { loc: '/?cat=misc', changefreq: 'hourly', priority: '0.9' },
+  ...CITY_PAGES,
   { loc: '/add-ad.html', changefreq: 'monthly', priority: '0.6' },
   { loc: '/about.html', changefreq: 'monthly', priority: '0.4' },
   { loc: '/faq.html', changefreq: 'monthly', priority: '0.4' },
@@ -47,7 +61,7 @@ exports.handler = async function(){
 
   const staticEntries = STATIC_PAGES.map(p => `
   <url>
-    <loc>${SITE_URL}${p.loc}</loc>
+    <loc>${SITE_URL}${escapeXml(p.loc)}</loc>
     <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
   </url>`).join('');
