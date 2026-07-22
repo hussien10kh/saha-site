@@ -601,6 +601,14 @@ textarea {
   margin: 0 0 14px;
 }
 
+.feed-intro {
+  font-size: 14px;
+  color: var(--muted);
+  margin: -6px 0 16px;
+  max-width: 68ch;
+  line-height: 1.6;
+}
+
 /* Featured sidebar list */
 .featured-list {
   display: flex;
