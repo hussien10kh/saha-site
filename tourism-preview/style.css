@@ -154,27 +154,17 @@ a{color:inherit;text-decoration:none;}
   border:1px solid var(--t-border); border-radius:var(--t-radius-md); background:#fff;
 }
 .t-cat .ic{
-  width:42px;height:42px;border-radius:50%; background:var(--t-primary-light); color:var(--t-primary);
+  background:none; color:var(--t-primary);
   display:flex; align-items:center; justify-content:center;
 }
-.t-cat .ic svg{width:20px;height:20px;}
-/* each type gets its own accent, matching the reference (not all teal) */
-.t-cat.shop .ic{background:#e3f6f3; color:#0d9488;}
-.t-cat.landmark .ic{background:#e6f0fb; color:#2563eb;}
-.t-cat.garden .ic{background:#e9f7ec; color:#16a34a;}
-.t-cat.cafe .ic{background:#fdf1e3; color:#c2740c;}
-.t-cat.food .ic{background:#fde9e5; color:#dc4a30;}
-@media (prefers-color-scheme: dark){
-  .t-cat.shop .ic{background:#0f2e2b;} .t-cat.landmark .ic{background:#152238;}
-  .t-cat.garden .ic{background:#122a18;} .t-cat.cafe .ic{background:#2e2013;}
-  .t-cat.food .ic{background:#301712;}
-}
-:root[data-theme="dark"] .t-cat.shop .ic{background:#0f2e2b;}
-:root[data-theme="dark"] .t-cat.landmark .ic{background:#152238;}
-:root[data-theme="dark"] .t-cat.garden .ic{background:#122a18;}
-:root[data-theme="dark"] .t-cat.cafe .ic{background:#2e2013;}
-:root[data-theme="dark"] .t-cat.food .ic{background:#301712;}
-.t-cat.all .ic{background:var(--t-primary); color:#fff; border-radius:var(--t-radius-md);}
+.t-cat .ic svg{width:32px;height:32px;}
+/* each type gets its own accent, matching the reference (not all teal) — icon color only, no background */
+.t-cat.shop .ic{color:#0d9488;}
+.t-cat.landmark .ic{color:#2563eb;}
+.t-cat.garden .ic{color:#16a34a;}
+.t-cat.cafe .ic{color:#c2740c;}
+.t-cat.food .ic{color:#dc4a30;}
+.t-cat.all .ic{color:#0d9488;}
 .t-cat.all{color:var(--t-primary);}
 
 /* ---- sections ---- */
