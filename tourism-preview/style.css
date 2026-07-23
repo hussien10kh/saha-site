@@ -61,7 +61,7 @@ a{color:inherit;text-decoration:none;}
 /* ---- header ---- */
 .t-header{
   height:60px;
-  background:#fff;
+  background:rgba(255,255,255,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
   position:sticky; top:0; z-index:20;
 }
 .t-header-inner{
@@ -208,22 +208,15 @@ a{color:inherit;text-decoration:none;}
     #F8FCFF 60%,
     #a0d6ff 100%);
   box-shadow:0 6px 24px rgba(15,42,61,.10);
-}
-.t-cta-content{
-  height:100%; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
-  position:relative; z-index:1;
+  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:nowrap;
 }
 /* The saved file has no alpha channel (flattened to a white background
    during save/paste). mix-blend-mode:multiply fakes transparency: white
    pixels multiply out to nothing over the banner's light background,
-   while the illustration's colored pixels stay visible.
-   Positioned absolute (not a flex item) so its height can exceed the
-   banner's own height and still anchor flush to the bottom, clipped
-   by the banner's overflow:hidden. */
+   while the illustration's colored pixels stay visible. */
 .t-cta-illustration{
-  position:absolute; inset-inline-start:16px; bottom:0; z-index:0;
-  height:154px; width:auto; max-width:220px;
-  object-fit:contain; object-position:bottom; mix-blend-mode:multiply;
+  align-self:flex-end; height:154px; width:auto; max-width:220px;
+  object-fit:contain; object-position:bottom; flex-shrink:0; mix-blend-mode:multiply;
 }
 @media (prefers-color-scheme: dark){ .t-cta{background:linear-gradient(180deg, #234a5c 0%, #1c232e 100%);} }
 :root[data-theme="dark"] .t-cta{background:linear-gradient(180deg, #234a5c 0%, #1c232e 100%);}
@@ -241,10 +234,11 @@ a{color:inherit;text-decoration:none;}
 .t-cta-btn:hover{background:var(--t-accent-dark);}
 
 /* ---- footer ---- */
-.t-footer{background:#fff; color:var(--t-text);}
+.t-footer{color:var(--t-text);}
 .t-footer-top{
   height:120px; box-sizing:border-box; padding:14px 20px;
-  display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:center; gap:20px;
+  background:rgba(255,255,255,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:center; gap:44px;
 }
 .t-footer-social{display:flex; gap:12px;}
 .t-footer-social a{
