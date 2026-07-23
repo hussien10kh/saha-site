@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>معاينة: سياحة | ساحة</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="style.css">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#15264a">
+<link rel="icon" href="/icon-192.png" type="image/png">
+</head>
+<body>
+
+<div id="site-header"></div>
+<div class="preview-banner">🚧 معاينة داخلية لتصميم قسم السياحة — مو مربوط بالموقع الحي ولا فيه بيانات حقيقية · <a href="add-place.html">نموذج الإضافة</a> · <a href="place.html">مثال صفحة مكان</a></div>
+
+<main class="page-body">
+  <div class="container">
+    <div class="layout">
+      <section>
+        <div class="tourism-head">
+          <h1>أماكن سياحية في سوريا</h1>
+          <p>اكتشف أماكن جربها زوار حقيقيون — من اقتراح أصحاب الأماكن أو السياح أو أهالي المنطقة، مع تقييمات وانطباعات فعلية.</p>
+        </div>
+        <div class="filter-row">
+          <span class="chip active">كل الأنواع</span>
+          <span class="chip">أثري وتاريخي</span>
+          <span class="chip">طبيعة ومتنزهات</span>
+          <span class="chip">مطاعم ومقاهي</span>
+          <span class="chip">فنادق وإقامة</span>
+          <span class="chip">أسواق تراثية</span>
+        </div>
+        <div class="place-grid">
+          <a class="place-card" href="place.html">
+            <div class="place-thumb">قلعة حلب<span class="place-type-badge">أثري</span></div>
+            <div class="place-info">
+              <h3>قلعة حلب</h3>
+              <div class="place-city">حلب — المدينة القديمة</div>
+              <div class="place-rating"><span class="stars">★★★★★</span><span class="rating-count">4.7 (128 تقييم)</span></div>
+            </div>
+          </a>
+          <a class="place-card" href="place.html">
+            <div class="place-thumb">وادي النضارة<span class="place-type-badge">طبيعة</span></div>
+            <div class="place-info">
+              <h3>وادي النضارة</h3>
+              <div class="place-city">حمص</div>
+              <div class="place-rating"><span class="stars">★★★★☆</span><span class="rating-count">4.3 (54 تقييم)</span></div>
+            </div>
+          </a>
+          <a class="place-card" href="place.html">
+            <div class="place-thumb">مقهى النوفرة<span class="place-type-badge">مطعم</span></div>
+            <div class="place-info">
+              <h3>مقهى النوفرة</h3>
+              <div class="place-city">دمشق — الحميدية</div>
+              <div class="place-rating"><span class="stars">★★★★★</span><span class="rating-count">4.9 (211 تقييم)</span></div>
+            </div>
+          </a>
+          <a class="place-card" href="place.html">
+            <div class="place-thumb">الكورنيش البحري<span class="place-type-badge">طبيعة</span></div>
+            <div class="place-info">
+              <h3>الكورنيش البحري</h3>
+              <div class="place-city">اللاذقية</div>
+              <div class="place-rating"><span class="stars">★★★★☆</span><span class="rating-count">3.9 (37 تقييم)</span></div>
+            </div>
+          </a>
+          <a class="place-card" href="place.html">
+            <div class="place-thumb">سوق الحميدية<span class="place-type-badge">سوق تراثي</span></div>
+            <div class="place-info">
+              <h3>سوق الحميدية</h3>
+              <div class="place-city">دمشق</div>
+              <div class="place-rating"><span class="stars">★★★★★</span><span class="rating-count">4.6 (302 تقييم)</span></div>
+            </div>
+          </a>
+          <a class="place-card" href="place.html">
+            <div class="place-thumb">قصر العظم<span class="place-type-badge">أثري</span></div>
+            <div class="place-info">
+              <h3>قصر العظم</h3>
+              <div class="place-city">دمشق</div>
+              <div class="place-rating"><span class="stars">★★★★☆</span><span class="rating-count">4.4 (89 تقييم)</span></div>
+            </div>
+          </a>
+        </div>
+      </section>
+      <aside class="panel sidebar-panel">
+        <h2 class="panel-title">إعلانات مميزة</h2>
+        <p style="font-size:12.5px;color:var(--muted);">(هاي المنطقة نفسها الموجودة بباقي صفحات الموقع — بتضل زي ما هي)</p>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<div id="mobile-nav"></div>
+
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async()=>{
+    await renderHeader('');
+    renderFooter();
+    renderMobileNav('');
+  })();
+</script>
+</body>
+</html>

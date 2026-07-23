@@ -1,0 +1,98 @@
+/* Tourism section — prototype only, not wired to the live site or a real
+   database yet. Adds accent tokens + components on top of ../css/style.css. */
+:root{
+  --accent:#c8792f; --accent-light:#fbeee0; --accent-dark:#9c5c1f;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --accent:#e0a35c; --accent-light:#2c2113; --accent-dark:#f0bd85; }
+}
+:root[data-theme="dark"]{ --accent:#e0a35c; --accent-light:#2c2113; --accent-dark:#f0bd85; }
+:root[data-theme="light"]{ --accent:#c8792f; --accent-light:#fbeee0; --accent-dark:#9c5c1f; }
+
+.preview-banner{
+  background:var(--accent-light); color:var(--accent-dark); border-bottom:1px solid var(--border);
+  text-align:center; font-size:12.5px; font-weight:700; padding:8px 12px;
+}
+.preview-banner a{color:inherit; text-decoration:underline;}
+
+.tourism-head{margin:22px 0 16px;}
+.tourism-head h1{font-size:19px; margin:0 0 4px;}
+.tourism-head p{font-size:13px; color:var(--muted); margin:0; max-width:60ch;}
+
+.filter-row{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px;}
+.chip{
+  border:1px solid var(--border); background:var(--bg); color:var(--text);
+  border-radius:var(--radius-pill); padding:7px 14px; font-size:12.5px; font-weight:600; cursor:pointer;
+}
+.chip.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+
+.place-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; margin-bottom:40px;}
+.place-card{border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; background:var(--surface); text-decoration:none; color:inherit; display:block;}
+.place-thumb{
+  height:120px; background:linear-gradient(135deg,var(--primary-light),var(--border));
+  display:flex; align-items:center; justify-content:center; color:var(--muted-2); font-size:12px; position:relative; text-align:center; padding:8px;
+}
+.place-type-badge{
+  position:absolute; top:8px; right:8px; background:rgba(255,255,255,.92); color:var(--accent-dark);
+  font-size:10.5px; font-weight:800; padding:3px 9px; border-radius:var(--radius-pill);
+}
+.place-info{padding:11px 12px 13px;}
+.place-info h3{font-size:14px; margin:0 0 4px;}
+.place-city{font-size:11.5px; color:var(--muted); margin-bottom:7px;}
+.place-rating{display:flex; align-items:center; gap:5px; font-size:12px;}
+.stars{color:var(--accent); letter-spacing:1px; font-size:13px;}
+.rating-count{color:var(--muted); font-size:11px;}
+
+.detail-hero{
+  height:200px; background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  display:flex; align-items:flex-end; padding:18px 20px; color:#fff; border-radius:var(--radius-lg);
+  margin-bottom:20px;
+}
+.detail-hero h1{font-size:20px; margin:0 0 6px;}
+.detail-hero-meta{display:flex; gap:14px; font-size:12.5px; opacity:.9; flex-wrap:wrap;}
+
+.detail-content{display:grid; grid-template-columns:1.6fr 1fr; gap:22px;}
+@media (max-width:640px){.detail-content{grid-template-columns:1fr;}}
+
+.rating-summary{
+  display:flex; align-items:center; gap:16px; background:var(--accent-light); border-radius:var(--radius-md);
+  padding:14px 16px; margin-bottom:16px;
+}
+.rating-big{font-size:30px; font-weight:900; color:var(--accent-dark); line-height:1;}
+.rating-summary .stars{font-size:16px;}
+.rating-summary .rc{font-size:12px; color:var(--muted);}
+
+.missing-services{margin:16px 0;}
+.missing-services h4{font-size:13px; margin:0 0 8px; color:var(--text);}
+.tag-cloud{display:flex; flex-wrap:wrap; gap:7px;}
+.tag-cloud span{
+  background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-pill);
+  padding:5px 11px; font-size:11.5px; color:var(--muted);
+}
+.tag-cloud span b{color:var(--text); font-weight:800; margin-left:3px;}
+
+.review{border-top:1px solid var(--border); padding:13px 0; display:flex; gap:11px;}
+.review-avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--primary-light);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;
+}
+.review-body{flex:1;}
+.review-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; gap:8px;}
+.review-name{font-size:13px; font-weight:700;}
+.review-date{font-size:11px; color:var(--muted);}
+.review-text{font-size:12.5px; color:var(--text); line-height:1.6;}
+.reviewer-tag{
+  display:inline-block; font-size:10px; background:var(--primary-light); color:var(--primary);
+  border-radius:var(--radius-pill); padding:2px 8px; margin-top:5px;
+}
+
+.side-panel{border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; align-self:flex-start; background:var(--bg);}
+.side-panel h4{font-size:13px; margin:0 0 10px;}
+
+.role-row{display:flex; gap:8px; flex-wrap:wrap;}
+.role-chip{border:1px solid var(--border); border-radius:var(--radius-pill); padding:8px 14px; font-size:12px; cursor:pointer; background:var(--surface); color:var(--text);}
+.role-chip.active{background:var(--primary); border-color:var(--primary); color:#fff;}
+.upload-box-mock{
+  border:1.5px dashed var(--border-hover); border-radius:var(--radius-md); padding:26px 10px;
+  text-align:center; color:var(--muted); font-size:12.5px; margin-bottom:14px; cursor:pointer;
+}

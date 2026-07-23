@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>معاينة: أضف مكانًا سياحيًا | ساحة</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="style.css">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#15264a">
+<link rel="icon" href="/icon-192.png" type="image/png">
+</head>
+<body>
+
+<div id="site-header"></div>
+<div class="preview-banner">🚧 معاينة داخلية — نموذج إضافة مكان (الأزرار هون لغرض العرض بس، ما بترسل شي) · <a href="index.html">رجوع للتصفح</a></div>
+
+<main class="page-body">
+  <div class="container">
+    <section class="panel" style="max-width:520px;margin:0 auto;">
+      <h2 class="panel-title">أضف مكانًا سياحيًا</h2>
+
+      <div class="field">
+        <label>أنا بضيف هالمكان بصفتي</label>
+        <div class="role-row">
+          <span class="role-chip active">صاحب المكان</span>
+          <span class="role-chip">سائح زرته</span>
+          <span class="role-chip">من أهالي المنطقة</span>
+        </div>
+      </div>
+
+      <div class="field"><label>اسم المكان</label><input placeholder="مثال: قلعة حلب"></div>
+
+      <div class="field">
+        <label>نوع المكان</label>
+        <select>
+          <option>أثري وتاريخي</option>
+          <option>طبيعة ومتنزهات</option>
+          <option>مطاعم ومقاهي</option>
+          <option>فنادق وإقامة</option>
+          <option>أسواق تراثية</option>
+        </select>
+      </div>
+
+      <div class="field"><label>المدينة / المنطقة</label><input placeholder="مثال: حلب — المدينة القديمة"></div>
+
+      <div class="field"><label>وصف مختصر</label><textarea placeholder="شو يميز هالمكان، وشو لازم يعرفه الزائر قبل ما يزوره؟"></textarea></div>
+
+      <div class="field">
+        <label>صور (اختياري)</label>
+        <div class="upload-box-mock">📷 اسحب صور المكان هون أو دوس للاختيار</div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;" onclick="alert('معاينة تصميم فقط — النموذج غير موصول بعد')">إضافة المكان للمراجعة</button>
+    </section>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<div id="mobile-nav"></div>
+
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (async()=>{
+    await renderHeader('');
+    renderFooter();
+    renderMobileNav('');
+  })();
+
+  document.querySelectorAll('.role-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.role-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
