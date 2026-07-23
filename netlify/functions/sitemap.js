@@ -8,7 +8,7 @@ const SUPABASE_URL = 'https://uijijqkbctemcfdzoxlg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_fKElveNWpcfKrcC9GBjo4Q_48S5m2EK';
 const AD_EXPIRY_DAYS = 90;
 
-const CATEGORIES = ['realestate', 'cars', 'mobiles', 'furniture', 'misc'];
+const CATEGORIES = ['realestate', 'cars', 'mobiles', 'furniture', 'electronics', 'misc'];
 
 /* Governorate capitals only (city name === governorate name in CITY_GROUPS,
    js/app.js) — these are the highest-search-volume city terms. Smaller towns
