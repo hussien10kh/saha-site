@@ -215,7 +215,7 @@ a{color:inherit;text-decoration:none;}
    pixels multiply out to nothing over the banner's light background,
    while the illustration's colored pixels stay visible. */
 .t-cta-illustration{
-  align-self:flex-end; height:154px; width:auto; max-width:220px;
+  align-self:flex-start; height:154px; width:auto; max-width:220px;
   object-fit:contain; object-position:bottom; flex-shrink:0; mix-blend-mode:multiply;
 }
 @media (prefers-color-scheme: dark){ .t-cta{background:linear-gradient(180deg, #234a5c 0%, #1c232e 100%);} }
