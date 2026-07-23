@@ -4,134 +4,201 @@
 <meta charset="UTF-8">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>معاينة: سياحة | ساحة</title>
+<title>معاينة: ساحة سياحة</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/style.css">
 <link rel="stylesheet" href="style.css">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#15264a">
-<link rel="icon" href="/icon-192.png" type="image/png">
 </head>
 <body>
 
-<div id="site-header"></div>
-<div class="preview-banner">🚧 معاينة داخلية لتصميم قسم السياحة — مو مربوط بالموقع الحي ولا فيه بيانات حقيقية · <a href="add-place.html">نموذج الإضافة</a> · <a href="place.html">مثال صفحة مكان</a></div>
+<div class="preview-banner">🚧 معاينة داخلية — هوية بصرية مستقلة عن موقع الإعلانات · <a href="add-place.html">نموذج الإضافة</a> · <a href="place.html">مثال صفحة مكان</a></div>
 
-<main class="page-body">
-  <div class="container">
-    <section>
-        <div class="tourism-head">
-          <h1>كل الأماكن</h1>
-          <p>اكتشف أماكن جربها زوار حقيقيون — من اقتراح أصحاب الأماكن أو السياح أو أهالي المنطقة، مع تقييمات وانطباعات فعلية.</p>
+<header class="t-header">
+  <div class="t-container t-header-inner">
+    <div class="t-logo">
+      <div class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-12a7 7 0 1 0-14 0c0 5.6 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+      <div class="t-logo-text"><b>ساحة سياحة</b><span>اكتشف كل الجميل</span></div>
+    </div>
+    <nav class="t-nav">
+      <a href="index.html" class="active">الرئيسية</a>
+      <a href="index.html">استكشف</a>
+      <a href="index.html">الأماكن</a>
+      <a href="index.html">المناطق</a>
+      <a href="add-place.html">أضف مكان</a>
+      <a href="index.html">المفضلة</a>
+    </nav>
+    <div class="t-header-right">
+      <div class="t-lang">ع <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="m6 9 6 6 6-6"/></svg></div>
+      <div class="t-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg></div>
+    </div>
+  </div>
+</header>
+
+<section class="t-hero">
+  <div class="t-hero-skyline"></div>
+  <div class="t-hero-inner">
+    <h1>اكتشف سوريا</h1>
+    <p>أماكن رائعة تنتظرك</p>
+    <div class="t-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input placeholder="ابحث عن مكان...">
+      <button class="t-search-btn" aria-label="بحث"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+    </div>
+  </div>
+</section>
+
+<div class="t-cats-wrap">
+  <div class="t-container t-cats">
+    <div class="t-cat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></div>متاجر</div>
+    <div class="t-cat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21h16M5 21V10M9 21V10M15 21V10M19 21V10M3 10l9-6 9 6"/></svg></div>معالم</div>
+    <div class="t-cat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-6"/><path d="M7 16a5 5 0 0 1 0-10 5.5 5.5 0 0 1 10 0 5 5 0 0 1 0 10H7Z"/></svg></div>حدائق</div>
+    <div class="t-cat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3c0 1-1 1-1 2M12 3c0 1-1 1-1 2"/></svg></div>مقاهي</div>
+    <div class="t-cat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2v8M5 2v5a2 2 0 0 0 2 2 2 2 0 0 0 2-2V2M7 12v10M17 2c-1.5 0-3 1.5-3 4v4c0 1 .5 2 2 2v10"/></svg></div>مطاعم</div>
+    <div class="t-cat all"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>الكل</div>
+  </div>
+</div>
+
+<main>
+  <div class="t-container t-section">
+    <div class="t-section-head">
+      <h2>⭐ أماكن مميزة</h2>
+      <a href="index.html">عرض الكل ‹</a>
+    </div>
+    <div class="t-grid">
+      <a class="t-card" href="place.html">
+        <div class="t-card-media place-thumb-teal">مقهى الأندلس
+          <span class="t-card-fav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg></span>
+          <span class="t-card-badge">4.6</span>
         </div>
-        <div class="filter-row">
-          <span class="chip">أثري وتاريخي</span>
-          <span class="chip">طبيعة ومتنزهات</span>
-          <span class="chip">مطاعم ومقاهي</span>
-          <span class="chip">فنادق وإقامة</span>
-          <span class="chip">أسواق تراثية</span>
+        <div class="t-card-body">
+          <h3>مقهى الأندلس</h3>
+          <div class="t-card-city">دمشق</div>
+          <div class="t-card-rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c1-3.5 3.8-5.5 7-5.5s6 2 7 5.5"/></svg>نصح به 128 شخص</div>
         </div>
-        <div class="place-grid">
-          <a class="place-card" href="place.html">
-            <div class="place-thumb">قلعة حلب<span class="place-type-badge">أثري</span></div>
-            <div class="place-info">
-              <h3>قلعة حلب</h3>
-              <div class="place-city">حلب — المدينة القديمة</div>
-              <div class="place-rating"><span class="stars">★★★★★</span><span class="rating-count">4.7 (128 تقييم)</span></div>
-            </div>
-          </a>
-          <a class="place-card" href="place.html">
-            <div class="place-thumb">وادي النضارة<span class="place-type-badge">طبيعة</span></div>
-            <div class="place-info">
-              <h3>وادي النضارة</h3>
-              <div class="place-city">حمص</div>
-              <div class="place-rating"><span class="stars">★★★★☆</span><span class="rating-count">4.3 (54 تقييم)</span></div>
-            </div>
-          </a>
-          <a class="place-card" href="place.html">
-            <div class="place-thumb">مقهى النوفرة<span class="place-type-badge">مطعم</span></div>
-            <div class="place-info">
-              <h3>مقهى النوفرة</h3>
-              <div class="place-city">دمشق — الحميدية</div>
-              <div class="place-rating"><span class="stars">★★★★★</span><span class="rating-count">4.9 (211 تقييم)</span></div>
-            </div>
-          </a>
-          <a class="place-card" href="place.html">
-            <div class="place-thumb">الكورنيش البحري<span class="place-type-badge">طبيعة</span></div>
-            <div class="place-info">
-              <h3>الكورنيش البحري</h3>
-              <div class="place-city">اللاذقية</div>
-              <div class="place-rating"><span class="stars">★★★★☆</span><span class="rating-count">3.9 (37 تقييم)</span></div>
-            </div>
-          </a>
-          <a class="place-card" href="place.html">
-            <div class="place-thumb">سوق الحميدية<span class="place-type-badge">سوق تراثي</span></div>
-            <div class="place-info">
-              <h3>سوق الحميدية</h3>
-              <div class="place-city">دمشق</div>
-              <div class="place-rating"><span class="stars">★★★★★</span><span class="rating-count">4.6 (302 تقييم)</span></div>
-            </div>
-          </a>
-          <a class="place-card" href="place.html">
-            <div class="place-thumb">قصر العظم<span class="place-type-badge">أثري</span></div>
-            <div class="place-info">
-              <h3>قصر العظم</h3>
-              <div class="place-city">دمشق</div>
-              <div class="place-rating"><span class="stars">★★★★☆</span><span class="rating-count">4.4 (89 تقييم)</span></div>
-            </div>
-          </a>
+      </a>
+      <a class="t-card" href="place.html">
+        <div class="t-card-media place-thumb-teal">قلعة حلب
+          <span class="t-card-fav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg></span>
+          <span class="t-card-badge">4.8</span>
         </div>
-    </section>
+        <div class="t-card-body">
+          <h3>قلعة حلب</h3>
+          <div class="t-card-city">حلب</div>
+          <div class="t-card-rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c1-3.5 3.8-5.5 7-5.5s6 2 7 5.5"/></svg>نصح به 246 شخص</div>
+        </div>
+      </a>
+      <a class="t-card" href="place.html">
+        <div class="t-card-media place-thumb-teal">منتزه الشلال
+          <span class="t-card-fav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg></span>
+          <span class="t-card-badge">4.7</span>
+        </div>
+        <div class="t-card-body">
+          <h3>منتزه الشلال</h3>
+          <div class="t-card-city">اللاذقية</div>
+          <div class="t-card-rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c1-3.5 3.8-5.5 7-5.5s6 2 7 5.5"/></svg>نصح به 96 شخص</div>
+        </div>
+      </a>
+      <a class="t-card" href="place.html">
+        <div class="t-card-media place-thumb-teal">مطعم البيت الشامي
+          <span class="t-card-fav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg></span>
+          <span class="t-card-badge">4.5</span>
+        </div>
+        <div class="t-card-body">
+          <h3>مطعم البيت الشامي</h3>
+          <div class="t-card-city">دمشق</div>
+          <div class="t-card-rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c1-3.5 3.8-5.5 7-5.5s6 2 7 5.5"/></svg>نصح به 178 شخص</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="t-container t-section">
+    <div class="t-section-head">
+      <h2>💙 أماكن مقترحة لك</h2>
+      <a href="index.html">عرض الكل ‹</a>
+    </div>
+    <div class="t-grid">
+      <a class="t-card" href="place.html">
+        <div class="t-card-media place-thumb-teal">كورنيش اللاذقية
+          <span class="t-card-fav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg></span>
+          <span class="t-card-badge">4.4</span>
+        </div>
+        <div class="t-card-body">
+          <h3>كورنيش اللاذقية</h3>
+          <div class="t-card-city">اللاذقية</div>
+          <div class="t-card-rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c1-3.5 3.8-5.5 7-5.5s6 2 7 5.5"/></svg>نصح به 75 شخص</div>
+        </div>
+      </a>
+      <a class="t-card" href="place.html">
+        <div class="t-card-media place-thumb-teal">سوق الحميدية
+          <span class="t-card-fav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg></span>
+          <span class="t-card-badge">4.6</span>
+        </div>
+        <div class="t-card-body">
+          <h3>سوق الحميدية</h3>
+          <div class="t-card-city">دمشق</div>
+          <div class="t-card-rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c1-3.5 3.8-5.5 7-5.5s6 2 7 5.5"/></svg>نصح به 215 شخص</div>
+        </div>
+      </a>
+      <a class="t-card" href="place.html">
+        <div class="t-card-media place-thumb-teal">أفاميا
+          <span class="t-card-fav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg></span>
+          <span class="t-card-badge">4.7</span>
+        </div>
+        <div class="t-card-body">
+          <h3>أفاميا</h3>
+          <div class="t-card-city">إدلب</div>
+          <div class="t-card-rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c1-3.5 3.8-5.5 7-5.5s6 2 7 5.5"/></svg>نصح به 132 شخص</div>
+        </div>
+      </a>
+      <a class="t-card" href="place.html">
+        <div class="t-card-media place-thumb-teal">مقهى الشرفة
+          <span class="t-card-fav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg></span>
+          <span class="t-card-badge">4.3</span>
+        </div>
+        <div class="t-card-body">
+          <h3>مقهى الشرفة</h3>
+          <div class="t-card-city">طرطوس</div>
+          <div class="t-card-rec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c1-3.5 3.8-5.5 7-5.5s6 2 7 5.5"/></svg>نصح به 62 شخص</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="t-container">
+    <div class="t-cta">
+      <div class="t-cta-text">
+        <h3>هل تعرف مكانًا رائعًا؟</h3>
+        <p>شاركنا مكانك المفضل وساعد الآخرين على اكتشافه</p>
+      </div>
+      <a class="t-cta-btn" href="add-place.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M12 5v14M5 12h14"/></svg>
+        أضف مكان جديد
+      </a>
+    </div>
   </div>
 </main>
 
-<footer class="site-footer">
-  <div class="container footer-top">
-    <div class="footer-logo">ساحة · سياحة</div>
-    <div class="footer-columns-row">
-      <div class="footer-col">
-        <h4>الأنواع</h4>
-        <ul>
-          <li><a href="index.html">أثري وتاريخي</a></li>
-          <li><a href="index.html">طبيعة ومتنزهات</a></li>
-          <li><a href="index.html">مطاعم ومقاهي</a></li>
-          <li><a href="index.html">فنادق وإقامة</a></li>
-          <li><a href="index.html">أسواق تراثية</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>روابط سريعة</h4>
-        <ul>
-          <li><a href="index.html">كل الأماكن</a></li>
-          <li><a href="add-place.html">أضف مكانًا</a></li>
-          <li><a href="../index.html">الموقع الرئيسي</a></li>
-          <li><a href="../contact.html">تواصل معنا</a></li>
-        </ul>
-      </div>
-      <div class="social-row">
-        <a href="https://www.facebook.com/saahasyria" target="_blank" rel="noopener" aria-label="فيسبوك"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.6h2.6l.4-3h-3v-1.9c0-.9.2-1.5 1.6-1.5h1.6V4.3C15.9 4.2 14.9 4 13.8 4c-2.4 0-4 1.5-4 4.1v2.3H7.2v3h2.6V21h3.7Z"/></svg></a>
-        <a href="https://www.instagram.com/saahasyria/" target="_blank" rel="noopener" aria-label="إنستغرام"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg></a>
-        <a href="https://x.com/saahasyria" target="_blank" rel="noopener" aria-label="تويتر"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 0 0-7 3.7A11.6 11.6 0 0 1 3.4 4.6a4.1 4.1 0 0 0 1.3 5.5c-.7 0-1.3-.2-1.9-.5v.1c0 2 1.4 3.6 3.3 4a4.2 4.2 0 0 1-1.9.1 4.1 4.1 0 0 0 3.8 2.9A8.3 8.3 0 0 1 2 18.4a11.6 11.6 0 0 0 6.3 1.9c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.2Z"/></svg></a>
-        <a href="../contact.html" aria-label="تواصل معنا"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 6.5 8 6 8-6"/></svg></a>
-      </div>
+<footer class="t-footer">
+  <div class="t-footer-top">
+    <div class="t-footer-social">
+      <a href="https://www.instagram.com/saahasyria/" target="_blank" rel="noopener" aria-label="إنستغرام"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg></a>
+      <a href="https://www.facebook.com/saahasyria" target="_blank" rel="noopener" aria-label="فيسبوك"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.6h2.6l.4-3h-3v-1.9c0-.9.2-1.5 1.6-1.5h1.6V4.3C15.9 4.2 14.9 4 13.8 4c-2.4 0-4 1.5-4 4.1v2.3H7.2v3h2.6V21h3.7Z"/></svg></a>
+      <a href="https://x.com/saahasyria" target="_blank" rel="noopener" aria-label="تويتر"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 0 0-7 3.7A11.6 11.6 0 0 1 3.4 4.6a4.1 4.1 0 0 0 1.3 5.5c-.7 0-1.3-.2-1.9-.5v.1c0 2 1.4 3.6 3.3 4a4.2 4.2 0 0 1-1.9.1 4.1 4.1 0 0 0 3.8 2.9A8.3 8.3 0 0 1 2 18.4a11.6 11.6 0 0 0 6.3 1.9c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.2Z"/></svg></a>
     </div>
+    <div class="t-footer-links">
+      <a href="index.html">من نحن</a>
+      <a href="../contact.html">اتصل بنا</a>
+      <a href="../faq.html">الأسئلة الشائعة</a>
+      <a href="../privacy.html">سياسة الخصوصية</a>
+      <a href="../terms.html">الشروط والأحكام</a>
+    </div>
+    <div class="t-footer-copy">© 2026 ساحة سياحة - اكتشف كل الجميل</div>
   </div>
-  <div class="container footer-bottom">
-    <span>© 2026 ساحة — قسم السياحة.</span>
-  </div>
+  <div class="t-footer-back"><a href="../index.html">ساحة - قسم الإعلانات</a></div>
 </footer>
-<div id="mobile-nav"></div>
 
-<script src="../js/vendor/supabase.js"></script>
-<script src="../js/supabase-client.js"></script>
-<script src="../js/app.js"></script>
-<script>
-  (async()=>{
-    await renderHeader('');
-    renderMobileNav('');
-  })();
-</script>
 </body>
 </html>
