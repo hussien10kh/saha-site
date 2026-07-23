@@ -236,9 +236,18 @@ a{color:inherit;text-decoration:none;}
 /* ---- footer ---- */
 .t-footer{color:var(--t-text);}
 .t-footer-top{
-  height:120px; box-sizing:border-box; padding:14px 20px;
+  height:120px; box-sizing:border-box;
   background:rgba(255,255,255,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-  display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:center; gap:44px;
+  display:flex; align-items:center;
+}
+/* Mirrors .t-cats-wrap's width:90% (no other styling) so this outer
+   wrapper's content box lines up exactly with the card grid's, instead
+   of hand-computing the combined percentage (which also has to account
+   for .t-section's horizontal padding). */
+.t-cats-wrap-width{width:90%; margin:0 auto;}
+.t-footer-top-inner{
+  width:95%; margin:0 auto;
+  display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:44px;
 }
 .t-footer-social{display:flex; gap:12px;}
 .t-footer-social a{
