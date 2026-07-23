@@ -61,7 +61,7 @@ a{color:inherit;text-decoration:none;}
 /* ---- header ---- */
 .t-header{
   height:60px;
-  background:linear-gradient(180deg, #f7f8f8, #e9ebec);
+  background:#fff;
   position:sticky; top:0; z-index:20;
 }
 .t-header-inner{
@@ -123,14 +123,23 @@ a{color:inherit;text-decoration:none;}
 
 /* ---- category cards ---- */
 .t-cats-wrap{
-  width:90%; margin:-35px auto 0; background:#fff; border-radius:var(--t-radius-lg) var(--t-radius-lg) 0 0;
+  width:90%; margin:-35px auto 0;
+  background:rgba(255,255,255,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border-radius:var(--t-radius-lg) var(--t-radius-lg) 0 0;
   position:relative; z-index:3; padding:24px 0 4px;
   box-shadow:0 -10px 24px rgba(15,42,61,.06);
 }
-.t-cats{display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap; padding-bottom:14px;}
+.t-cats{display:flex; align-items:stretch; justify-content:center; gap:16px; flex-wrap:wrap; padding-bottom:14px;}
+.t-cats-group{
+  display:flex; border:1px solid var(--t-border); border-radius:var(--t-radius-md);
+  overflow:hidden; background:#fff;
+}
 .t-cat{
   width:120px; height:170px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
   cursor:pointer; color:var(--t-muted); font-size:12.5px; font-weight:700;
+}
+.t-cats-group .t-cat + .t-cat{border-inline-start:1px solid var(--t-border);}
+.t-cat.all{
   border:1px solid var(--t-border); border-radius:var(--t-radius-md); background:#fff;
 }
 .t-cat .ic{
