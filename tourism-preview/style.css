@@ -101,23 +101,28 @@ a{color:inherit;text-decoration:none;}
   position:relative; overflow:hidden; height:500px; text-align:center; color:#fff;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   background:
-    linear-gradient(180deg, rgba(15,42,61,.15) 0%, rgba(15,42,61,.65) 100%),
+    linear-gradient(180deg, rgba(15,42,61,.05) 0%, rgba(15,42,61,.4) 100%),
     url('images/hero-umayyad.png') center 42% / cover no-repeat,
     linear-gradient(180deg, #f3b969 0%, #e8935a 30%, #3a7d92 62%, #164a5c 100%);
 }
 .t-hero-inner{position:relative; z-index:2;}
 .t-hero h1{font-size:32px; margin:0 0 8px; font-weight:900; text-shadow:0 2px 12px rgba(0,0,0,.25);}
 .t-hero p{font-size:15px; margin:0 0 26px; opacity:.95;}
+/* Width matches the total span of the category cards row (.t-cats:
+   5×110px group + 16px gap + 110px "الكل" card ≈ 680px) so the search
+   bar and the card row read as the same content width. */
 .t-search{
-  width:760px; height:80px; max-width:70vh; margin:0 auto; background:#fff; border-radius:35px;
-  display:flex; align-items:center; gap:12px; padding:0 24px 0 10px; box-shadow:0 10px 30px rgba(15,42,61,.25);
+  width:678px; height:80px; max-width:92vw; margin:0 auto;
+  background:rgba(255,255,255,.82); border-radius:20px;
+  display:flex; align-items:center; gap:12px; padding:0 24px 0 10px;
+  box-shadow:0 10px 30px rgba(15,42,61,.25), inset 0 2px 6px rgba(15,42,61,.12);
 }
 .t-search input{
   flex:1; border:none; outline:none; font-size:15px; font-family:inherit; background:transparent; color:var(--t-text);
   height:100%;
 }
 .t-search-btn{
-  background:var(--t-primary); color:#fff; border:none; border-radius:50%; width:60px;height:60px;
+  background:var(--t-primary); color:#fff; border:none; border-radius:20%; width:60px;height:60px;
   display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer;
 }
 .t-search-btn svg{width:22px;height:22px;}
