@@ -100,7 +100,7 @@ a{color:inherit;text-decoration:none;}
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   background:
     linear-gradient(180deg, rgba(15,42,61,.15) 0%, rgba(15,42,61,.65) 100%),
-    url('images/hero-umayyad.jpg') center 42% / cover no-repeat,
+    url('images/hero-umayyad.png') center 42% / cover no-repeat,
     linear-gradient(180deg, #f3b969 0%, #e8935a 30%, #3a7d92 62%, #164a5c 100%);
 }
 .t-hero-inner{position:relative; z-index:2;}
