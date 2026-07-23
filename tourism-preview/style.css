@@ -187,10 +187,11 @@ a{color:inherit;text-decoration:none;}
   color:rgba(255,255,255,.85); font-size:12.5px; font-weight:700; text-align:center; padding:8px;
 }
 .t-card-fav{
-  position:absolute; top:9px; left:9px; width:28px;height:28px; border-radius:50%;
-  background:rgba(255,255,255,.92); color:var(--t-accent); display:flex; align-items:center; justify-content:center;
+  position:absolute; top:9px; left:9px; width:28px;height:28px;
+  background:none; color:#fff; display:flex; align-items:center; justify-content:center;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));
 }
-.t-card-fav svg{width:14px;height:14px;}
+.t-card-fav svg{width:18px;height:18px;}
 .t-card-badge{
   position:absolute; top:9px; right:9px; background:var(--t-navy); color:#fff;
   font-size:11.5px; font-weight:800; padding:3px 9px; border-radius:var(--t-radius-pill);
