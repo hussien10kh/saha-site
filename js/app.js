@@ -260,9 +260,10 @@ const ICONS = {
   bell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5.5 2 7.5 2 7.5H4S6 13.5 6 8Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>`,
   sun:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
   moon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>`,
+  sofa:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v5"/><rect x="2" y="12" width="20" height="6" rx="1.5"/><path d="M5 18v2M19 18v2"/></svg>`,
 };
 
-const CATEGORY_LABELS = {realestate:'عقار', cars:'سيارات', misc:'غير مصنف'};
+const CATEGORY_LABELS = {realestate:'عقار', cars:'سيارات', mobiles:'موبايلات', furniture:'أثاث', misc:'غير مصنف'};
 
 /* Local placeholder shown when an ad has no photo yet (no external
    network dependency, and doubles as the "no image" state). */
@@ -910,6 +911,8 @@ async function renderHeader(activeCategory){
               <a data-cat="" href="index.html">${ICONS.home}<span>الرئيسية</span></a>
               <a data-cat="realestate" href="index.html?cat=realestate">${ICONS.building}<span>عقار</span></a>
               <a data-cat="cars" href="index.html?cat=cars">${ICONS.car}<span>سيارات</span></a>
+              <a data-cat="mobiles" href="index.html?cat=mobiles">${ICONS.device}<span>موبايلات</span></a>
+              <a data-cat="furniture" href="index.html?cat=furniture">${ICONS.sofa}<span>أثاث</span></a>
               <a data-cat="misc" href="index.html?cat=misc">${ICONS.grid}<span>غير مصنف</span></a>
             </div>
           </div>
@@ -927,6 +930,8 @@ async function renderHeader(activeCategory){
         <a class="tab" data-cat="" href="index.html">${ICONS.home}<span>الرئيسية</span></a>
         <a class="tab" data-cat="realestate" href="index.html?cat=realestate">${ICONS.building}<span>عقار</span></a>
         <a class="tab" data-cat="cars" href="index.html?cat=cars">${ICONS.car}<span>سيارات</span></a>
+        <a class="tab" data-cat="mobiles" href="index.html?cat=mobiles">${ICONS.device}<span>موبايلات</span></a>
+        <a class="tab" data-cat="furniture" href="index.html?cat=furniture">${ICONS.sofa}<span>أثاث</span></a>
         <a class="tab" data-cat="misc" href="index.html?cat=misc">${ICONS.grid}<span>غير مصنف</span></a>
       </nav>
     </div>
@@ -1047,6 +1052,8 @@ async function renderFooter(){
           <ul>
             <li><a href="index.html?cat=realestate">عقار</a></li>
             <li><a href="index.html?cat=cars">سيارات</a></li>
+            <li><a href="index.html?cat=mobiles">موبايلات</a></li>
+            <li><a href="index.html?cat=furniture">أثاث</a></li>
             <li><a href="index.html?cat=misc">غير مصنف</a></li>
           </ul>
         </div>

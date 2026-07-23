@@ -8,7 +8,7 @@ const SUPABASE_URL = 'https://uijijqkbctemcfdzoxlg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_fKElveNWpcfKrcC9GBjo4Q_48S5m2EK';
 const AD_EXPIRY_DAYS = 90;
 
-const CATEGORIES = ['realestate', 'cars', 'misc'];
+const CATEGORIES = ['realestate', 'cars', 'mobiles', 'furniture', 'misc'];
 
 /* Governorate capitals only (city name === governorate name in CITY_GROUPS,
    js/app.js) — these are the highest-search-volume city terms. Smaller towns
@@ -23,9 +23,7 @@ const CITY_PAGES = MAJOR_CITIES.flatMap(city => [
 
 const STATIC_PAGES = [
   { loc: '/', changefreq: 'hourly', priority: '1.0' },
-  { loc: '/?cat=realestate', changefreq: 'hourly', priority: '0.9' },
-  { loc: '/?cat=cars', changefreq: 'hourly', priority: '0.9' },
-  { loc: '/?cat=misc', changefreq: 'hourly', priority: '0.9' },
+  ...CATEGORIES.map(cat => ({ loc: `/?cat=${cat}`, changefreq: 'hourly', priority: '0.9' })),
   ...CITY_PAGES,
   { loc: '/add-ad.html', changefreq: 'monthly', priority: '0.6' },
   { loc: '/about.html', changefreq: 'monthly', priority: '0.4' },
