@@ -95,16 +95,29 @@ a{color:inherit;text-decoration:none;}
 }
 .t-avatar svg{width:18px;height:18px;}
 
-/* ---- hero ---- */
+/* ---- hero ----
+   Two image layers so the photo can stay fully uncropped without
+   leaving visible gaps: a blurred cover-fit copy fills the whole box,
+   and the sharp, uncropped (contain-fit) photo sits on top of it. */
 .t-hero{
   position:relative; overflow:hidden; height:500px; text-align:center; color:#fff;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  background:
-    linear-gradient(180deg, rgba(15,42,61,.15) 0%, rgba(15,42,61,.65) 100%),
-    url('images/hero-umayyad.png') center center / contain no-repeat,
-    linear-gradient(180deg, #f3b969 0%, #e8935a 30%, #3a7d92 62%, #164a5c 100%);
+  background:linear-gradient(180deg, #f3b969 0%, #e8935a 30%, #3a7d92 62%, #164a5c 100%);
 }
-.t-hero-inner{position:relative; z-index:2;}
+.t-hero-blur{
+  position:absolute; inset:-20px; z-index:0;
+  background:url('images/hero-umayyad.png') center center / cover no-repeat;
+  filter:blur(22px) brightness(.75);
+}
+.t-hero-photo{
+  position:absolute; inset:0; z-index:1;
+  background:url('images/hero-umayyad.png') center center / contain no-repeat;
+}
+.t-hero-shade{
+  position:absolute; inset:0; z-index:2;
+  background:linear-gradient(180deg, rgba(15,42,61,.15) 0%, rgba(15,42,61,.65) 100%);
+}
+.t-hero-inner{position:relative; z-index:3;}
 .t-hero h1{font-size:32px; margin:0 0 8px; font-weight:900; text-shadow:0 2px 12px rgba(0,0,0,.25);}
 .t-hero p{font-size:15px; margin:0 0 26px; opacity:.95;}
 .t-search{
