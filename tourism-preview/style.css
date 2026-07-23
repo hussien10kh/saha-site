@@ -214,7 +214,10 @@ a{color:inherit;text-decoration:none;}
    during save/paste). mix-blend-mode:multiply fakes transparency: white
    pixels multiply out to nothing over the banner's light background,
    while the illustration's colored pixels stay visible. */
-.t-cta-illustration{width:150px; height:100px; object-fit:contain; flex-shrink:0; mix-blend-mode:multiply;}
+.t-cta-illustration{
+  align-self:flex-end; height:115px; width:auto; max-width:220px;
+  object-fit:contain; object-position:bottom; flex-shrink:0; mix-blend-mode:multiply;
+}
 @media (prefers-color-scheme: dark){ .t-cta{background:linear-gradient(180deg, #234a5c 0%, #1c232e 100%);} }
 :root[data-theme="dark"] .t-cta{background:linear-gradient(180deg, #234a5c 0%, #1c232e 100%);}
 :root[data-theme="light"] .t-cta{background:linear-gradient(to top, #FFFFFF 0%,
