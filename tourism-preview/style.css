@@ -111,7 +111,6 @@ a{color:inherit;text-decoration:none;}
   width:760px; height:80px; max-width:88vw; margin:0 auto; background:#fff; border-radius:var(--t-radius-pill);
   display:flex; align-items:center; gap:12px; padding:0 10px 0 22px; box-shadow:0 10px 30px rgba(15,42,61,.25);
 }
-.t-search svg{width:18px;height:18px; color:var(--t-primary); flex-shrink:0;}
 .t-search input{
   flex:1; border:none; outline:none; font-size:15px; font-family:inherit; background:transparent; color:var(--t-text);
   height:100%;
