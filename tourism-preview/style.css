@@ -9,6 +9,10 @@
 :root[data-theme="dark"]{ --accent:#e0a35c; --accent-light:#2c2113; --accent-dark:#f0bd85; }
 :root[data-theme="light"]{ --accent:#c8792f; --accent-light:#fbeee0; --accent-dark:#9c5c1f; }
 
+/* "أضف إعلانك" doesn't belong on a tourism section — hide it without
+   touching the shared header component used by the rest of the site. */
+.cta-add{display:none !important;}
+
 .preview-banner{
   background:var(--accent-light); color:var(--accent-dark); border-bottom:1px solid var(--border);
   text-align:center; font-size:12.5px; font-weight:700; padding:8px 12px;
