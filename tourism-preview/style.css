@@ -202,23 +202,21 @@ a{color:inherit;text-decoration:none;}
 
 /* ---- CTA banner ---- */
 .t-cta{
-  position:relative; overflow:hidden; height:130px; box-sizing:border-box; margin:10px 0 36px;
+  width:95%; position:relative; overflow:hidden; height:130px; box-sizing:border-box; margin:10px auto 36px;
   border-radius:var(--t-radius-lg); padding:0 28px;
-  background:linear-gradient(120deg, var(--t-primary-light), #d7ece8);
+  background:linear-gradient(180deg, #bfe3f5 0%, #eef1f3 100%);
   display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
 }
-.t-cta-dome{
-  position:absolute; inset-inline-start:-6px; bottom:0; width:180px; height:auto;
-  color:var(--t-primary); opacity:.18;
-}
-@media (prefers-color-scheme: dark){ .t-cta{background:linear-gradient(120deg, var(--t-primary-light), var(--t-navy-2));} }
-:root[data-theme="dark"] .t-cta{background:linear-gradient(120deg, var(--t-primary-light), var(--t-navy-2));}
-.t-cta-text h3{font-size:16px; margin:0 0 4px;}
+.t-cta-illustration{width:130px; height:auto; flex-shrink:0;}
+@media (prefers-color-scheme: dark){ .t-cta{background:linear-gradient(180deg, #234a5c 0%, #1c232e 100%);} }
+:root[data-theme="dark"] .t-cta{background:linear-gradient(180deg, #234a5c 0%, #1c232e 100%);}
+.t-cta-text{text-align:center;}
+.t-cta-text h3{font-size:16px; margin:0 0 4px; color:var(--t-primary-dark);}
 .t-cta-text p{font-size:13px; color:var(--t-muted); margin:0;}
 .t-cta-btn{
   background:var(--t-accent); color:#fff; border:none; border-radius:var(--t-radius-pill);
   padding:12px 22px; font-size:13.5px; font-weight:800; display:inline-flex; align-items:center; gap:8px;
-  cursor:pointer; white-space:nowrap;
+  cursor:pointer; white-space:nowrap; flex-shrink:0;
 }
 .t-cta-btn:hover{background:var(--t-accent-dark);}
 
