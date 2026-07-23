@@ -60,7 +60,7 @@ a{color:inherit;text-decoration:none;}
 
 /* ---- header ---- */
 .t-header{
-  height:90px;
+  height:60px;
   background:linear-gradient(180deg, #f7f8f8, #e9ebec);
   position:sticky; top:0; z-index:20;
 }
@@ -123,8 +123,8 @@ a{color:inherit;text-decoration:none;}
 
 /* ---- category cards ---- */
 .t-cats-wrap{
-  background:#fff; border-radius:var(--t-radius-lg) var(--t-radius-lg) 0 0;
-  margin-top:-70px; position:relative; z-index:3; padding:24px 0 4px;
+  width:90%; margin:-35px auto 0; background:#fff; border-radius:var(--t-radius-lg) var(--t-radius-lg) 0 0;
+  position:relative; z-index:3; padding:24px 0 4px;
   box-shadow:0 -10px 24px rgba(15,42,61,.06);
 }
 .t-cats{display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap; padding-bottom:14px;}
@@ -163,15 +163,16 @@ a{color:inherit;text-decoration:none;}
 .t-section-head h2{font-size:17px; margin:0; display:flex; align-items:center; gap:8px;}
 .t-section-head a{font-size:12.5px; color:var(--t-primary); font-weight:700; display:flex; align-items:center; gap:3px;}
 
-.t-grid{display:grid; grid-template-columns:repeat(auto-fill, 320px); justify-content:center; gap:16px;}
+.t-grid{width:95%; margin:0 auto; display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;}
+@media (max-width:900px){.t-grid{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:520px){.t-grid{grid-template-columns:1fr;}}
 
 .t-card{
-  width:320px; height:360px;
   background:var(--t-surface); border:1px solid var(--t-border); border-radius:var(--t-radius-md);
   overflow:hidden; display:block;
 }
 .t-card-media{
-  width:320px; height:200px; position:relative; display:flex; align-items:center; justify-content:center;
+  aspect-ratio:16/10; width:100%; position:relative; display:flex; align-items:center; justify-content:center;
   color:rgba(255,255,255,.85); font-size:12.5px; font-weight:700; text-align:center; padding:8px;
 }
 .t-card-fav{
@@ -183,7 +184,7 @@ a{color:inherit;text-decoration:none;}
   position:absolute; top:9px; right:9px; background:var(--t-navy); color:#fff;
   font-size:11.5px; font-weight:800; padding:3px 9px; border-radius:var(--t-radius-pill);
 }
-.t-card-body{height:160px; padding:14px 16px; box-sizing:border-box;}
+.t-card-body{padding:14px 16px;}
 .t-card-body h3{font-size:14px; margin:0 0 3px;}
 .t-card-city{font-size:11.5px; color:var(--t-muted); margin-bottom:7px;}
 .t-card-rec{display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--t-muted);}
