@@ -95,22 +95,11 @@ a{color:inherit;text-decoration:none;}
 /* ---- hero ---- */
 .t-hero{
   position:relative; overflow:hidden; padding:64px 20px 0; text-align:center; color:#fff;
+  min-height:380px; display:flex; align-items:flex-end; justify-content:center;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.14), transparent 55%),
+    linear-gradient(180deg, rgba(15,42,61,.15) 0%, rgba(15,42,61,.65) 100%),
+    url('images/hero-umayyad.jpg') center 42% / cover no-repeat,
     linear-gradient(180deg, #f3b969 0%, #e8935a 30%, #3a7d92 62%, #164a5c 100%);
-}
-.t-hero-skyline{
-  position:absolute; inset:auto 0 0 0; height:38%; opacity:.9;
-  background-image:
-    radial-gradient(circle at 12% 100%, transparent 24px, var(--t-navy) 25px),
-    radial-gradient(circle at 30% 100%, transparent 34px, var(--t-navy) 35px),
-    radial-gradient(circle at 50% 100%, transparent 44px, var(--t-navy) 45px),
-    radial-gradient(circle at 70% 100%, transparent 34px, var(--t-navy) 35px),
-    radial-gradient(circle at 88% 100%, transparent 24px, var(--t-navy) 25px);
-  background-repeat:no-repeat;
-  background-size:20% 60px,20% 80px,20% 100px,20% 80px,20% 60px;
-  background-position:0% 100%,20% 100%,40% 100%,65% 100%,85% 100%;
-  mask-image:linear-gradient(180deg, transparent, #000 40%);
 }
 .t-hero-inner{position:relative; z-index:2; padding-bottom:54px;}
 .t-hero h1{font-size:32px; margin:0 0 8px; font-weight:900; text-shadow:0 2px 12px rgba(0,0,0,.25);}
@@ -143,7 +132,23 @@ a{color:inherit;text-decoration:none;}
   display:flex; align-items:center; justify-content:center;
 }
 .t-cat .ic svg{width:24px;height:24px;}
-.t-cat.all .ic{background:var(--t-primary); color:#fff;}
+/* each type gets its own accent, matching the reference (not all teal) */
+.t-cat.shop .ic{background:#e3f6f3; color:#0d9488;}
+.t-cat.landmark .ic{background:#e6f0fb; color:#2563eb;}
+.t-cat.garden .ic{background:#e9f7ec; color:#16a34a;}
+.t-cat.cafe .ic{background:#fdf1e3; color:#c2740c;}
+.t-cat.food .ic{background:#fde9e5; color:#dc4a30;}
+@media (prefers-color-scheme: dark){
+  .t-cat.shop .ic{background:#0f2e2b;} .t-cat.landmark .ic{background:#152238;}
+  .t-cat.garden .ic{background:#122a18;} .t-cat.cafe .ic{background:#2e2013;}
+  .t-cat.food .ic{background:#301712;}
+}
+:root[data-theme="dark"] .t-cat.shop .ic{background:#0f2e2b;}
+:root[data-theme="dark"] .t-cat.landmark .ic{background:#152238;}
+:root[data-theme="dark"] .t-cat.garden .ic{background:#122a18;}
+:root[data-theme="dark"] .t-cat.cafe .ic{background:#2e2013;}
+:root[data-theme="dark"] .t-cat.food .ic{background:#301712;}
+.t-cat.all .ic{background:var(--t-primary); color:#fff; border-radius:var(--t-radius-md);}
 .t-cat.all{color:var(--t-primary);}
 
 /* ---- sections ---- */
@@ -181,9 +186,14 @@ a{color:inherit;text-decoration:none;}
 
 /* ---- CTA banner ---- */
 .t-cta{
+  position:relative; overflow:hidden;
   margin:10px 20px 36px; border-radius:var(--t-radius-lg); padding:26px 28px;
   background:linear-gradient(120deg, var(--t-primary-light), #d7ece8);
   display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+}
+.t-cta-dome{
+  position:absolute; inset-inline-start:-6px; bottom:0; width:180px; height:auto;
+  color:var(--t-primary); opacity:.18;
 }
 :root[data-theme="dark"] .t-cta, @media (prefers-color-scheme: dark){.t-cta{background:linear-gradient(120deg, var(--t-primary-light), var(--t-navy-2));}}
 .t-cta-text h3{font-size:16px; margin:0 0 4px;}
