@@ -106,7 +106,7 @@ a{color:inherit;text-decoration:none;}
 }
 /* Content block is pinned 300px down from the top of the (now 600px) hero. */
 .t-hero-inner{
-  position:absolute; inset-block-start:300px; height:50%; width:100%;
+  position:absolute; inset-block-start:100px; height:50%; width:100%;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   z-index:2;
 }
@@ -130,7 +130,7 @@ a{color:inherit;text-decoration:none;}
 
 /* ---- category cards ---- */
 .t-cats-wrap{
-  width:85%; margin:-35px auto 0;
+  width:85%; margin:-70px auto 0;
   background:rgba(255,255,255,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
   border-radius:65px 65px 0 0;
   position:relative; z-index:3; padding:24px 0 4px;
