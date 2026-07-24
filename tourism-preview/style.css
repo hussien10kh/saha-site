@@ -98,27 +98,23 @@ a{color:inherit;text-decoration:none;}
 
 /* ---- hero ---- */
 .t-hero{
-  position:relative; overflow:hidden; height:500px; text-align:center; color:#fff;
+  position:relative; overflow:hidden; height:600px; text-align:center; color:#fff;
   background:
-    linear-gradient(180deg, rgba(15,42,61,.05) 0%, rgba(15,42,61,.4) 100%),
+    linear-gradient(180deg, rgba(15,42,61,.02) 0%, rgba(15,42,61,.28) 100%),
     url('images/hero-umayyad.png') center 42% / cover no-repeat,
     linear-gradient(180deg, #f3b969 0%, #e8935a 30%, #3a7d92 62%, #164a5c 100%);
 }
-/* Content lives in the top half of the hero, centered within that
-   half specifically — not the full hero height. */
+/* Content block is pinned 300px down from the top of the (now 600px) hero. */
 .t-hero-inner{
-  position:absolute; inset-block-start:0; height:50%; width:100%;
+  position:absolute; inset-block-start:300px; height:50%; width:100%;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   z-index:2;
 }
 .t-hero h1{font-size:32px; margin:0 0 8px; font-weight:900; text-shadow:0 2px 12px rgba(0,0,0,.25);}
 .t-hero p{font-size:15px; margin:0 0 26px; opacity:.95;}
-/* Width matches the total span of the category cards row (.t-cats:
-   5×110px group + 16px gap + 110px "الكل" card ≈ 680px) so the search
-   bar and the card row read as the same content width. */
 .t-search{
-  width:678px; height:80px; max-width:92vw; margin:0 auto;
-  background:rgba(255,255,255,.82); border-radius:20px;
+  width:600px; height:80px; max-width:92vw; margin:0 auto;
+  background:rgba(255,255,255,.6); border:1px solid var(--t-primary); border-radius:20px;
   display:flex; align-items:center; gap:12px; padding:0 24px 0 10px;
   box-shadow:0 10px 30px rgba(15,42,61,.25), inset 0 2px 6px rgba(15,42,61,.12);
 }
