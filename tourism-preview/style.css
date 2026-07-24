@@ -87,12 +87,14 @@ a{color:inherit;text-decoration:none;}
 
 .t-header-right{display:flex; align-items:center; gap:12px;}
 .t-lang{
-  border:1px solid var(--t-border); border-radius:var(--t-radius-pill); padding:6px 12px;
-  font-size:12.5px; color:var(--t-muted); display:flex; align-items:center; gap:4px;
+  border:1px solid var(--t-border); border-radius:var(--t-radius-pill); padding:6px 14px;
+  font-size:12.5px; font-weight:700; color:var(--t-text); background:none; cursor:pointer;
+  display:flex; align-items:center; gap:4px; font-family:inherit;
 }
+.t-lang:hover{border-color:var(--t-primary); color:var(--t-primary);}
 .t-avatar{
-  width:36px;height:36px;border-radius:50%;background:var(--t-bg); border:1px solid var(--t-border);
-  display:flex;align-items:center;justify-content:center; color:var(--t-muted);
+  width:36px;height:36px;border-radius:50%;background:#0d9488; border:1px solid #0d9488;
+  display:flex;align-items:center;justify-content:center; color:#fff;
 }
 .t-avatar svg{width:18px;height:18px;}
 

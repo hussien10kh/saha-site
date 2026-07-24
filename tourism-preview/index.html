@@ -30,7 +30,7 @@
       <a href="index.html">المفضلة</a>
     </nav>
     <div class="t-header-right">
-      <div class="t-lang">ع <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="m6 9 6 6 6-6"/></svg></div>
+      <button type="button" class="t-lang" id="langToggle"></button>
       <div class="t-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg></div>
     </div>
   </div>
@@ -206,5 +206,27 @@
   <div class="t-footer-back"><a href="../index.html">ساحة - قسم الإعلانات</a></div>
 </footer>
 
+<script>
+  /* Toggles the <html> dir/lang attributes and the button's own label
+     between ar/en. Starts from the browser's language. Note: this
+     switches direction and the label only — the mock Arabic content
+     on the page itself isn't translated (that needs real English
+     copy, out of scope for this layout prototype). */
+  (function(){
+    var btn = document.getElementById('langToggle');
+    if(!btn) return;
+    var lang = (navigator.language || 'ar').toLowerCase().indexOf('en') === 0 ? 'en' : 'ar';
+    function apply(){
+      document.documentElement.setAttribute('lang', lang);
+      document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      btn.textContent = lang === 'ar' ? 'عربي' : 'English';
+    }
+    apply();
+    btn.addEventListener('click', function(){
+      lang = lang === 'ar' ? 'en' : 'ar';
+      apply();
+    });
+  })();
+</script>
 </body>
 </html>
