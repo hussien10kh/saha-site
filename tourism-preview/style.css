@@ -585,7 +585,7 @@ a {
 .t-cta {
   width: 95%;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   min-height: 84px;
   box-sizing: border-box;
   margin: 10px auto 36px;
@@ -598,18 +598,23 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: clamp(8px, 3vw, 20px);
+  gap: 8px;
   flex-wrap: nowrap;
 }
 
 /* The saved file has no alpha channel (flattened to a white background
    during save/paste). mix-blend-mode:multiply fakes transparency: white
    pixels multiply out to nothing over the banner's light background,
-   while the illustration's colored pixels stay visible. */
+   while the illustration's colored pixels stay visible.
+   (align-self:stretch with height:auto looked right in theory, but for
+   a replaced element with no cap it stretched to the image's own
+   *natural* 1024px height instead of the flex line's height, which
+   then inflated the whole banner to match — circular. Back to an
+   explicit height, just tuned to track close under the banner's own
+   height at both the mobile and desktop min-heights.) */
 .t-cta-illustration {
-  height: clamp(48px, 12vw, 76px);
+  height: clamp(64px, 9vw, 96px);
   width: auto;
-  max-width: clamp(56px, 16vw, 110px);
   object-fit: contain;
   object-position: bottom;
   flex-shrink: 0;
@@ -639,6 +644,7 @@ a {
   gap: 8px;
   flex: 1;
   min-width: 0;
+  margin-right: -40px;
 }
 
 .t-cta-heading {
