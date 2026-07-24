@@ -58,15 +58,18 @@ a{color:inherit;text-decoration:none;}
 }
 .preview-banner a{text-decoration:underline;}
 
-/* ---- header ---- */
+/* ---- header ----
+   min-height in vh (≈ the old 60px on a common ~780px-tall viewport)
+   instead of a hard height, so wrapped content on narrow/short
+   screens grows the bar instead of getting clipped by it. */
 .t-header{
-  height:60px;
+  min-height:7.7vh; height:auto;
   background:rgba(255,255,255,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
   position:sticky; top:0; z-index:20;
   box-shadow:0 4px 12px rgba(15,42,61,.08);
 }
 .t-header-inner{
-  width:93%; margin:0 auto; height:100%;
+  width:93%; margin:0 auto; min-height:60px; padding:8px 0;
   display:flex; align-items:center; justify-content:space-between; gap:16px;
   flex-wrap:wrap;
 }
@@ -146,9 +149,14 @@ a{color:inherit;text-decoration:none;}
   display:flex; border:1px solid var(--t-border); border-radius:var(--t-radius-md);
   overflow:hidden; background:#fff;
 }
+/* Fluid instead of a fixed 90x110 — shrinks smoothly with the
+   viewport (and wraps to a new line if it still doesn't fit) rather
+   than needing a horizontal scrollbar or getting squeezed by flexbox
+   below its own icon size. */
 .t-cat{
-  width:90px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:25px;
-  cursor:pointer; color:var(--t-muted); font-size:12.5px; font-weight:700;
+  width:clamp(58px, 11vw, 90px); aspect-ratio:9/11;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(10px, 3vw, 25px);
+  cursor:pointer; color:var(--t-muted); font-size:clamp(10.5px, 2vw, 12.5px); font-weight:700;
 }
 .t-cats-group .t-cat + .t-cat{border-inline-start:1px solid var(--t-border);}
 .t-cat.all{
@@ -158,7 +166,7 @@ a{color:inherit;text-decoration:none;}
   background:none; color:var(--t-primary);
   display:flex; align-items:center; justify-content:center;
 }
-.t-cat .ic svg{width:32px;height:32px;}
+.t-cat .ic svg{width:clamp(20px, 5vw, 32px); height:clamp(20px, 5vw, 32px);}
 /* each type gets its own accent, matching the reference (not all teal) — icon color only, no background */
 .t-cat.shop .ic{color:#0d9488;}
 .t-cat.landmark .ic{color:#2563eb;}
@@ -175,7 +183,7 @@ a{color:inherit;text-decoration:none;}
 .t-section-head a .chev{width:17px; height:17px; flex-shrink:0;}
 
 .t-grid{width:95%; margin:0 auto; display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;}
-@media (max-width:900px){.t-grid{grid-template-columns:repeat(3,1fr); gap:10px;}}
+@media (max-width:1024px){.t-grid{grid-template-columns:repeat(3,1fr); gap:10px;}}
 
 .t-card{
   background:var(--t-surface); border:1px solid var(--t-border); border-radius:var(--t-radius-md);
@@ -183,7 +191,7 @@ a{color:inherit;text-decoration:none;}
 }
 .t-card-media{
   aspect-ratio:16/10; width:100%; position:relative; display:flex; align-items:center; justify-content:center;
-  color:rgba(255,255,255,.85); font-size:12.5px; font-weight:700; text-align:center; padding:8px;
+  color:rgba(255,255,255,.85); font-size:clamp(10px, 2.2vw, 12.5px); font-weight:700; text-align:center; padding:8px;
 }
 .t-card-fav{
   position:absolute; top:9px; left:9px; width:28px;height:28px;
@@ -195,28 +203,28 @@ a{color:inherit;text-decoration:none;}
   position:absolute; top:9px; right:9px; background:var(--t-navy); color:#fff;
   font-size:11.5px; font-weight:800; padding:3px 9px; border-radius:var(--t-radius-pill);
 }
-.t-card-body{padding:14px 16px;}
-.t-card-body h3{font-size:14px; margin:0 0 3px;}
-.t-card-city{font-size:11.5px; color:var(--t-muted); margin-bottom:7px;}
-.t-card-rec{display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--t-muted);}
-.t-card-rec svg{width:13px;height:13px; color:var(--t-primary);}
+.t-card-body{padding:clamp(8px, 2.5vw, 14px) clamp(8px, 3vw, 16px);}
+.t-card-body h3{font-size:clamp(11.5px, 2.4vw, 14px); margin:0 0 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.t-card-city{font-size:clamp(10px, 2vw, 11.5px); color:var(--t-muted); margin-bottom:7px;}
+.t-card-rec{display:flex; align-items:center; gap:5px; font-size:clamp(10px, 2vw, 11.5px); color:var(--t-muted);}
+.t-card-rec svg{width:13px;height:13px; color:var(--t-primary); flex-shrink:0;}
 
 /* ---- CTA banner ---- */
 .t-cta{
-  width:95%; position:relative; overflow:hidden; height:130px; box-sizing:border-box; margin:10px auto 36px;
-  border-radius:var(--t-radius-lg); padding:0 28px;
+  width:95%; position:relative; overflow:hidden; min-height:130px; box-sizing:border-box; margin:10px auto 36px;
+  border-radius:var(--t-radius-lg); padding:clamp(14px, 3vw, 0) clamp(16px, 4vw, 28px);
   background:linear-gradient(to top, #FFFFFF 0%,
     #F8FCFF 60%,
     #a0d6ff 100%);
   box-shadow:0 6px 24px rgba(15,42,61,.10);
-  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:nowrap;
+  display:flex; align-items:center; justify-content:space-between; gap:clamp(10px, 3vw, 20px); flex-wrap:wrap;
 }
 /* The saved file has no alpha channel (flattened to a white background
    during save/paste). mix-blend-mode:multiply fakes transparency: white
    pixels multiply out to nothing over the banner's light background,
    while the illustration's colored pixels stay visible. */
 .t-cta-illustration{
-  align-self:flex-start; height:154px; width:auto; max-width:220px;
+  align-self:flex-start; height:clamp(90px, 22vw, 154px); width:auto; max-width:clamp(120px, 30vw, 220px);
   object-fit:contain; object-position:bottom; flex-shrink:0; mix-blend-mode:multiply;
 }
 @media (prefers-color-scheme: dark){ .t-cta{background:linear-gradient(180deg, #234a5c 0%, #1c232e 100%);} }
@@ -224,12 +232,13 @@ a{color:inherit;text-decoration:none;}
 :root[data-theme="light"] .t-cta{background:linear-gradient(to top, #FFFFFF 0%,
     #F8FCFF 60%,
     #a0d6ff 100%);}
-.t-cta-text{text-align:center;}
-.t-cta-text h3{font-size:16px; margin:0 0 4px; color:var(--t-primary-dark);}
-.t-cta-text p{font-size:13px; color:var(--t-muted); margin:0;}
+.t-cta-text{text-align:center; flex:1; min-width:140px;}
+.t-cta-text h3{font-size:clamp(13.5px, 2.6vw, 16px); margin:0 0 4px; color:var(--t-primary-dark);}
+.t-cta-text p{font-size:clamp(11.5px, 2vw, 13px); color:var(--t-muted); margin:0;}
 .t-cta-btn{
   background:var(--t-accent); color:#fff; border:none; border-radius:var(--t-radius-pill);
-  padding:12px 22px; font-size:13.5px; font-weight:800; display:inline-flex; align-items:center; gap:8px;
+  padding:clamp(9px, 2vw, 12px) clamp(14px, 3vw, 22px); font-size:clamp(12px, 2.2vw, 13.5px); font-weight:800;
+  display:inline-flex; align-items:center; gap:8px;
   cursor:pointer; white-space:nowrap; flex-shrink:0;
 }
 .t-cta-btn:hover{background:var(--t-accent-dark);}
@@ -237,7 +246,7 @@ a{color:inherit;text-decoration:none;}
 /* ---- footer ---- */
 .t-footer{color:var(--t-text);}
 .t-footer-top{
-  height:60px; box-sizing:border-box;
+  min-height:7.7vh; height:auto; box-sizing:border-box; padding:14px 0;
   background:rgba(255,255,255,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
   display:flex; align-items:center;
   box-shadow:0 -4px 12px rgba(15,42,61,.08);
@@ -273,23 +282,10 @@ a{color:inherit;text-decoration:none;}
 /* place-thumb backgrounds reused on detail/add pages */
 .place-thumb-teal{background:linear-gradient(135deg,var(--t-primary),var(--t-navy));}
 
-/* ---- mobile fixes ----
-   Several bars (header, footer, category row) were given fixed
-   heights based on desktop content, then wrapped/shrank badly at
-   phone widths — content spilled outside its box and visually
-   overlapped whatever sat next to it. Found by inspecting real
-   rendered rects at a 375px viewport, not guessed. */
+/* ---- mobile fixes ---- */
 @media (max-width:820px){
-  .t-header, .t-header-inner{height:auto; min-height:60px; padding:8px 0;}
   .t-nav{display:none;} /* no hamburger menu built for this prototype yet — dropped rather than left overlapping */
-  .t-footer-top{height:auto; padding:20px 0;}
   .t-footer-top-inner{gap:18px;}
-
-  /* Category row: let it scroll horizontally instead of shrinking
-     every card below its own icon+label size. */
-  .t-cats{flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; -webkit-overflow-scrolling:touch; padding-inline:4px;}
-  .t-cats-group, .t-cat{flex-shrink:0;}
-
   .t-hero h1{font-size:24px;}
   .t-hero p{font-size:13px; margin-bottom:18px;}
 }
