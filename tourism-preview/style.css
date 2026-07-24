@@ -585,12 +585,12 @@ a {
 .t-cta {
   width: 95%;
   position: relative;
-  overflow: visible;
-  min-height: 84px;
+  overflow: hidden;
+  min-height: 130px;
   box-sizing: border-box;
-  margin: 10px auto 36px;
+  margin: 10px auto 20px;
   border-radius: var(--t-radius-lg);
-  padding: 12px clamp(10px, 4vw, 24px);
+  padding: 14px clamp(16px, 4vw, 28px);
   background: linear-gradient(to top, #FFFFFF 0%,
       #F8FCFF 60%,
       #a0d6ff 100%);
@@ -598,22 +598,16 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 20px;
   flex-wrap: nowrap;
 }
 
 /* The saved file has no alpha channel (flattened to a white background
    during save/paste). mix-blend-mode:multiply fakes transparency: white
    pixels multiply out to nothing over the banner's light background,
-   while the illustration's colored pixels stay visible.
-   (align-self:stretch with height:auto looked right in theory, but for
-   a replaced element with no cap it stretched to the image's own
-   *natural* 1024px height instead of the flex line's height, which
-   then inflated the whole banner to match — circular. Back to an
-   explicit height, just tuned to track close under the banner's own
-   height at both the mobile and desktop min-heights.) */
+   while the illustration's colored pixels stay visible. */
 .t-cta-illustration {
-  height: clamp(64px, 9vw, 96px);
+  height: clamp(90px, 22vw, 154px);
   width: auto;
   object-fit: contain;
   object-position: bottom;
@@ -644,7 +638,6 @@ a {
   gap: 8px;
   flex: 1;
   min-width: 0;
-  margin-right: -40px;
 }
 
 .t-cta-heading {
@@ -785,6 +778,25 @@ a {
 @media (max-width:820px) {
   .t-nav {
     display: none;
+  }
+
+  /* Compact CTA banner — laptop keeps the spacious base rules above;
+     these values are mobile-only. */
+  .t-cta {
+    overflow: visible;
+    min-height: 84px;
+    padding: 12px clamp(10px, 4vw, 24px);
+    gap: 8px;
+  }
+
+  .t-cta-illustration {
+    height: 95px;
+    margin-left: -15px;
+    margin-bottom: -25px;
+  }
+
+  .t-cta-stack {
+    margin-right: -20px;
   }
 
   /* no hamburger menu built for this prototype yet — dropped rather than left overlapping */
