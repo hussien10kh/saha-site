@@ -579,9 +579,9 @@ a {
 }
 
 /* ---- CTA banner ----
-   Wide, short rectangle: image on the left, a text+button column
-   stacked on the right — not the earlier 3-across row, which never
-   had room to breathe at narrow widths. */
+   Original 3-item row: button, centered text block, illustration.
+   Base rules below are the desktop/tablet design; the phone-only
+   media query further down restyles this into a compact stack. */
 .t-cta {
   width: 95%;
   position: relative;
@@ -590,7 +590,7 @@ a {
   box-sizing: border-box;
   margin: 10px auto 20px;
   border-radius: var(--t-radius-lg);
-  padding: 14px clamp(16px, 4vw, 28px);
+  padding: 0 clamp(16px, 4vw, 28px);
   background: linear-gradient(to top, #FFFFFF 0%,
       #F8FCFF 60%,
       #a0d6ff 100%);
@@ -607,8 +607,10 @@ a {
    pixels multiply out to nothing over the banner's light background,
    while the illustration's colored pixels stay visible. */
 .t-cta-illustration {
-  height: clamp(90px, 22vw, 154px);
+  align-self: flex-start;
+  height: 154px;
   width: auto;
+  max-width: 220px;
   object-fit: contain;
   object-position: bottom;
   flex-shrink: 0;
@@ -631,21 +633,20 @@ a {
       #a0d6ff 100%);
 }
 
-.t-cta-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
+.t-cta-text {
+  text-align: center;
 }
 
-.t-cta-heading {
-  font-size: clamp(12.5px, 2.6vw, 15px);
-  margin: 0;
+.t-cta-text h3 {
+  font-size: 16px;
+  margin: 0 0 4px;
   color: var(--t-primary-dark);
-  font-weight: 800;
-  text-align: center;
+}
+
+.t-cta-text p {
+  font-size: 13px;
+  color: var(--t-muted);
+  margin: 0;
 }
 
 .t-cta-btn {
@@ -653,12 +654,12 @@ a {
   color: #fff;
   border: none;
   border-radius: var(--t-radius-pill);
-  padding: clamp(6px, 2vw, 12px) clamp(9px, 3vw, 22px);
-  font-size: clamp(9.5px, 2.2vw, 13.5px);
+  padding: 12px 22px;
+  font-size: 13.5px;
   font-weight: 800;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -780,24 +781,6 @@ a {
     display: none;
   }
 
-  /* Compact CTA banner — laptop keeps the spacious base rules above;
-     these values are mobile-only. */
-  .t-cta {
-    overflow: visible;
-    min-height: 84px;
-    padding: 12px clamp(10px, 4vw, 24px);
-    gap: 8px;
-  }
-
-  .t-cta-illustration {
-    height: 95px;
-    margin-left: -15px;
-    margin-bottom: -25px;
-  }
-
-  .t-cta-stack {
-    margin-right: -20px;
-  }
 
   /* no hamburger menu built for this prototype yet — dropped rather than left overlapping */
   .t-footer-top-inner {
@@ -844,5 +827,29 @@ a {
   .t-hero p {
     font-size: 13px;
     margin-bottom: 18px;
+  }
+}
+
+/* ---- phone-only CTA compaction ----
+   Desktop/tablet keep the 3-item row above; true phone widths get a
+   shorter rectangle with the text+button pulled together and the
+   image shrunk, since the 3-item row has no room to breathe below
+   this width. */
+@media (max-width:520px) {
+  .t-cta {
+    overflow: visible;
+    min-height: 84px;
+    padding: 12px clamp(10px, 4vw, 24px);
+    gap: 8px;
+  }
+
+  .t-cta-illustration {
+    height: 95px;
+    margin-left: -15px;
+    margin-bottom: -25px;
+  }
+
+  .t-cta-text {
+    margin-right: -20px;
   }
 }
