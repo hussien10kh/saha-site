@@ -55,7 +55,8 @@
   </div>
   <div class="field">
     <label>المحافظة <span class="req">*</span></label>
-    <input type="text" id="tGov" placeholder="مثال: دمشق" required>
+    <select id="tGov" required></select>
+    <script>document.getElementById('tGov').innerHTML = FormUX.governorateOptionsHTML();</script>
   </div>
   <div class="field">
     <label>المدينة / المنطقة <span class="req">*</span></label>
@@ -92,6 +93,9 @@
   const submitBtn = $("submitBtn");
   await FormUX.requireAuth({ loginUrl: 'login.html', submitBtnId: 'submitBtn' });
 
+  FormUX.attachLiveValidator($("tTitle"), FormUX.isMeaningfulText, 'عنوان التمرين مو واضح');
+  FormUX.attachLiveValidator($("tCity"), FormUX.isMeaningfulText, 'اسم المدينة مو واضح');
+
   let period = "صباحاً";
   $("tPeriod").addEventListener("click", (e) => {
     const opt = e.target.closest("[data-value]");
@@ -115,10 +119,10 @@
     const maxParticipants = Number(countEl.value);
     const fee = Number($("tFee").value);
 
-    if (!title) return FormUX.markFieldError(titleEl, 'الرجاء كتابة عنوان التمرين');
+    if (!FormUX.isMeaningfulText(title)) return FormUX.markFieldError(titleEl, 'عنوان التمرين مو واضح');
     if (!type) return FormUX.markFieldError(typeEl, 'اختر نوع التمرين');
-    if (!governorate) return FormUX.markFieldError(govEl, 'الرجاء كتابة المحافظة');
-    if (!city) return FormUX.markFieldError(cityEl, 'الرجاء كتابة المدينة');
+    if (!governorate) return FormUX.markFieldError(govEl, 'اختر المحافظة');
+    if (!FormUX.isMeaningfulText(city)) return FormUX.markFieldError(cityEl, 'اسم المدينة مو واضح');
     if (!maxParticipants || maxParticipants < 2) return FormUX.markFieldError(countEl, 'عدد المشاركين لازم يكون 2 على الأقل');
 
     FormUX.setSubmitLoading(submitBtn, true, 'جاري الحفظ...');

@@ -133,10 +133,35 @@ const SiteCore = {
   },
 
   // بتكتب الهيدر/الفوتر مكان عناصر النائب (placeholders) - بتنكتب فوراً وقت التحميل
-  // فما بيصير وميض ولا انزياح بالتخطيط
+  // فما بيصير وميض ولا انزياح بالتخطيط. ثم يفحص الجلسة async ويبدّل CTA "تسجيل الدخول"
+  // بـ"حسابي" (يودّي لـ../account.html) لو المستخدم مسجّل — بدون انتظار ولا وميض ملحوظ.
   mountHeader(opts) {
     const el = document.getElementById("siteHeader");
     if (el) el.outerHTML = this.headerHTML(opts);
+    // فحص المستخدم بشكل غير متزامن (يفشل بصمت لو ما في اتصال — يبقى الافتراضي "تسجيل الدخول")
+    if (typeof sb !== 'undefined' && sb.auth) {
+      sb.auth.getUser().then(({ data }) => {
+        const user = data && data.user;
+        if (!user) return;
+        const actions = document.querySelector('header.nav .nav-actions');
+        if (!actions) return;
+        // شيل زر "تسجيل الدخول" و"إنشاء حساب"، حط "حسابي" و"خروج"
+        actions.querySelectorAll('a').forEach(a => {
+          const href = a.getAttribute('href') || '';
+          if (href === 'login.html' || href === 'register.html') a.remove();
+        });
+        const name = (user.user_metadata && user.user_metadata.name) || (user.email || '').split('@')[0] || 'حسابي';
+        actions.insertAdjacentHTML('beforeend', `
+          <a class="btn btn-outline" href="../account.html" title="${name}">👤 ${name.length > 14 ? name.slice(0,14)+'…' : name}</a>
+          <button type="button" class="btn btn-outline" id="mlbLogoutBtn" style="border-color:#d93025;color:#d93025;">خروج</button>
+        `);
+        const btn = document.getElementById('mlbLogoutBtn');
+        if (btn) btn.addEventListener('click', async () => {
+          await sb.auth.signOut();
+          location.reload();
+        });
+      }).catch(() => {});
+    }
   },
 
   mountFooter() {

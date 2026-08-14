@@ -36,18 +36,66 @@ const FormUX = (() => {
   }
 
   // ---------- Field errors ----------
+  function _errorMsgElFor(el) {
+    // نضيف <div class="fux-field-error"> مباشرة بعد الحقل (أو الـwrapper إذا موجود مثل .fux-pw-wrap)
+    let host = el;
+    if (el.parentElement && el.parentElement.classList.contains('fux-pw-wrap')) host = el.parentElement;
+    let msgEl = host.nextElementSibling;
+    if (!msgEl || !msgEl.classList || !msgEl.classList.contains('fux-field-error')) {
+      msgEl = document.createElement('div');
+      msgEl.className = 'fux-field-error';
+      host.insertAdjacentElement('afterend', msgEl);
+    }
+    return msgEl;
+  }
   function clearFieldErrors(scope) {
     (scope || document).querySelectorAll('.field-invalid').forEach((el) => el.classList.remove('field-invalid'));
+    (scope || document).querySelectorAll('.fux-field-error').forEach((el) => { el.textContent = ''; el.classList.remove('show'); });
+  }
+  function _clearOne(el) {
+    el.classList.remove('field-invalid');
+    const msg = _errorMsgElFor(el);
+    msg.textContent = ''; msg.classList.remove('show');
   }
   function markFieldError(el, message) {
     if (!el) { toast(message, 'error'); return; }
     el.classList.add('field-invalid');
+    // رسالة خطأ تحت الحقل مباشرة
+    if (message) {
+      const msgEl = _errorMsgElFor(el);
+      msgEl.textContent = message;
+      msgEl.classList.add('show');
+    }
     try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
     try { el.focus({ preventScroll: true }); } catch (e) {}
-    if (message) toast(message, 'error');
-    const clear = () => { el.classList.remove('field-invalid'); el.removeEventListener('input', clear); el.removeEventListener('change', clear); };
+    // اسمع أول تغيير — البورد الأحمر والرسالة يختفوا فور ما يبلّش يكتب
+    const clear = () => { _clearOne(el); el.removeEventListener('input', clear); el.removeEventListener('change', clear); };
     el.addEventListener('input', clear);
     el.addEventListener('change', clear);
+  }
+
+  // ---------- Live validation on blur ----------
+  // اربطها بحقول محدّدة مشان لما المستخدم يخرج من الحقل بقيمة مو منطقية، يشوف الخطأ فوراً
+  // (بدل ما يستنى الضغط على "إرسال"). يستعمل validatorFn(value) → true إذا صحيح.
+  function attachLiveValidator(el, validatorFn, errorMessage) {
+    if (!el) return;
+    el.addEventListener('blur', () => {
+      const v = el.value || '';
+      if (v.trim() === '') return; // فاضي = ما نظهر خطأ، الـsubmit بيعالج المطلوب
+      if (!validatorFn(v)) {
+        el.classList.add('field-invalid');
+        const msg = _errorMsgElFor(el);
+        msg.textContent = errorMessage;
+        msg.classList.add('show');
+      } else {
+        _clearOne(el);
+      }
+    });
+    // شيل الخطأ عند التصحيح (input)
+    el.addEventListener('input', () => {
+      const v = el.value || '';
+      if (v.trim() === '' || validatorFn(v)) _clearOne(el);
+    });
   }
 
   // ---------- Submit loading ----------
@@ -170,9 +218,39 @@ const FormUX = (() => {
     return true;
   }
 
+  // ---------- محافظات سوريا (14) ----------
+  const SYRIA_GOVERNORATES = [
+    'دمشق', 'ريف دمشق', 'حلب', 'حمص', 'حماة',
+    'اللاذقية', 'طرطوس', 'إدلب', 'دير الزور',
+    'الرقة', 'الحسكة', 'السويداء', 'درعا', 'القنيطرة',
+  ];
+
+  // يبني <option>s جاهزة لحقن بـ<select> — بيضيف "اختر المحافظة" كأول option
+  function governorateOptionsHTML(selected = '') {
+    return `<option value="">اختر المحافظة</option>` +
+      SYRIA_GOVERNORATES.map(g => `<option value="${g}"${g === selected ? ' selected' : ''}>${g}</option>`).join('');
+  }
+
+  // ---------- فحص "نص واضح" — يرفض التكرار الفارغ (ddd, aaa) والنصوص القصيرة ----------
+  // بيرجع true إذا النص مقبول (فيه على الأقل 3 حروف مختلفة، مو تكرار حرف واحد،
+  // ومو أرقام/رموز فقط)
+  function isMeaningfulText(v, minLen = 3) {
+    if (!v || typeof v !== 'string') return false;
+    const t = v.trim();
+    if (t.length < minLen) return false;
+    // احذف المسافات وأرقام وعلامات ترقيم شائعة، وشوف إذا ضلّ نص فعلي
+    const letters = t.replace(/[\s\d\-_.،,()[\]{}!؟?]+/g, '');
+    if (letters.length < minLen) return false;
+    // على الأقل 3 حروف مختلفة (يرفض 'aaa', 'ddd', 'كككك')
+    const unique = new Set(letters);
+    if (unique.size < 3) return false;
+    return true;
+  }
+
   return {
     toast, clearFieldErrors, markFieldError, setSubmitLoading, friendlyError,
     requireAuth, saveDraft, loadDraft, clearDraft, currentUser,
-    isValidYouTubeUrl, checkFileSize,
+    isValidYouTubeUrl, checkFileSize, attachLiveValidator,
+    SYRIA_GOVERNORATES, governorateOptionsHTML, isMeaningfulText,
   };
 })();

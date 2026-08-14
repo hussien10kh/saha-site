@@ -49,7 +49,8 @@
   </div>
   <div class="field">
     <label>المحافظة <span class="req">*</span></label>
-    <input type="text" id="aGov" placeholder="مثال: دمشق" required>
+    <select id="aGov" required></select>
+    <script>document.getElementById('aGov').innerHTML = FormUX.governorateOptionsHTML();</script>
   </div>
   <div class="field">
     <label>المدينة / المنطقة <span class="req">*</span></label>
@@ -104,6 +105,9 @@
 
   await FormUX.requireAuth({ loginUrl: 'login.html', submitBtnId: 'submitBtn' });
 
+  FormUX.attachLiveValidator($("aName"), FormUX.isMeaningfulText, 'اسم الأكاديمية مو واضح');
+  FormUX.attachLiveValidator($("aCity"), FormUX.isMeaningfulText, 'اسم المدينة/المنطقة مو واضح');
+
   const preview = $("acadImagePreview");
   const input = $("acadImageInput");
   const placeholder = preview.querySelector(".venue-image-placeholder");
@@ -136,9 +140,9 @@
     const imageFile = $("acadImageInput").files[0];
     const ytRaw = videoEl.value.trim();
 
-    if (!name) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسم الأكاديمية');
-    if (!governorate) return FormUX.markFieldError(govEl, 'الرجاء كتابة المحافظة');
-    if (!city) return FormUX.markFieldError(cityEl, 'الرجاء كتابة المدينة');
+    if (!FormUX.isMeaningfulText(name)) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسم واضح للأكاديمية');
+    if (!governorate) return FormUX.markFieldError(govEl, 'اختر المحافظة');
+    if (!FormUX.isMeaningfulText(city)) return FormUX.markFieldError(cityEl, 'أدخل اسم مدينة/منطقة واضح');
     if (!sports.length) return FormUX.markFieldError(sportsBoxes[0], 'اختر رياضة واحدة على الأقل');
     if (!ageGroups.length) return FormUX.markFieldError(agesBoxes[0], 'اختر فئة عمرية واحدة على الأقل');
     if (!monthlyFee || monthlyFee <= 0) return FormUX.markFieldError(feeEl, 'أدخل اشتراك شهري صحيح');

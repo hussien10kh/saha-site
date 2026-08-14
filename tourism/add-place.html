@@ -85,7 +85,11 @@
       </select>
     </div>
 
-    <div class="f-field"><label>المحافظة <span class="req">*</span></label><input id="fRegion" placeholder="مثال: حلب" required></div>
+    <div class="f-field">
+      <label>المحافظة <span class="req">*</span></label>
+      <select id="fRegion" required></select>
+      <script>document.getElementById('fRegion').innerHTML = FormUX.governorateOptionsHTML();</script>
+    </div>
     <div class="f-field"><label>المدينة / المنطقة <span class="req">*</span></label><input id="fCity" placeholder="مثال: المدينة القديمة" required></div>
     <div class="f-field"><label>العنوان (اختياري)</label><input id="fAddress" placeholder="مثال: مدخل باب أنطاكية"></div>
 
@@ -150,6 +154,10 @@
     // Auth guard على load: شريط علوي + قفل الزر لو مو مسجّل + حفظ Draft
     await FormUX.requireAuth({ loginUrl: '../login.html', submitBtnId: 'fSubmit' });
 
+    FormUX.attachLiveValidator($('fName'), FormUX.isMeaningfulText, 'اسم المكان مو واضح');
+    FormUX.attachLiveValidator($('fCity'), FormUX.isMeaningfulText, 'اسم المدينة مو واضح');
+    FormUX.attachLiveValidator($('fAddress'), (v) => FormUX.isMeaningfulText(v, 5), 'العنوان قصير أو مو واضح');
+
     // معاينة الصورة المختارة
     const imgInput = $('fImage'), imgLabel = $('fImageLabel');
     imgInput.addEventListener('change', () => {
@@ -175,10 +183,10 @@
       const ytRaw = videoEl.value.trim();
       const imageFile = imgInput.files[0];
 
-      if (!name) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسم المكان');
+      if (!FormUX.isMeaningfulText(name)) return FormUX.markFieldError(nameEl, 'اسم المكان مو واضح');
       if (!category) return FormUX.markFieldError(typeEl, 'اختر نوع المكان');
-      if (!region) return FormUX.markFieldError(regionEl, 'الرجاء كتابة المحافظة');
-      if (!city) return FormUX.markFieldError(cityEl, 'الرجاء كتابة المدينة/المنطقة');
+      if (!region) return FormUX.markFieldError(regionEl, 'اختر المحافظة');
+      if (!FormUX.isMeaningfulText(city)) return FormUX.markFieldError(cityEl, 'اسم المدينة مو واضح');
       if (imageFile && !FormUX.checkFileSize(imageFile, 5)) return;
       if (ytRaw && !FormUX.isValidYouTubeUrl(ytRaw)) return FormUX.markFieldError(videoEl, 'رابط اليوتيوب مو صحيح');
 

@@ -50,7 +50,8 @@
   </div>
   <div class="field">
     <label>المحافظة <span class="req">*</span></label>
-    <input type="text" id="vGov" placeholder="مثال: دمشق" required>
+    <select id="vGov" required></select>
+    <script>document.getElementById('vGov').innerHTML = FormUX.governorateOptionsHTML();</script>
   </div>
   <div class="field">
     <label>المدينة / المنطقة <span class="req">*</span></label>
@@ -162,6 +163,12 @@
   // 1) auth guard على load — لو مو مسجّل، شريط علوي + قفل الزر + حفظ Draft عند تسجيل الدخول
   await FormUX.requireAuth({ loginUrl: 'login.html', submitBtnId: 'submitBtn' });
 
+  // فحص لحظي على الحقول النصّية — لما المستخدم يخرج من الحقل بقيمة مو منطقية
+  // (مثلاً "ddd"), يشوف الخطأ فوراً تحت الحقل بدون ما ينتظر الضغط على "إرسال"
+  FormUX.attachLiveValidator($("vName"), FormUX.isMeaningfulText, 'اسم الملعب مو واضح — اكتبه بشكل صحيح');
+  FormUX.attachLiveValidator($("vCity"), FormUX.isMeaningfulText, 'اسم المدينة/المنطقة مو واضح');
+  FormUX.attachLiveValidator($("vAddress"), (v) => FormUX.isMeaningfulText(v, 5), 'العنوان قصير جداً أو مو واضح');
+
   const PAY_MAP = { "مبلغ ثابت": "fixed", "نسبة مئوية": "percent", "بدون دفع مسبق": "none" };
   let payMode = "percent";
   $("vPay").addEventListener("click", (e) => {
@@ -187,10 +194,11 @@
     const imageFile = $("venueImageInput").files[0];
     const ytRaw = videoEl.value.trim();
 
-    if (!name) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسم الملعب');
+    if (!FormUX.isMeaningfulText(name)) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسم واضح للملعب (مو حروف مكررة)');
     if (!sport) return FormUX.markFieldError(sportEl, 'اختر نوع الرياضة');
-    if (!governorate) return FormUX.markFieldError(govEl, 'الرجاء كتابة المحافظة');
-    if (!city) return FormUX.markFieldError(cityEl, 'الرجاء كتابة المدينة/المنطقة');
+    if (!governorate) return FormUX.markFieldError(govEl, 'اختر المحافظة');
+    if (!FormUX.isMeaningfulText(city)) return FormUX.markFieldError(cityEl, 'أدخل اسم مدينة/منطقة واضح');
+    if (address && !FormUX.isMeaningfulText(address, 5)) return FormUX.markFieldError($("vAddress"), 'العنوان مو واضح — اكتبه بشكل مفصّل أو فرّغه');
     if (!price || price <= 0) return FormUX.markFieldError(priceEl, 'أدخل سعر ساعة صحيح');
     if (!imageFile) return FormUX.markFieldError($("venueImageInput"), 'لازم ترفع صورة الملعب');
     if (!FormUX.checkFileSize(imageFile, 5)) return;

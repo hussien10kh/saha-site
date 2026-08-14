@@ -10,6 +10,17 @@ textarea.field-invalid {
   box-shadow: 0 0 0 2px rgba(217, 48, 37, 0.15) !important;
 }
 
+/* رسالة خطأ تحت الحقل مباشرة */
+.fux-field-error {
+  color: #d93025;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-top: 5px;
+  line-height: 1.5;
+  display: none;
+}
+.fux-field-error.show { display: block; }
+
 /* علامة الحقل المطلوب */
 .req {
   color: #d93025;

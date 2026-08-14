@@ -51,7 +51,8 @@
   </div>
   <div class="field">
     <label>المحافظة <span class="req">*</span></label>
-    <input type="text" id="eGov" placeholder="مثال: دمشق" required>
+    <select id="eGov" required></select>
+    <script>document.getElementById('eGov').innerHTML = FormUX.governorateOptionsHTML();</script>
   </div>
   <div class="field">
     <label>المدينة / المنطقة <span class="req">*</span></label>
@@ -86,6 +87,9 @@
 
   await FormUX.requireAuth({ loginUrl: 'login.html', submitBtnId: 'submitBtn' });
 
+  FormUX.attachLiveValidator($("eTitle"), FormUX.isMeaningfulText, 'عنوان الفعالية مو واضح');
+  FormUX.attachLiveValidator($("eCity"), FormUX.isMeaningfulText, 'اسم المدينة مو واضح');
+
   submitBtn.addEventListener("click", async () => {
     if (submitBtn.dataset.authGate === '1') return;
     FormUX.clearFieldErrors();
@@ -100,10 +104,10 @@
     const maxTeams = Number(teamsEl.value);
     const fee = Number($("eFee").value);
 
-    if (!title) return FormUX.markFieldError(titleEl, 'الرجاء كتابة عنوان الفعالية');
+    if (!FormUX.isMeaningfulText(title)) return FormUX.markFieldError(titleEl, 'عنوان الفعالية مو واضح');
     if (!type) return FormUX.markFieldError(typeEl, 'اختر نوع الفعالية');
-    if (!governorate) return FormUX.markFieldError(govEl, 'الرجاء كتابة المحافظة');
-    if (!city) return FormUX.markFieldError(cityEl, 'الرجاء كتابة المدينة');
+    if (!governorate) return FormUX.markFieldError(govEl, 'اختر المحافظة');
+    if (!FormUX.isMeaningfulText(city)) return FormUX.markFieldError(cityEl, 'اسم المدينة مو واضح');
     if (!maxTeams || maxTeams < 2) return FormUX.markFieldError(teamsEl, 'عدد الفرق لازم يكون 2 على الأقل');
 
     FormUX.setSubmitLoading(submitBtn, true, 'جاري الحفظ...');

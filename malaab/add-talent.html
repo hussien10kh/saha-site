@@ -63,7 +63,8 @@
   </div>
   <div class="field">
     <label>المحافظة <span class="req">*</span></label>
-    <input type="text" id="tGov" placeholder="مثال: دمشق" required>
+    <select id="tGov" required></select>
+    <script>document.getElementById('tGov').innerHTML = FormUX.governorateOptionsHTML();</script>
   </div>
   <div class="field">
     <label>المدينة / المنطقة <span class="req">*</span></label>
@@ -134,6 +135,10 @@
 
   await FormUX.requireAuth({ loginUrl: 'login.html', submitBtnId: 'submitBtn' });
 
+  FormUX.attachLiveValidator(document.getElementById("tName"), FormUX.isMeaningfulText, 'الاسم مو واضح');
+  FormUX.attachLiveValidator(document.getElementById("tCity"), FormUX.isMeaningfulText, 'اسم المدينة مو واضح');
+  FormUX.attachLiveValidator(document.getElementById("tPosition"), FormUX.isMeaningfulText, 'المركز مو واضح');
+
   let foot = "يمين";
   footPicker.addEventListener("click", (e) => {
     const opt = e.target.closest("[data-value]");
@@ -184,12 +189,12 @@
     const videoTitle = document.getElementById("tVideoTitle").value.trim();
     const videoFile = input.files[0];
 
-    if (!name) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسمك');
+    if (!FormUX.isMeaningfulText(name)) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسمك الكامل');
     if (!sport) return FormUX.markFieldError(sportEl, 'اختر الرياضة');
-    if (!position) return FormUX.markFieldError(posEl, 'الرجاء كتابة المركز');
+    if (!FormUX.isMeaningfulText(position)) return FormUX.markFieldError(posEl, 'الرجاء كتابة المركز بشكل صحيح');
     if (!age || age < 8 || age > 45) return FormUX.markFieldError(ageEl, 'أدخل عمر صحيح (8-45)');
-    if (!governorate) return FormUX.markFieldError(govEl, 'الرجاء كتابة المحافظة');
-    if (!city) return FormUX.markFieldError(cityEl, 'الرجاء كتابة المدينة');
+    if (!governorate) return FormUX.markFieldError(govEl, 'اختر المحافظة');
+    if (!FormUX.isMeaningfulText(city)) return FormUX.markFieldError(cityEl, 'أدخل اسم مدينة صحيح');
     if (!videoFile) return FormUX.markFieldError(input, 'لازم ترفع فيديو أول');
     if (!FormUX.checkFileSize(videoFile, 100)) return;
     if (!agree.checked) return FormUX.markFieldError(agree, 'لازم توافق على الشروط قبل الإرسال');

@@ -53,8 +53,17 @@ const FIELD_LABELS = {
 };
 const HIDDEN_FIELDS = new Set(['id','owner_id','added_by','reviewed_by','reviewed_at','rating_avg','review_count','image','images']);
 
+// ترجمة قيم الحقول الـenum من الإنجليزي للعربي عشان الأدمن يفهم مباشرة
+const VALUE_TRANSLATIONS = {
+  pay_mode: { fixed:'مبلغ ثابت', percent:'نسبة مئوية', none:'بدون دفع مسبق' },
+  category: { landmark:'معلم أثري', restaurant:'مطعم', cafe:'مقهى', garden:'حديقة', shop:'متجر', other:'أخرى' },
+  status:   { pending:'قيد المراجعة', approved:'موافق عليه', rejected:'مرفوض' },
+};
+
 function formatFieldValue(k, v){
   if (v === null || v === undefined || v === '') return '<span style="color:var(--muted);">—</span>';
+  // ترجمة enums
+  if (VALUE_TRANSLATIONS[k] && VALUE_TRANSLATIONS[k][v]) return escapeHTML(VALUE_TRANSLATIONS[k][v]);
   if (k === 'video_url' || (typeof v === 'string' && v.startsWith('http'))) {
     return `<a href="${escapeHTML(v)}" target="_blank" rel="noopener">${escapeHTML(v.length>60?v.slice(0,60)+'…':v)}</a>`;
   }
