@@ -35,8 +35,9 @@
 (async function setupVenueDetail() {
   await DataBridge.load("venues");
   const root = document.getElementById("detailRoot");
-  const id = Number(new URLSearchParams(location.search).get("id"));
-  const v = SITE_DATA.venues.find((x) => x.id === id) || SITE_DATA.venues[0];
+  const raw = new URLSearchParams(location.search).get("id");
+  const asNum = Number(raw);
+  const v = raw ? SITE_DATA.venues.find((x) => x.id === raw || x.id === asNum) : null;
 
   if (!v) {
     root.innerHTML = `

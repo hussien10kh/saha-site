@@ -10,9 +10,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../css/form-ux.css">
 <script src="site-core.js"></script>
 <script src="../js/vendor/supabase.js"></script>
 <script src="../js/supabase-client.js"></script>
+<script src="../js/form-ux.js"></script>
 </head>
 <body>
 
@@ -25,21 +27,20 @@
     نفس حساب ساحة يعمل هنا — منصة واحدة، حساب واحد.
   </p>
 
-  <form id="loginForm">
+  <form id="loginForm" novalidate>
     <div class="field">
-      <label>البريد الإلكتروني</label>
-      <input type="email" id="email" placeholder="example@mail.com" required autocomplete="email">
+      <label>البريد الإلكتروني <span class="req">*</span></label>
+      <input type="email" id="email" placeholder="example@mail.com" required autocomplete="email" inputmode="email">
     </div>
     <div class="field">
-      <label>كلمة المرور</label>
-      <input type="password" id="password" required autocomplete="current-password">
+      <label>كلمة المرور <span class="req">*</span></label>
+      <div class="fux-pw-wrap">
+        <input type="password" id="password" required autocomplete="current-password">
+        <button type="button" class="fux-pw-toggle" data-target="password" aria-label="إظهار/إخفاء كلمة المرور">👁</button>
+      </div>
     </div>
     <button type="submit" class="btn btn-primary" id="loginBtn" style="display:block;width:100%;">تسجيل الدخول</button>
-    <p class="muted" id="loginHint" style="font-size:13px;text-align:center;margin-top:10px;min-height:1em;"></p>
   </form>
-
-  <div style="text-align:center;margin:14px 0 6px;color:#9aa7c0;font-size:12px;">أو</div>
-  <button type="button" class="btn btn-outline" id="guestBtn" style="display:block;width:100%;">ادخل كضيف</button>
 
   <p style="text-align:center;font-size:13px;margin-top:16px;">
     ليس لديك حساب؟ <a href="register.html" style="color:#0f5c2a;text-decoration:underline;font-weight:700;">إنشاء حساب</a>
@@ -50,8 +51,17 @@
 <script>SiteCore.mountFooter();</script>
 
 <script>
+// Password toggle عام
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.fux-pw-toggle');
+  if (!btn) return;
+  const inp = document.getElementById(btn.dataset.target);
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+});
+
 (async function setupLogin() {
-  // إذا مسجّل دخول أصلاً — حوّله لوجهته
   const redirect = new URLSearchParams(location.search).get("redirect") || "index.html";
   const { data: { user } } = await sb.auth.getUser();
   if (user) { location.href = redirect; return; }
@@ -60,33 +70,24 @@
   const emailEl = document.getElementById("email");
   const passEl = document.getElementById("password");
   const btn = document.getElementById("loginBtn");
-  const hint = document.getElementById("loginHint");
-  const guestBtn = document.getElementById("guestBtn");
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    hint.textContent = "";
-    btn.disabled = true; btn.textContent = "جاري الدخول...";
-    const { error } = await sb.auth.signInWithPassword({ email: emailEl.value.trim(), password: passEl.value });
-    if (error) {
-      hint.textContent = error.message === "Invalid login credentials"
-        ? "البريد أو كلمة المرور غير صحيحة."
-        : "تعذّر الدخول: " + error.message;
-      btn.disabled = false; btn.textContent = "تسجيل الدخول";
-      return;
-    }
-    location.href = redirect;
-  });
+    FormUX.clearFieldErrors();
+    const email = emailEl.value.trim();
+    if (!email || !/.+@.+\..+/.test(email)) return FormUX.markFieldError(emailEl, 'أدخل بريد إلكتروني صحيح');
+    if (!passEl.value) return FormUX.markFieldError(passEl, 'أدخل كلمة المرور');
 
-  guestBtn.addEventListener("click", async () => {
-    guestBtn.disabled = true; guestBtn.textContent = "جاري الدخول...";
-    const { error } = await sb.auth.signInAnonymously();
-    if (error) {
-      hint.textContent = "تعذّر الدخول كضيف: " + error.message;
-      guestBtn.disabled = false; guestBtn.textContent = "ادخل كضيف";
-      return;
+    FormUX.setSubmitLoading(btn, true, 'جاري الدخول...');
+    try {
+      const { error } = await sb.auth.signInWithPassword({ email, password: passEl.value });
+      if (error) throw error;
+      location.href = redirect;
+    } catch (err) {
+      console.error(err);
+      FormUX.toast(FormUX.friendlyError(err), 'error');
+      FormUX.setSubmitLoading(btn, false);
     }
-    location.href = redirect;
   });
 })();
 </script>

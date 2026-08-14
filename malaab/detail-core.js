@@ -61,10 +61,14 @@ const DetailCore = {
   },
 
   // ---------- قراءة العنصر من الرابط ----------
-  // بترجّع العنصر المطلوب حسب ?id= أو أول عنصر كبديل (ما منترك الصفحة فاضية)
+  // بترجع العنصر المطلوب حسب ?id= بالضبط. لو ما في id أو الـid ما بيطابق شي،
+  // بترجع null → الصفحة بتعرض notFoundHTML بدل ما تعرض عنصر عشوائي (يضلل المستخدم).
   fromQuery(list) {
-    const id = Number(new URLSearchParams(location.search).get("id"));
-    return list.find((x) => x.id === id) || list[0] || null;
+    const raw = new URLSearchParams(location.search).get("id");
+    if (!raw) return null;
+    // الـid ممكن يكون رقم (SITE_DATA القديم) أو UUID string (Supabase).
+    const asNum = Number(raw);
+    return list.find((x) => x.id === raw || x.id === asNum) || null;
   },
 
   notFoundHTML(backHref, backLabel) {

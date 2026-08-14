@@ -10,11 +10,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../css/form-ux.css">
 <script src="site-core.js"></script>
 <script src="data.js"></script>
 <script src="store.js"></script>
 <script src="../js/vendor/supabase.js"></script>
 <script src="../js/supabase-client.js"></script>
+<script src="../js/form-ux.js"></script>
 <script src="malaabak-api.js"></script>
 </head>
 <body>
@@ -29,12 +31,12 @@
   </p>
 
   <div class="field">
-    <label>عنوان المباراة</label>
-    <input type="text" id="mTitle" placeholder="مثال: مباراة ودية مساء الخميس">
+    <label>عنوان المباراة <span class="req">*</span></label>
+    <input type="text" id="mTitle" placeholder="مثال: مباراة ودية مساء الخميس" required maxlength="80">
   </div>
   <div class="field">
-    <label>نوع الرياضة</label>
-    <select id="mSport">
+    <label>نوع الرياضة <span class="req">*</span></label>
+    <select id="mSport" required>
       <option value="">اختر الرياضة</option>
       <option>كرة قدم</option>
       <option>كرة صالات</option>
@@ -44,16 +46,16 @@
     </select>
   </div>
   <div class="field">
-    <label>الملعب</label>
-    <input type="text" id="mVenue" placeholder="مثال: ملعب النجوم">
+    <label>الملعب <span class="req">*</span></label>
+    <input type="text" id="mVenue" placeholder="مثال: ملعب النجوم" required>
   </div>
   <div class="field">
-    <label>المحافظة</label>
-    <input type="text" id="mGov" placeholder="مثال: دمشق">
+    <label>المحافظة <span class="req">*</span></label>
+    <input type="text" id="mGov" placeholder="مثال: دمشق" required>
   </div>
   <div class="field">
-    <label>المدينة / المنطقة</label>
-    <input type="text" id="mCity" placeholder="مثال: المزة">
+    <label>المدينة / المنطقة <span class="req">*</span></label>
+    <input type="text" id="mCity" placeholder="مثال: المزة" required>
   </div>
   <div class="field">
     <label>اليوم والوقت</label>
@@ -68,27 +70,26 @@
     </div>
   </div>
   <div class="field">
-    <label>عدد اللاعبين المطلوب</label>
-    <input type="number" id="mPlayers" placeholder="مثال: 10" min="2">
+    <label>عدد اللاعبين المطلوب <span class="req">*</span></label>
+    <input type="number" id="mPlayers" placeholder="مثال: 10" min="2" inputmode="numeric" required>
   </div>
   <div class="field">
     <label>رسوم المشاركة للاعب (ل.س)</label>
-    <input type="number" id="mFee" placeholder="مثال: 5000" min="0" step="500">
+    <input type="number" id="mFee" placeholder="مثال: 5000" min="0" step="500" inputmode="numeric">
   </div>
 
   <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إنشاء المباراة</button>
-  <p class="muted" id="formHint" style="font-size:0.8em;text-align:center;margin-top:0.6em;">املأ الحقول المطلوبة وراح تظهر مباراتك بصفحة المباريات فوراً.</p>
+  <p class="muted" style="font-size:0.8em;text-align:center;margin-top:0.6em;">املأ الحقول المطلوبة وراح تظهر مباراتك بصفحة المباريات فوراً.</p>
 </div>
 
 <script>
-// ===== حفظ المباراة =====
-// المباريات تنعرض فوراً (ما في بوابة موافقة) - منحفظها بـstore ونوجّه لصفحة المباريات.
-(function setupAddMatch() {
+(async function setupAddMatch() {
   const $ = (id) => document.getElementById(id);
-  const hint = $("formHint");
+  const submitBtn = $("submitBtn");
   const EMOJI = { "كرة قدم": "⚽", "كرة صالات": "🥅", "كرة سلة": "🏀", "تنس": "🎾", "كرة طائرة": "🏐" };
 
-  // اختيار المستوى من الـrole-picker
+  await FormUX.requireAuth({ loginUrl: 'login.html', submitBtnId: 'submitBtn' });
+
   let level = "متوسط";
   $("mLevel").addEventListener("click", (e) => {
     const opt = e.target.closest("[data-value]");
@@ -98,31 +99,28 @@
     level = opt.dataset.value;
   });
 
-  $("submitBtn").addEventListener("click", async () => {
-    const title = $("mTitle").value.trim();
-    const sport = $("mSport").value;
-    const venueName = $("mVenue").value.trim();
-    const governorate = $("mGov").value.trim();
-    const city = $("mCity").value.trim();
+  submitBtn.addEventListener("click", async () => {
+    if (submitBtn.dataset.authGate === '1') return;
+    FormUX.clearFieldErrors();
+    const titleEl = $("mTitle"), sportEl = $("mSport"), venueEl = $("mVenue"),
+          govEl = $("mGov"), cityEl = $("mCity"), playersEl = $("mPlayers");
+    const title = titleEl.value.trim();
+    const sport = sportEl.value;
+    const venueName = venueEl.value.trim();
+    const governorate = govEl.value.trim();
+    const city = cityEl.value.trim();
     const time = $("mTime").value.trim();
-    const maxParticipants = Number($("mPlayers").value);
+    const maxParticipants = Number(playersEl.value);
     const fee = Number($("mFee").value);
 
-    if (!title || !sport || !venueName || !governorate || !city) {
-      hint.textContent = "لازم تعبّي: العنوان، الرياضة، الملعب، المحافظة، والمدينة."; return;
-    }
-    if (!maxParticipants || maxParticipants < 2) {
-      hint.textContent = "عدد اللاعبين لازم يكون 2 على الأقل."; return;
-    }
+    if (!title) return FormUX.markFieldError(titleEl, 'الرجاء كتابة عنوان المباراة');
+    if (!sport) return FormUX.markFieldError(sportEl, 'اختر الرياضة');
+    if (!venueName) return FormUX.markFieldError(venueEl, 'الرجاء كتابة اسم الملعب');
+    if (!governorate) return FormUX.markFieldError(govEl, 'الرجاء كتابة المحافظة');
+    if (!city) return FormUX.markFieldError(cityEl, 'الرجاء كتابة المدينة');
+    if (!maxParticipants || maxParticipants < 2) return FormUX.markFieldError(playersEl, 'عدد اللاعبين لازم يكون 2 على الأقل');
 
-    // ---------- Supabase (تسجيل الدخول مطلوب لأن RLS يشترط creator_id = auth.uid) ----------
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) {
-      hint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
-      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent("add-match.html"); }, 1200);
-      return;
-    }
-    $("submitBtn").disabled = true;
+    FormUX.setSubmitLoading(submitBtn, true, 'جاري الحفظ...');
     try {
       await MalaabakAPI.create("matches", {
         title, sport, governorate, city,
@@ -132,11 +130,13 @@
         participants: 1, max_participants: maxParticipants,
         image: EMOJI[sport] || "⚽",
       });
-      hint.textContent = "تم إنشاء المباراة ✓ عم نحوّلك لصفحة المباريات...";
-      setTimeout(() => { location.href = "matches.html"; }, 900);
+      FormUX.clearDraft();
+      FormUX.toast('تم إنشاء المباراة ✓', 'success', 2000);
+      setTimeout(() => { location.href = "matches.html"; }, 1100);
     } catch (err) {
-      console.error(err); hint.textContent = "تعذّر الحفظ: " + (err.message || "حاول مرة أخرى.");
-      $("submitBtn").disabled = false;
+      console.error(err);
+      FormUX.toast(FormUX.friendlyError(err), 'error');
+      FormUX.setSubmitLoading(submitBtn, false);
     }
   });
 })();

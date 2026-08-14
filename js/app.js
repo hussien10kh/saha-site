@@ -1079,7 +1079,7 @@ async function renderFooter(){
         </div>
       </div>
     </div>
-    <div class="saaha-copy-wrap"><div class="saaha-copy"><span class="saaha-copy-name">ساحة — 2026</span><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
+    <div class="saaha-copy-wrap"><div class="saaha-copy"><a class="saaha-copy-name" href="index.html" style="text-decoration:none;color:inherit;">ساحة — 2026</a><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
   </footer>`;
   syncInstallButtons();
 }

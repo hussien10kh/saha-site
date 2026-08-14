@@ -1,0 +1,103 @@
+/* ===== FormUX styles — يشتغل بأي قسم (ملعبك + سياحة + إعلانات) ===== */
+/* لا يعتمد على CSS variables محدّدة القسم — يستعمل fallbacks تشتغل بكل مكان */
+
+.field-invalid,
+input.field-invalid,
+select.field-invalid,
+textarea.field-invalid {
+  border-color: #d93025 !important;
+  background: rgba(217, 48, 37, 0.08) !important;
+  box-shadow: 0 0 0 2px rgba(217, 48, 37, 0.15) !important;
+}
+
+/* علامة الحقل المطلوب */
+.req {
+  color: #d93025;
+  margin-inline-start: 3px;
+  font-weight: 700;
+}
+
+/* Toast لـFormUX (اسم مختلف عن toast الرئيسي لتجنّب التصادم) */
+.fux-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1f2937;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 99999;
+  max-width: min(92vw, 420px);
+  text-align: center;
+  line-height: 1.5;
+}
+.fux-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.fux-toast.fux-toast-error { background: #d93025; }
+.fux-toast.fux-toast-success { background: #1a9c5e; }
+
+/* شريط تنبيه "لازم تسجّل دخول" فوق الفورم */
+.fux-auth-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #fef3c7;
+  color: #78350f;
+  border-bottom: 1px solid #fbbf24;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  z-index: 9998;
+  flex-wrap: wrap;
+  text-align: center;
+}
+.fux-auth-btn {
+  background: #d97706;
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.fux-auth-btn:hover { background: #b45309; }
+
+@media (prefers-color-scheme: dark) {
+  .fux-auth-bar { background: #78350f; color: #fef3c7; border-bottom-color: #d97706; }
+  .fux-toast { background: #374151; }
+}
+
+/* زر show/hide password */
+.fux-pw-wrap { position: relative; }
+.fux-pw-wrap input { padding-inline-end: 42px; }
+.fux-pw-toggle {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 10px;
+  transform: translateY(-50%);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 4px;
+  color: #6b7280;
+  font-size: 18px;
+  line-height: 1;
+}
+.fux-pw-toggle:hover { color: #111827; }

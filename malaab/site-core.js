@@ -68,7 +68,7 @@ const SiteCore = {
     const addVenue = hideAddVenue ? "" : `<a class="btn btn-outline" href="add-venue.html">+ أضف ملعب</a>\n    `;
     // ملاحظة مهمة: header.nav لازم يضل بدون position (static) - راجع تحذير clipping بـDESIGN-SYSTEM
     return `<header class="nav">
-  <div class="logo"><span class="ball"><img src="player-silhouette.svg" alt="ملعبك"></span> ملعبك</div>
+  <a class="logo" href="index.html" style="text-decoration:none;color:inherit;"><span class="ball"><img src="player-silhouette.svg" alt="ملعبك"></span> ملعبك</a>
   <nav class="nav-links">
     ${links}
   </nav>
@@ -92,7 +92,7 @@ const SiteCore = {
   <div class="footer-top">
     <div class="footer-brand">
       <div class="footer-brand-top">
-        <div class="logo"><span class="ball"><img src="player-silhouette.svg" alt="ملعبك"></span> ملعبك</div>
+        <a class="logo" href="index.html" style="text-decoration:none;color:inherit;"><span class="ball"><img src="player-silhouette.svg" alt="ملعبك"></span> ملعبك</a>
         <p>منصة رياضية سورية لحجز الملاعب، الانضمام للمباريات والتمارين، والتواصل مع أفضل المدربين.</p>
       </div>
       <div class="footer-social">
@@ -128,7 +128,7 @@ const SiteCore = {
       </div>
     </div>
   </div>
-  <div class="saaha-copy-wrap"><div class="saaha-copy"><span class="saaha-copy-name">ساحة — 2026</span><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
+  <div class="saaha-copy-wrap"><div class="saaha-copy"><a class="saaha-copy-name" href="../index.html" style="text-decoration:none;color:inherit;">ساحة — 2026</a><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
 </footer>`;
   },
 

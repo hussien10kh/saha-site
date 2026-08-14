@@ -10,9 +10,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../css/form-ux.css">
 <script src="site-core.js"></script>
 <script src="../js/vendor/supabase.js"></script>
 <script src="../js/supabase-client.js"></script>
+<script src="../js/form-ux.js"></script>
 </head>
 <body>
 
@@ -25,27 +27,36 @@
     نفس حساب ساحة — يعمل بكل الأقسام (إعلانات، سياحة، ملعبك).
   </p>
 
-  <form id="regForm">
+  <form id="regForm" novalidate>
     <div class="field">
-      <label>الاسم الكامل</label>
-      <input type="text" id="name" required autocomplete="name">
+      <label>الاسم الكامل <span class="req">*</span></label>
+      <input type="text" id="name" required autocomplete="name" maxlength="80">
     </div>
     <div class="field">
-      <label>البريد الإلكتروني</label>
-      <input type="email" id="email" required autocomplete="email" placeholder="example@mail.com">
+      <label>البريد الإلكتروني <span class="req">*</span></label>
+      <input type="email" id="email" required autocomplete="email" placeholder="example@mail.com" inputmode="email">
     </div>
     <div class="field">
       <label>رقم الهاتف (اختياري)</label>
-      <input type="text" id="phone" autocomplete="tel" placeholder="09xxxxxxxx">
+      <input type="tel" id="phone" autocomplete="tel" placeholder="09xxxxxxxx" inputmode="tel">
     </div>
     <div class="field">
-      <label>كلمة المرور</label>
-      <input type="password" id="password" required minlength="6" autocomplete="new-password">
+      <label>كلمة المرور <span class="req">*</span></label>
+      <div class="fux-pw-wrap">
+        <input type="password" id="password" required minlength="6" autocomplete="new-password">
+        <button type="button" class="fux-pw-toggle" data-target="password" aria-label="إظهار/إخفاء كلمة المرور">👁</button>
+      </div>
       <p class="muted" style="font-size:12px;margin-top:4px;">6 أحرف على الأقل</p>
+    </div>
+    <div class="field">
+      <label>تأكيد كلمة المرور <span class="req">*</span></label>
+      <div class="fux-pw-wrap">
+        <input type="password" id="password2" required autocomplete="new-password">
+        <button type="button" class="fux-pw-toggle" data-target="password2" aria-label="إظهار/إخفاء كلمة المرور">👁</button>
+      </div>
     </div>
 
     <button type="submit" class="btn btn-primary" id="regBtn" style="display:block;width:100%;">إنشاء حساب</button>
-    <p class="muted" id="regHint" style="font-size:13px;text-align:center;margin-top:10px;min-height:1em;"></p>
   </form>
 
   <p style="text-align:center;font-size:13px;margin-top:16px;">
@@ -57,6 +68,16 @@
 <script>SiteCore.mountFooter();</script>
 
 <script>
+// zerar للـpassword toggles (عام لكل الصفحة)
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.fux-pw-toggle');
+  if (!btn) return;
+  const inp = document.getElementById(btn.dataset.target);
+  if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+});
+
 (async function setupRegister() {
   const redirect = new URLSearchParams(location.search).get("redirect") || "index.html";
   const { data: { user } } = await sb.auth.getUser();
@@ -64,40 +85,51 @@
 
   const form = document.getElementById("regForm");
   const btn = document.getElementById("regBtn");
-  const hint = document.getElementById("regHint");
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    hint.textContent = "";
-    const name = document.getElementById("name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const password = document.getElementById("password").value;
+    FormUX.clearFieldErrors();
+    const nameEl = document.getElementById("name"), emailEl = document.getElementById("email"),
+          phoneEl = document.getElementById("phone"), pwEl = document.getElementById("password"),
+          pw2El = document.getElementById("password2");
+    const name = nameEl.value.trim();
+    const email = emailEl.value.trim();
+    const phone = phoneEl.value.trim();
+    const password = pwEl.value;
+    const password2 = pw2El.value;
 
-    if (password.length < 6) { hint.textContent = "كلمة المرور 6 أحرف على الأقل."; return; }
+    if (!name) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسمك الكامل');
+    if (!email || !/.+@.+\..+/.test(email)) return FormUX.markFieldError(emailEl, 'أدخل بريد إلكتروني صحيح');
+    if (phone && !/^\+?\d[\d\s-]{6,}$/.test(phone)) return FormUX.markFieldError(phoneEl, 'أدخل رقم هاتف صحيح');
+    if (password.length < 6) return FormUX.markFieldError(pwEl, 'كلمة المرور 6 أحرف على الأقل');
+    if (password !== password2) return FormUX.markFieldError(pw2El, 'كلمة المرور ما بتطابق');
 
-    btn.disabled = true; btn.textContent = "جاري إنشاء الحساب...";
+    FormUX.setSubmitLoading(btn, true, 'جاري إنشاء الحساب...');
+    try {
+      const { data, error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { name, phone } },
+      });
+      if (error) throw error;
 
-    // trigger handle_new_user يُنشئ سجل بـprofiles تلقائياً، بس نحتاج نحدّث name/phone
-    const { data, error } = await sb.auth.signUp({
-      email, password,
-      options: { data: { name, phone } },
-    });
-    if (error) {
-      hint.textContent = error.message.includes("already registered")
-        ? "البريد مسجّل مسبقاً — سجّل دخول."
-        : "تعذّر التسجيل: " + error.message;
-      btn.disabled = false; btn.textContent = "إنشاء حساب";
-      return;
-    }
-    // بعد signUp: user موجود (لأن Confirm email معطّل بساحة). حدّث profile بالاسم والهاتف.
-    if (data.user) {
+      // لو Confirm email مفعّل بـSupabase → data.session بيكون null → المستخدم لازم يفعّل قبل الدخول
+      if (!data.session) {
+        FormUX.toast('تم إنشاء الحساب ✓ افتح بريدك الإلكتروني لتفعيل الحساب.', 'success', 5000);
+        setTimeout(() => { location.href = 'login.html'; }, 3000);
+        return;
+      }
+
+      // Session موجودة → حدّث الـprofile (بعد ما صرنا authenticated)
       try {
         await sb.from("profiles").update({ name, phone: phone || null }).eq("id", data.user.id);
-      } catch (_) { /* تجاهل — الحساب أُنشئ */ }
+      } catch (_) {}
+      FormUX.toast('تم إنشاء الحساب ✓', 'success', 1500);
+      setTimeout(() => { location.href = redirect; }, 1000);
+    } catch (err) {
+      console.error(err);
+      FormUX.toast(FormUX.friendlyError(err), 'error');
+      FormUX.setSubmitLoading(btn, false);
     }
-    hint.textContent = "✓ تم إنشاء الحساب — عم نحوّلك...";
-    setTimeout(() => { location.href = redirect; }, 800);
   });
 })();
 </script>

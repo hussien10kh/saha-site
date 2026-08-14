@@ -10,7 +10,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../css/form-ux.css">
 <meta name="color-scheme" content="light dark">
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/media-processor.js"></script>
+<script src="../js/form-ux.js"></script>
 <style>
   .f-wrap{max-width:520px;margin:0 auto;padding:30px 20px 60px;}
   .f-panel{background:var(--t-surface);border:1px solid var(--t-border);border-radius:var(--t-radius-lg);padding:24px;}
@@ -34,11 +39,11 @@
 
 <header class="t-header">
   <div class="t-container t-header-inner">
-    <div class="t-logo">
+    <a class="t-logo" href="index.html" style="text-decoration:none;color:inherit;">
       <b class="t-brand-main">ساحة</b>
       <div class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-12a7 7 0 1 0-14 0c0 5.6 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
       <div class="t-logo-text"><b>سوريا</b><span>اكتشف كل الجمال</span></div>
-    </div>
+    </a>
     <nav class="t-nav">
       <a href="index.html">الرئيسية</a>
       <a href="regions.html">المناطق</a>
@@ -66,34 +71,38 @@
       </div>
     </div>
 
-    <div class="f-field"><label>اسم المكان</label><input id="fName" placeholder="مثال: قلعة حلب"></div>
+    <div class="f-field"><label>اسم المكان <span class="req">*</span></label><input id="fName" placeholder="مثال: قلعة حلب" required maxlength="80"></div>
 
     <div class="f-field">
-      <label>نوع المكان</label>
-      <select id="fType">
+      <label>نوع المكان <span class="req">*</span></label>
+      <select id="fType" required>
         <option value="landmark">معالم أثرية</option>
         <option value="garden">حدائق ومتنزهات</option>
-        <option value="food">مطاعم</option>
+        <option value="restaurant">مطاعم</option>
         <option value="cafe">مقاهي</option>
         <option value="shop">متاجر</option>
+        <option value="other">أخرى</option>
       </select>
     </div>
 
-    <div class="f-field"><label>المدينة / المنطقة</label><input id="fLoc" placeholder="مثال: حلب — المدينة القديمة"></div>
+    <div class="f-field"><label>المحافظة <span class="req">*</span></label><input id="fRegion" placeholder="مثال: حلب" required></div>
+    <div class="f-field"><label>المدينة / المنطقة <span class="req">*</span></label><input id="fCity" placeholder="مثال: المدينة القديمة" required></div>
+    <div class="f-field"><label>العنوان (اختياري)</label><input id="fAddress" placeholder="مثال: مدخل باب أنطاكية"></div>
 
-    <div class="f-field"><label>وصف مختصر</label><textarea id="fDesc" placeholder="شو يميز هالمكان، وشو لازم يعرفه الزائر قبل ما يزوره؟"></textarea></div>
+    <div class="f-field"><label>وصف مختصر</label><textarea id="fDesc" placeholder="شو يميز هالمكان، وشو لازم يعرفه الزائر قبل ما يزوره؟" maxlength="800"></textarea></div>
 
     <div class="f-field">
-      <label>صور (اختياري)</label>
-      <div class="f-upload">📷 اسحب صور المكان هون أو دوس للاختيار</div>
+      <label>صورة (اختياري)</label>
+      <label class="f-upload" for="fImage" id="fImageLabel" style="display:block;">📷 اضغط لاختيار صورة (حد أقصى 5 ميغا)</label>
+      <input type="file" id="fImage" accept="image/*" hidden>
     </div>
 
     <div class="f-field">
       <label>رابط يوتيوب (اختياري)</label>
-      <input id="fVideo" placeholder="https://youtu.be/... (فيديو تعريفي عن المكان)">
+      <input id="fVideo" type="url" placeholder="https://youtu.be/... (فيديو تعريفي عن المكان)">
     </div>
 
-    <button class="f-submit" id="fSubmit">إضافة المكان للمراجعة</button>
+    <button type="button" class="f-submit" id="fSubmit">إضافة المكان للمراجعة</button>
   </div>
 </div>
 
@@ -120,7 +129,7 @@
    </div>
    </div>
   </div>
-    <div class="saaha-copy-wrap"><div class="saaha-copy"><span class="saaha-copy-name">ساحة — 2026</span><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
+    <div class="saaha-copy-wrap"><div class="saaha-copy"><a class="saaha-copy-name" href="../index.html" style="text-decoration:none;color:inherit;">ساحة — 2026</a><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
 </footer>
 
 <script src="places-data.js"></script>
@@ -132,31 +141,91 @@
       chip.classList.add('active');
     });
   });
-  document.getElementById('fSubmit').addEventListener('click', function(){
-    var user = authGetUser();
-    if (!user) {
-      alert('لازم تسجّل دخولك الأول حتى تقدر تضيف مكان وتلاقيه لاحقًا بملفك الشخصي.');
-      location.href = 'profile.html';
-      return;
-    }
-    var name = document.getElementById('fName').value.trim();
-    var loc = document.getElementById('fLoc').value.trim();
-    if (!name || !loc) {
-      alert('لازم تعبّي اسم المكان والمدينة/المنطقة قبل الإرسال.');
-      return;
-    }
-    addedPlacesAdd({
-      ownerEmail: user.email,
-      name: name,
-      category: document.getElementById('fType').value,
-      loc: loc,
-      desc: document.getElementById('fDesc').value.trim(),
-      videoUrl: document.getElementById('fVideo').value.trim() || null,
-      status: 'قيد المراجعة'
+
+  // ===== إضافة مكان سياحي إلى Supabase (tourism_places) =====
+  (async function setupAddPlace(){
+    const $ = id => document.getElementById(id);
+    const submitBtn = $('fSubmit');
+
+    // Auth guard على load: شريط علوي + قفل الزر لو مو مسجّل + حفظ Draft
+    await FormUX.requireAuth({ loginUrl: '../login.html', submitBtnId: 'fSubmit' });
+
+    // معاينة الصورة المختارة
+    const imgInput = $('fImage'), imgLabel = $('fImageLabel');
+    imgInput.addEventListener('change', () => {
+      const f = imgInput.files[0];
+      if (!f) { imgLabel.textContent = '📷 اضغط لاختيار صورة (حد أقصى 5 ميغا)'; return; }
+      if (!FormUX.checkFileSize(f, 5)) { imgInput.value = ''; return; }
+      imgLabel.textContent = '✓ ' + f.name + ' — اضغط لتغييرها';
     });
-    alert('تمام! صار مكانك "قيد المراجعة" — بتلاقيه بملفك الشخصي.');
-    location.href = 'profile.html';
-  });
+
+    submitBtn.addEventListener('click', async () => {
+      if (submitBtn.dataset.authGate === '1') return;
+      FormUX.clearFieldErrors();
+
+      const nameEl = $('fName'), typeEl = $('fType'), regionEl = $('fRegion'),
+            cityEl = $('fCity'), addrEl = $('fAddress'), descEl = $('fDesc'),
+            videoEl = $('fVideo');
+      const name = nameEl.value.trim();
+      const category = typeEl.value;
+      const region = regionEl.value.trim();
+      const city = cityEl.value.trim();
+      const address = addrEl.value.trim();
+      const description = descEl.value.trim();
+      const ytRaw = videoEl.value.trim();
+      const imageFile = imgInput.files[0];
+
+      if (!name) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسم المكان');
+      if (!category) return FormUX.markFieldError(typeEl, 'اختر نوع المكان');
+      if (!region) return FormUX.markFieldError(regionEl, 'الرجاء كتابة المحافظة');
+      if (!city) return FormUX.markFieldError(cityEl, 'الرجاء كتابة المدينة/المنطقة');
+      if (imageFile && !FormUX.checkFileSize(imageFile, 5)) return;
+      if (ytRaw && !FormUX.isValidYouTubeUrl(ytRaw)) return FormUX.markFieldError(videoEl, 'رابط اليوتيوب مو صحيح');
+
+      FormUX.setSubmitLoading(submitBtn, true, 'جاري الإرسال...');
+      try {
+        // 1) تأكد من المستخدم (RLS شرط added_by = auth.uid)
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user) throw new Error('انتهت جلستك. سجّل دخول من جديد.');
+
+        // 2) رفع الصورة (اختياري) — إلى sahat-media تحت مسار المستخدم/tourism
+        const images = [];
+        if (imageFile) {
+          const slug = (name.toLowerCase().replace(/[^a-z0-9ء-ي]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,40)) || 'place';
+          const key = `${user.id}/tourism/${slug}-${Date.now()}.webp`;
+          let blob = imageFile;
+          if (window.MediaProcessor) {
+            try { blob = await MediaProcessor.processImage(imageFile, { label: 'ساحة', output: 'blob' }); } catch(e) {}
+          }
+          const { error: upErr } = await sb.storage.from('sahat-media').upload(key, blob, {
+            upsert: true, cacheControl: '3600', contentType: 'image/webp'
+          });
+          if (upErr) throw upErr;
+          const { data } = sb.storage.from('sahat-media').getPublicUrl(key);
+          images.push(data.publicUrl);
+        }
+
+        // 3) إنشاء السجل (status=pending تلقائياً من SQL default)
+        const { error } = await sb.from('tourism_places').insert({
+          added_by: user.id,
+          name, category, region, city,
+          address: address || null,
+          description: description || null,
+          images,
+          video_url: ytRaw || null,
+        });
+        if (error) throw error;
+
+        FormUX.clearDraft();
+        FormUX.toast('تم الإرسال ✓ مكانك رح يظهر بعد موافقة الإدارة.', 'success', 3000);
+        setTimeout(() => { location.href = 'profile.html'; }, 1500);
+      } catch (err) {
+        console.error(err);
+        FormUX.toast(FormUX.friendlyError(err), 'error');
+        FormUX.setSubmitLoading(submitBtn, false);
+      }
+    });
+  })();
   (function(){
     var btn = document.getElementById('langToggle');
     if(!btn) return;

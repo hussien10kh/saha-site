@@ -10,12 +10,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../css/form-ux.css">
 <script src="site-core.js"></script>
 <script src="data.js"></script>
 <script src="store.js"></script>
 <script src="terms.js"></script>
 <script src="../js/vendor/supabase.js"></script>
 <script src="../js/supabase-client.js"></script>
+<script src="../js/form-ux.js"></script>
 <script src="malaabak-api.js"></script>
 </head>
 <body>
@@ -38,12 +40,12 @@
   </div>
 
   <div class="field">
-    <label>الاسم الكامل</label>
-    <input type="text" id="tName" placeholder="مثال: كريم الأحمد">
+    <label>الاسم الكامل <span class="req">*</span></label>
+    <input type="text" id="tName" placeholder="مثال: كريم الأحمد" required maxlength="80">
   </div>
   <div class="field">
-    <label>الرياضة</label>
-    <select id="tSport">
+    <label>الرياضة <span class="req">*</span></label>
+    <select id="tSport" required>
       <option value="">اختر الرياضة</option>
       <option>كرة قدم</option>
       <option>كرة سلة</option>
@@ -52,20 +54,20 @@
     </select>
   </div>
   <div class="field">
-    <label>المركز</label>
-    <input type="text" id="tPosition" placeholder="مثال: مهاجم">
+    <label>المركز <span class="req">*</span></label>
+    <input type="text" id="tPosition" placeholder="مثال: مهاجم" required>
   </div>
   <div class="field">
-    <label>العمر</label>
-    <input type="number" id="tAge" placeholder="مثال: 17" min="8" max="45">
+    <label>العمر <span class="req">*</span></label>
+    <input type="number" id="tAge" placeholder="مثال: 17" min="8" max="45" inputmode="numeric" required>
   </div>
   <div class="field">
-    <label>المحافظة</label>
-    <input type="text" id="tGov" placeholder="مثال: دمشق">
+    <label>المحافظة <span class="req">*</span></label>
+    <input type="text" id="tGov" placeholder="مثال: دمشق" required>
   </div>
   <div class="field">
-    <label>المدينة / المنطقة</label>
-    <input type="text" id="tCity" placeholder="مثال: المزة">
+    <label>المدينة / المنطقة <span class="req">*</span></label>
+    <input type="text" id="tCity" placeholder="مثال: المزة" required>
   </div>
   <div class="field">
     <label>القدم المفضلة</label>
@@ -77,7 +79,7 @@
   </div>
 
   <div class="field">
-    <label>فيديو الموهبة</label>
+    <label>فيديو الموهبة <span class="req">*</span></label>
     <div class="upload-dropzone" id="dropzone">
       <div class="upload-dropzone-icon">🎬</div>
       <div class="upload-dropzone-text">اضغط لاختيار فيديو</div>
@@ -108,7 +110,7 @@
   <script>document.getElementById("termsSlot").innerHTML = MalaabakTerms.block(); MalaabakTerms.init();</script>
 
   <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إرسال للمراجعة</button>
-  <p class="muted" id="formHint" style="font-size:0.78em;text-align:center;margin-top:0.6em;">
+  <p class="muted" style="font-size:0.78em;text-align:center;margin-top:0.6em;">
     رح يوصلك إشعار بعد مراجعة الإدارة.
   </p>
 </div>
@@ -117,7 +119,7 @@
 <script>SiteCore.mountFooter();</script>
 
 <script>
-(function setupTalentUpload() {
+(async function setupTalentUpload() {
   const dropzone = document.getElementById("dropzone");
   const input = document.getElementById("videoInput");
   const previewWrap = document.getElementById("videoPreviewWrap");
@@ -126,10 +128,11 @@
   const agree = document.getElementById("agreeTerms");
   const muteVideo = document.getElementById("muteVideo");
   const submitBtn = document.getElementById("submitBtn");
-  const hint = document.getElementById("formHint");
   const logo = preview.querySelector(".video-logo");
   const footPicker = document.getElementById("tFoot");
   const EMOJI = { "كرة قدم": "⚽", "كرة سلة": "🏀", "كرة طائرة": "🏐", "تنس": "🎾" };
+
+  await FormUX.requireAuth({ loginUrl: 'login.html', submitBtnId: 'submitBtn' });
 
   let foot = "يمين";
   footPicker.addEventListener("click", (e) => {
@@ -145,16 +148,14 @@
   input.addEventListener("change", () => {
     const file = input.files[0];
     if (!file) return;
-    // معاينة محلية فقط (URL مؤقت بالمتصفح) - الرفع الفعلي بده باكند
+    if (!FormUX.checkFileSize(file, 100)) { input.value = ''; return; }
     const url = URL.createObjectURL(file);
     preview.innerHTML = `<video src="${url}" controls playsinline${muteVideo.checked ? " muted" : ""}></video>`;
-    preview.appendChild(logo); // اللوغو يضل فوق الفيديو
+    preview.appendChild(logo);
     previewWrap.style.display = "";
     dropzone.style.display = "none";
   });
 
-  // خيار "بدون صوت" - بالمعاينة منكتم الصوت مباشرة؛ الحذف النهائي للصوت من الملف بده معالجة
-  // بالسيرفر (ffmpeg -an) وقت الرفع - المتصفح ما بيقدر يعدّل ملف الفيديو الأصلي لحاله
   muteVideo.addEventListener("change", () => {
     const vid = preview.querySelector("video");
     if (vid) vid.muted = muteVideo.checked;
@@ -169,31 +170,32 @@
   });
 
   submitBtn.addEventListener("click", async () => {
-    const name = document.getElementById("tName").value.trim();
-    const sport = document.getElementById("tSport").value;
-    const position = document.getElementById("tPosition").value.trim();
-    const age = Number(document.getElementById("tAge").value);
-    const governorate = document.getElementById("tGov").value.trim();
-    const city = document.getElementById("tCity").value.trim();
+    if (submitBtn.dataset.authGate === '1') return;
+    FormUX.clearFieldErrors();
+    const nameEl = document.getElementById("tName"), sportEl = document.getElementById("tSport"),
+          posEl = document.getElementById("tPosition"), ageEl = document.getElementById("tAge"),
+          govEl = document.getElementById("tGov"), cityEl = document.getElementById("tCity");
+    const name = nameEl.value.trim();
+    const sport = sportEl.value;
+    const position = posEl.value.trim();
+    const age = Number(ageEl.value);
+    const governorate = govEl.value.trim();
+    const city = cityEl.value.trim();
     const videoTitle = document.getElementById("tVideoTitle").value.trim();
     const videoFile = input.files[0];
 
-    if (!name || !sport || !position || !governorate || !city) {
-      hint.textContent = "لازم تعبّي: الاسم، الرياضة، المركز، المحافظة، والمدينة."; return;
-    }
-    if (!age || age < 8 || age > 45) { hint.textContent = "أدخل عمر صحيح (8 - 45)."; return; }
-    if (!videoFile) { hint.textContent = "لازم ترفع فيديو أول."; return; }
-    if (!agree.checked) { hint.textContent = "لازم توافق على الشروط قبل الإرسال."; return; }
+    if (!name) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسمك');
+    if (!sport) return FormUX.markFieldError(sportEl, 'اختر الرياضة');
+    if (!position) return FormUX.markFieldError(posEl, 'الرجاء كتابة المركز');
+    if (!age || age < 8 || age > 45) return FormUX.markFieldError(ageEl, 'أدخل عمر صحيح (8-45)');
+    if (!governorate) return FormUX.markFieldError(govEl, 'الرجاء كتابة المحافظة');
+    if (!city) return FormUX.markFieldError(cityEl, 'الرجاء كتابة المدينة');
+    if (!videoFile) return FormUX.markFieldError(input, 'لازم ترفع فيديو أول');
+    if (!FormUX.checkFileSize(videoFile, 100)) return;
+    if (!agree.checked) return FormUX.markFieldError(agree, 'لازم توافق على الشروط قبل الإرسال');
 
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) {
-      hint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
-      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent("add-talent.html"); }, 1200);
-      return;
-    }
-    submitBtn.disabled = true; submitBtn.textContent = "جاري رفع الفيديو...";
+    FormUX.setSubmitLoading(submitBtn, true, 'جاري رفع الفيديو...');
     try {
-      // ارفع الفيديو الفعلي إلى Supabase Storage
       const ext = (videoFile.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
       const videoUrl = await MalaabakAPI.upload(videoFile, `talents/${MalaabakAPI.slugify(name)}-${Date.now()}.${ext}`);
 
@@ -202,12 +204,13 @@
         videos: [{ title: videoTitle || "فيديو الموهبة", videoUrl, muted: muteVideo.checked, action: "asis" }],
         image: EMOJI[sport] || "⚽",
       });
-
-      hint.textContent = "تم الإرسال للمراجعة ✓ موهبتك بتظهر بعد موافقة الإدارة. عم نحوّلك...";
-      setTimeout(() => { location.href = "admin.html"; }, 1200);
+      FormUX.clearDraft();
+      FormUX.toast('تم الإرسال للمراجعة ✓ موهبتك بتظهر بعد موافقة الإدارة.', 'success', 3000);
+      setTimeout(() => { location.href = "admin.html"; }, 1400);
     } catch (err) {
-      console.error(err); hint.textContent = "تعذّر الرفع: " + (err.message || "حاول مرة أخرى.");
-      submitBtn.disabled = false; submitBtn.textContent = "إرسال للمراجعة";
+      console.error(err);
+      FormUX.toast(FormUX.friendlyError(err), 'error');
+      FormUX.setSubmitLoading(submitBtn, false);
     }
   });
 })();

@@ -10,11 +10,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../css/form-ux.css">
 <script src="site-core.js"></script>
 <script src="data.js"></script>
 <script src="store.js"></script>
 <script src="../js/vendor/supabase.js"></script>
 <script src="../js/supabase-client.js"></script>
+<script src="../js/form-ux.js"></script>
 <script src="malaabak-api.js"></script>
 </head>
 <body>
@@ -29,12 +31,12 @@
   </p>
 
   <div class="field">
-    <label>عنوان التمرين</label>
-    <input type="text" id="tTitle" placeholder="مثال: تمرين لياقة صباحي">
+    <label>عنوان التمرين <span class="req">*</span></label>
+    <input type="text" id="tTitle" placeholder="مثال: تمرين لياقة صباحي" required maxlength="80">
   </div>
   <div class="field">
-    <label>نوع التمرين</label>
-    <select id="tType">
+    <label>نوع التمرين <span class="req">*</span></label>
+    <select id="tType" required>
       <option value="">اختر النوع</option>
       <option>لياقة عامة</option>
       <option>مهارات فردية</option>
@@ -52,12 +54,12 @@
     <input type="text" id="tVenue" placeholder="مثال: ملعب النجوم">
   </div>
   <div class="field">
-    <label>المحافظة</label>
-    <input type="text" id="tGov" placeholder="مثال: دمشق">
+    <label>المحافظة <span class="req">*</span></label>
+    <input type="text" id="tGov" placeholder="مثال: دمشق" required>
   </div>
   <div class="field">
-    <label>المدينة / المنطقة</label>
-    <input type="text" id="tCity" placeholder="مثال: المزة">
+    <label>المدينة / المنطقة <span class="req">*</span></label>
+    <input type="text" id="tCity" placeholder="مثال: المزة" required>
   </div>
   <div class="field">
     <label>التاريخ والوقت</label>
@@ -72,24 +74,23 @@
     </div>
   </div>
   <div class="field">
-    <label>عدد المشاركين المطلوب</label>
-    <input type="number" id="tCount" placeholder="مثال: 20" min="2">
+    <label>عدد المشاركين المطلوب <span class="req">*</span></label>
+    <input type="number" id="tCount" placeholder="مثال: 20" min="2" inputmode="numeric" required>
   </div>
   <div class="field">
     <label>رسوم المشاركة للاعب (ل.س) — اتركها 0 للمجاني</label>
-    <input type="number" id="tFee" placeholder="مثال: 8000" min="0" step="500">
+    <input type="number" id="tFee" placeholder="مثال: 8000" min="0" step="500" inputmode="numeric">
   </div>
 
   <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إنشاء التمرين</button>
-  <p class="muted" id="formHint" style="font-size:0.8em;text-align:center;margin-top:0.6em;">املأ الحقول المطلوبة وراح يظهر تمرينك بصفحة التمارين فوراً.</p>
+  <p class="muted" style="font-size:0.8em;text-align:center;margin-top:0.6em;">املأ الحقول المطلوبة وراح يظهر تمرينك بصفحة التمارين فوراً.</p>
 </div>
 
 <script>
-// ===== حفظ التمرين =====
-// التمارين تنعرض فوراً (مو ضمن لوحة المراجعة الحالية) - منحفظها status:"approved".
-(function setupAddTraining() {
+(async function setupAddTraining() {
   const $ = (id) => document.getElementById(id);
-  const hint = $("formHint");
+  const submitBtn = $("submitBtn");
+  await FormUX.requireAuth({ loginUrl: 'login.html', submitBtnId: 'submitBtn' });
 
   let period = "صباحاً";
   $("tPeriod").addEventListener("click", (e) => {
@@ -100,31 +101,27 @@
     period = opt.dataset.value;
   });
 
-  $("submitBtn").addEventListener("click", async () => {
-    const title = $("tTitle").value.trim();
-    const type = $("tType").value;
+  submitBtn.addEventListener("click", async () => {
+    if (submitBtn.dataset.authGate === '1') return;
+    FormUX.clearFieldErrors();
+    const titleEl = $("tTitle"), typeEl = $("tType"), govEl = $("tGov"), cityEl = $("tCity"), countEl = $("tCount");
+    const title = titleEl.value.trim();
+    const type = typeEl.value;
     const coach = $("tCoach").value.trim();
     const venueName = $("tVenue").value.trim();
-    const governorate = $("tGov").value.trim();
-    const city = $("tCity").value.trim();
+    const governorate = govEl.value.trim();
+    const city = cityEl.value.trim();
     const time = $("tTime").value.trim();
-    const maxParticipants = Number($("tCount").value);
+    const maxParticipants = Number(countEl.value);
     const fee = Number($("tFee").value);
 
-    if (!title || !type || !governorate || !city) {
-      hint.textContent = "لازم تعبّي: العنوان، النوع، المحافظة، والمدينة."; return;
-    }
-    if (!maxParticipants || maxParticipants < 2) {
-      hint.textContent = "عدد المشاركين لازم يكون 2 على الأقل."; return;
-    }
+    if (!title) return FormUX.markFieldError(titleEl, 'الرجاء كتابة عنوان التمرين');
+    if (!type) return FormUX.markFieldError(typeEl, 'اختر نوع التمرين');
+    if (!governorate) return FormUX.markFieldError(govEl, 'الرجاء كتابة المحافظة');
+    if (!city) return FormUX.markFieldError(cityEl, 'الرجاء كتابة المدينة');
+    if (!maxParticipants || maxParticipants < 2) return FormUX.markFieldError(countEl, 'عدد المشاركين لازم يكون 2 على الأقل');
 
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) {
-      hint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
-      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent("add-training.html"); }, 1200);
-      return;
-    }
-    $("submitBtn").disabled = true;
+    FormUX.setSubmitLoading(submitBtn, true, 'جاري الحفظ...');
     try {
       await MalaabakAPI.create("trainings", {
         title, type, governorate, city,
@@ -134,11 +131,13 @@
         coach: coach || null,
         image: "🏃",
       });
-      hint.textContent = "تم إنشاء التمرين ✓ عم نحوّلك لصفحة التمارين...";
-      setTimeout(() => { location.href = "training.html"; }, 900);
+      FormUX.clearDraft();
+      FormUX.toast('تم إنشاء التمرين ✓', 'success', 2000);
+      setTimeout(() => { location.href = "training.html"; }, 1100);
     } catch (err) {
-      console.error(err); hint.textContent = "تعذّر الحفظ: " + (err.message || "حاول مرة أخرى.");
-      $("submitBtn").disabled = false;
+      console.error(err);
+      FormUX.toast(FormUX.friendlyError(err), 'error');
+      FormUX.setSubmitLoading(submitBtn, false);
     }
   });
 })();
