@@ -11,6 +11,10 @@
 <script src="site-core.js"></script>
 <script src="data.js"></script>
 <script src="store.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
 </head>
 <body>
 
@@ -147,32 +151,7 @@
       <h3>مواهب</h3>
       <a href="talents.html" class="quad-more">المزيد ←</a>
     </div>
-    <div class="quad-items">
-      <a href="talents.html" class="quad-item">
-        <div class="quad-item-image">🧑</div>
-        <div class="quad-item-title">محمد العلي</div>
-        <div class="quad-item-location">📍 دمشق</div>
-        <div class="quad-item-stat">18 سنة</div>
-      </a>
-      <a href="talents.html" class="quad-item">
-        <div class="quad-item-image">🧑</div>
-        <div class="quad-item-title">يوسف حسن</div>
-        <div class="quad-item-location">📍 حلب</div>
-        <div class="quad-item-stat">20 سنة</div>
-      </a>
-      <a href="talents.html" class="quad-item">
-        <div class="quad-item-image">🧑</div>
-        <div class="quad-item-title">سامر خليل</div>
-        <div class="quad-item-location">📍 اللاذقية</div>
-        <div class="quad-item-stat">17 سنة</div>
-      </a>
-      <a href="talents.html" class="quad-item">
-        <div class="quad-item-image">🧑</div>
-        <div class="quad-item-title">علي مراد</div>
-        <div class="quad-item-location">📍 حمص</div>
-        <div class="quad-item-stat">19 سنة</div>
-      </a>
-    </div>
+    <div class="quad-items" id="talentsGrid"></div>
   </div>
 
   <div class="quad-card">
@@ -180,36 +159,7 @@
       <h3>تمارين عامة</h3>
       <a href="training.html" class="quad-more">المزيد ←</a>
     </div>
-    <div class="quad-items">
-      <a href="training.html" class="quad-item">
-        <div class="quad-item-image">🏃</div>
-        <div class="quad-item-title">تمرين لياقة صباحي</div>
-        <div class="quad-item-location">📍 صالة الفرقان - حلب</div>
-        <div class="quad-item-time">🕐 06:00 ص</div>
-        <div class="quad-item-stat">متبقي 6 أماكن</div>
-      </a>
-      <a href="training.html" class="quad-item">
-        <div class="quad-item-image">🏃</div>
-        <div class="quad-item-title">تدريب حراس متقدم</div>
-        <div class="quad-item-location">📍 ملعب النجوم - دمشق</div>
-        <div class="quad-item-time">🕐 05:00 م</div>
-        <div class="quad-item-stat">متبقي 2 أماكن</div>
-      </a>
-      <a href="training.html" class="quad-item">
-        <div class="quad-item-image">🏃</div>
-        <div class="quad-item-title">تمرين يوغا مسائي</div>
-        <div class="quad-item-location">📍 نادي الساحل - اللاذقية</div>
-        <div class="quad-item-time">🕐 07:30 م</div>
-        <div class="quad-item-stat">متبقي 4 أماكن</div>
-      </a>
-      <a href="training.html" class="quad-item">
-        <div class="quad-item-image">🏃</div>
-        <div class="quad-item-title">تمرين كرة سلة مسائي</div>
-        <div class="quad-item-location">📍 صالة الوعر - حمص</div>
-        <div class="quad-item-time">🕐 08:00 م</div>
-        <div class="quad-item-stat">متبقي 5 أماكن</div>
-      </a>
-    </div>
+    <div class="quad-items" id="trainingsGrid"></div>
   </div>
 
   <div class="quad-card">
@@ -217,36 +167,7 @@
       <h3>مباريات</h3>
       <a href="matches.html" class="quad-more">المزيد ←</a>
     </div>
-    <div class="quad-items">
-      <a href="matches.html" class="quad-item">
-        <div class="quad-item-image">⚽</div>
-        <div class="quad-item-title">مباراة ودية مساء الخميس</div>
-        <div class="quad-item-location">📍 ملعب النجوم - دمشق</div>
-        <div class="quad-item-time">🕐 09:00 م</div>
-        <div class="quad-item-stat">متبقي 2 لاعب</div>
-      </a>
-      <a href="matches.html" class="quad-item">
-        <div class="quad-item-image">⚽</div>
-        <div class="quad-item-title">دوري صغير - الجولة 3</div>
-        <div class="quad-item-location">📍 صالة الفرقان - حلب</div>
-        <div class="quad-item-time">🕐 06:00 م</div>
-        <div class="quad-item-stat">مكتملة</div>
-      </a>
-      <a href="matches.html" class="quad-item">
-        <div class="quad-item-image">⚽</div>
-        <div class="quad-item-title">مباراة السبت الصباحية</div>
-        <div class="quad-item-location">📍 ملعب الساحل - اللاذقية</div>
-        <div class="quad-item-time">🕐 09:00 ص</div>
-        <div class="quad-item-stat">متبقي 4 لاعب</div>
-      </a>
-      <a href="matches.html" class="quad-item">
-        <div class="quad-item-image">⚽</div>
-        <div class="quad-item-title">مباراة كرة سلة ودية</div>
-        <div class="quad-item-location">📍 ملعب الوعر - حمص</div>
-        <div class="quad-item-time">🕐 07:00 م</div>
-        <div class="quad-item-stat">متبقي 3 لاعب</div>
-      </a>
-    </div>
+    <div class="quad-items" id="homeMatchesGrid"></div>
   </div>
 </div>
 
@@ -311,16 +232,79 @@
 <script>SiteCore.mountFooter();</script>
 
 <script>
-// أرقام .stats-bar محسوبة فعلياً من SITE_DATA (data.js) - مو أرقام ثابتة مكتوبة يدوياً
-(function fillStats() {
-  const distinctGovernorates = new Set(SITE_DATA.venues.map((v) => v.governorate));
-  const openMatches = SITE_DATA.matches.filter((m) => m.participants < m.maxParticipants);
+// عبّي كل الأقسام من Supabase (venues/matches/trainings/talents) قبل أي عرض
+(async function loadHome() {
+  try {
+    await Promise.all([
+      DataBridge.load('venues'),
+      DataBridge.load('matches'),
+      DataBridge.load('trainings'),
+      DataBridge.load('talents'),
+    ]);
+  } catch(e) { console.warn('DataBridge load partial:', e); }
+  fillStats();
+  renderTopSections();
+  if (typeof applyFilters === 'function') applyFilters();
+})();
+
+// أرقام .stats-bar محسوبة فعلياً من البيانات
+function fillStats() {
+  const distinctGovernorates = new Set((SITE_DATA.venues || []).map((v) => v.governorate));
+  const openMatches = (SITE_DATA.matches || []).filter((m) => m.participants < m.maxParticipants);
+  const playersApprox = (SITE_DATA.matches || []).reduce((s, m) => s + (m.participants || 0), 0)
+                      + (SITE_DATA.trainings || []).reduce((s, t) => s + (t.participants || 0), 0);
 
   document.getElementById("statCities").textContent = distinctGovernorates.size;
   document.getElementById("statMatches").textContent = openMatches.length;
-  document.getElementById("statPlayers").textContent = SITE_DATA.playersApprox.toLocaleString("en-US");
-  document.getElementById("statVenues").textContent = SITE_DATA.venues.length;
-})();
+  document.getElementById("statPlayers").textContent = playersApprox.toLocaleString("en-US");
+  document.getElementById("statVenues").textContent = (SITE_DATA.venues || []).length;
+}
+
+// رندر الأقسام الثلاثة (مواهب/تمارين/مباريات) — 4 بطاقات لكل قسم، ولو فاضي رسالة
+function renderTopSections() {
+  const emptyMsg = (text) => `<p class="muted" style="grid-column:1/-1;text-align:center;padding:1em 0;font-size:.9em;">${text}</p>`;
+
+  // مواهب — رابط لصفحة تفاصيل الموهبة
+  const talents = (SITE_DATA.talents || []).slice(0, 4);
+  document.getElementById("talentsGrid").innerHTML = talents.length
+    ? talents.map(t => `
+        <a href="talent-detail.html?id=${t.id}" class="quad-item">
+          <div class="quad-item-image">${t.image || '🧑'}</div>
+          <div class="quad-item-title">${t.name}</div>
+          <div class="quad-item-location">📍 ${t.governorate}</div>
+          <div class="quad-item-stat">${t.age || ''} ${t.age ? 'سنة' : ''}</div>
+        </a>`).join('')
+    : emptyMsg('لا يوجد مواهب مضافة بعد');
+
+  // تمارين — رابط لصفحة تفاصيل التمرين
+  const trainings = (SITE_DATA.trainings || []).slice(0, 4);
+  document.getElementById("trainingsGrid").innerHTML = trainings.length
+    ? trainings.map(t => `
+        <a href="training-detail.html?id=${t.id}" class="quad-item">
+          <div class="quad-item-image">${t.image || '🏃'}</div>
+          <div class="quad-item-title">${t.title}</div>
+          <div class="quad-item-location">📍 ${t.venueName || t.governorate}</div>
+          <div class="quad-item-time">🕐 ${t.time || ''}</div>
+          <div class="quad-item-stat">متبقي ${Math.max(0, (t.maxParticipants||0) - (t.participants||0))} أماكن</div>
+        </a>`).join('')
+    : emptyMsg('لا يوجد تمارين مضافة بعد');
+
+  // مباريات — رابط لصفحة تفاصيل المباراة
+  const matches = (SITE_DATA.matches || []).slice(0, 4);
+  document.getElementById("homeMatchesGrid").innerHTML = matches.length
+    ? matches.map(m => {
+        const remaining = Math.max(0, (m.maxParticipants||0) - (m.participants||0));
+        return `
+        <a href="match-detail.html?id=${m.id}" class="quad-item">
+          <div class="quad-item-image">${m.image || '⚽'}</div>
+          <div class="quad-item-title">${m.title}</div>
+          <div class="quad-item-location">📍 ${m.venueName || m.governorate}</div>
+          <div class="quad-item-time">🕐 ${m.time || ''}</div>
+          <div class="quad-item-stat">${remaining === 0 ? 'مكتملة' : 'متبقي ' + remaining + ' لاعب'}</div>
+        </a>`;
+      }).join('')
+    : emptyMsg('لا يوجد مباريات مضافة بعد');
+}
 
 // المحافظات/المدن + حقول التاريخ صاروا بـsite-core.js (كانوا 3 نسخ متطابقة بـ3 صفحات)
 SiteCore.fillDateSelects();
