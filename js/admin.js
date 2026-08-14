@@ -27,6 +27,128 @@ let currentTab = 'overview';
 let editingAdId = null;
 let adminUser = null;
 
+// عدّاد الطلبات المعلّقة — يظهر كـbadge أحمر بجانب كل تبويب
+let pendingCounts = { venues:0, coaches:0, academies:0, talents:0, tourism:0 };
+
+// ---------- Modal: عرض كامل تفاصيل عنصر معلّق ----------
+// خرائط عربية للتسميات
+const FIELD_LABELS = {
+  name:'الاسم', sport:'الرياضة', specialty:'التخصص', sports:'الرياضات',
+  category:'النوع', type:'النوع',
+  governorate:'المحافظة', region:'المحافظة', city:'المدينة', address:'العنوان',
+  price:'السعر', pay_mode:'طريقة الدفع', price_per_session:'سعر الحصة',
+  monthly_fee:'الاشتراك الشهري', fee:'الرسوم',
+  phone:'الهاتف', experience:'سنوات الخبرة', gender:'الجنس',
+  age:'العمر', age_groups:'الفئات العمرية', position:'المركز', foot:'القدم المفضلة',
+  description:'الوصف', players:'اللاعبين', field_count:'عدد الملاعب',
+  area:'المساحة', surface:'الأرضية', amenities:'الخدمات',
+  lat:'خط العرض', lng:'خط الطول',
+  video_url:'رابط فيديو يوتيوب', image:'الصورة', images:'الصور',
+  watermark_included:'علامة مائية', videos:'الفيديوهات',
+  venue_name:'الملعب', date_label:'التاريخ', time:'الوقت', day:'اليوم',
+  level:'المستوى', max_participants:'الحد الأقصى للمشاركين',
+  max_teams:'الحد الأقصى للفرق', participants:'المشاركين', teams:'الفرق',
+  coach:'المدرب', period:'الفترة',
+  created_at:'تاريخ الإنشاء', status:'الحالة',
+};
+const HIDDEN_FIELDS = new Set(['id','owner_id','added_by','reviewed_by','reviewed_at','rating_avg','review_count','image','images']);
+
+function formatFieldValue(k, v){
+  if (v === null || v === undefined || v === '') return '<span style="color:var(--muted);">—</span>';
+  if (k === 'video_url' || (typeof v === 'string' && v.startsWith('http'))) {
+    return `<a href="${escapeHTML(v)}" target="_blank" rel="noopener">${escapeHTML(v.length>60?v.slice(0,60)+'…':v)}</a>`;
+  }
+  if (k === 'created_at' || k === 'reviewed_at') {
+    try { return escapeHTML(new Date(v).toLocaleString('ar-SY')); } catch(e){}
+  }
+  if (Array.isArray(v)) return v.length ? v.map(x=>`<span class="tag" style="display:inline-block;padding:2px 8px;background:var(--border);border-radius:999px;font-size:12px;margin:2px 3px;">${escapeHTML(String(x))}</span>`).join('') : '—';
+  if (typeof v === 'boolean') return v ? '✓ نعم' : '✗ لا';
+  if (typeof v === 'object') return `<pre style="font-size:11px;background:var(--border);padding:6px;border-radius:6px;white-space:pre-wrap;">${escapeHTML(JSON.stringify(v,null,2))}</pre>`;
+  return escapeHTML(String(v));
+}
+
+function openReviewModal(item, opts={}){
+  // opts: { title, onApprove(id), onReject(id) }
+  const overlay = document.createElement('div');
+  overlay.className = 'admin-review-overlay';
+
+  // gallery
+  const images = (item.images && item.images.length) ? item.images : (item.image && String(item.image).startsWith('http') ? [item.image] : []);
+  const galleryHTML = images.length
+    ? `<div class="admin-review-gallery">${images.map(u=>`<img src="${escapeHTML(u)}" alt="">`).join('')}</div>` : '';
+
+  // fields (كل ما مو مخفي)
+  const fieldsHTML = Object.entries(item)
+    .filter(([k,v]) => !HIDDEN_FIELDS.has(k))
+    .map(([k,v]) => {
+      const label = FIELD_LABELS[k] || k;
+      return `<div class="admin-review-field"><div class="k">${escapeHTML(label)}</div><div class="v">${formatFieldValue(k,v)}</div></div>`;
+    }).join('');
+
+  // YouTube embed لو موجود
+  const ytId = item.video_url && MalaabakAPI.parseYouTubeId ? MalaabakAPI.parseYouTubeId(item.video_url) : null;
+  const embedHTML = ytId ? `
+    <div style="position:relative;padding-bottom:56.25%;height:0;border-radius:10px;overflow:hidden;background:#000;margin-bottom:14px;">
+      <iframe src="https://www.youtube.com/embed/${ytId}?rel=0" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe>
+    </div>` : '';
+
+  overlay.innerHTML = `
+    <div class="admin-review-modal">
+      <div class="admin-review-head">
+        <h2>${escapeHTML(opts.title || 'مراجعة كاملة — ' + (item.name || item.title || ''))}</h2>
+        <button type="button" class="admin-review-close" aria-label="إغلاق">×</button>
+      </div>
+      <div class="admin-review-body">
+        ${galleryHTML}
+        ${embedHTML}
+        ${fieldsHTML}
+      </div>
+      ${(opts.onApprove || opts.onReject) ? `
+        <div class="admin-review-actions">
+          ${opts.onApprove ? '<button type="button" class="btn btn-primary" data-act="approve">موافقة</button>' : ''}
+          ${opts.onReject ? '<button type="button" class="btn btn-danger" data-act="reject">رفض</button>' : ''}
+        </div>` : ''}
+    </div>`;
+
+  const close = () => overlay.remove();
+  overlay.querySelector('.admin-review-close').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  overlay.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const act = btn.dataset.act;
+      btn.disabled = true; btn.textContent = '...';
+      try {
+        if (act === 'approve' && opts.onApprove) await opts.onApprove(item.id);
+        if (act === 'reject'  && opts.onReject)  await opts.onReject(item.id);
+        close();
+      } catch(err) {
+        alert('تعذّر الحفظ: ' + (err.message || err));
+        btn.disabled = false; btn.textContent = act === 'approve' ? 'موافقة' : 'رفض';
+      }
+    });
+  });
+
+  document.body.appendChild(overlay);
+}
+
+async function refreshPendingCounts(){
+  try {
+    const q = (table) => sb.from(table).select('id', { count:'exact', head:true }).eq('status','pending');
+    const [venues, coaches, academies, talents, tourism] = await Promise.all([
+      q('malaabak_venues'), q('malaabak_coaches'), q('malaabak_academies'),
+      q('malaabak_talents'), q('tourism_places'),
+    ]);
+    pendingCounts = {
+      venues:    venues.count    || 0,
+      coaches:   coaches.count   || 0,
+      academies: academies.count || 0,
+      talents:   talents.count   || 0,
+      tourism:   tourism.count   || 0,
+    };
+  } catch(e){ console.error('refreshPendingCounts failed:', e); }
+}
+
 async function initAdmin(){
   try{
     if(!(await requireAdmin())) return;
@@ -37,6 +159,7 @@ async function initAdmin(){
       '<div class="admin-empty">تعذّر تحميل لوحة التحكم، تحقق من اتصالك بالإنترنت وحاول تحديث الصفحة.</div>';
     return;
   }
+  await refreshPendingCounts();
   renderSidebar();
   renderTopbar();
   renderTab();
@@ -56,14 +179,14 @@ function renderSidebar(){
       {id:'settings', label:'الإعدادات', icon:ADMIN_ICONS.settings},
     ]},
     { title:'السياحة', items:[
-      {id:'tourism-pending', label:'أماكن معلّقة',      icon:ADMIN_ICONS.overview},
+      {id:'tourism-pending', label:'أماكن معلّقة',      icon:ADMIN_ICONS.overview, badge: pendingCounts.tourism},
       {id:'tourism-reviews', label:'تعليقات السياحة',  icon:ADMIN_ICONS.comments},
     ]},
     { title:'الرياضة (ملعبك)', items:[
-      {id:'malaab-venues',    label:'ملاعب معلّقة',    icon:ADMIN_ICONS.overview},
-      {id:'malaab-coaches',   label:'مدربين معلّقين',  icon:ADMIN_ICONS.overview},
-      {id:'malaab-academies', label:'أكاديميات معلّقة', icon:ADMIN_ICONS.overview},
-      {id:'malaab-talents',   label:'مواهب معلّقة',   icon:ADMIN_ICONS.overview},
+      {id:'malaab-venues',    label:'ملاعب معلّقة',    icon:ADMIN_ICONS.overview, badge: pendingCounts.venues},
+      {id:'malaab-coaches',   label:'مدربين معلّقين',  icon:ADMIN_ICONS.overview, badge: pendingCounts.coaches},
+      {id:'malaab-academies', label:'أكاديميات معلّقة', icon:ADMIN_ICONS.overview, badge: pendingCounts.academies},
+      {id:'malaab-talents',   label:'مواهب معلّقة',   icon:ADMIN_ICONS.overview, badge: pendingCounts.talents},
       {id:'malaab-reviews',   label:'تقييمات ملعبك',  icon:ADMIN_ICONS.comments},
       {id:'malaab-bookings',  label:'حجوزات ملعبك',   icon:ADMIN_ICONS.ads},
     ]},
@@ -72,7 +195,10 @@ function renderSidebar(){
       {id:'users-admins', label:'المشرفون',       icon:ADMIN_ICONS.settings},
     ]},
   ];
-  const renderItem = (i) => `<button class="admin-nav-item ${currentTab===i.id?'active':''}" data-tab="${i.id}">${i.icon}<span>${i.label}</span></button>`;
+  const renderItem = (i) => {
+    const badge = i.badge ? `<span class="admin-nav-badge">${i.badge}</span>` : '';
+    return `<button class="admin-nav-item ${currentTab===i.id?'active':''}" data-tab="${i.id}">${i.icon}<span>${i.label}</span>${badge}</button>`;
+  };
   mount.innerHTML = `
     <div class="admin-logo">ساحة<span>.</span> إدارة</div>
     ${sections.map((s,idx)=>`
@@ -551,13 +677,37 @@ async function renderTourismPending(mount){
               placeholder="https://youtube.com/watch?v=..." style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.85em;">
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0;">
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+          <button class="btn btn-outline tourism-review" data-id="${r.id}" style="font-size:.8em;padding:6px 12px;">👁 كل التفاصيل</button>
           <button class="btn btn-primary tourism-approve" data-id="${r.id}" style="font-size:.85em;padding:8px 14px;">موافقة</button>
           <button class="btn btn-danger tourism-reject" data-id="${r.id}" style="font-size:.85em;padding:8px 14px;">رفض</button>
         </div>
       </div>`;
   }).join('');
+  const tourismCache = new Map(rows.map(r=>[r.id, r]));
   mount.addEventListener('click', async (e)=>{
+    const review = e.target.closest('.tourism-review');
+    if (review) {
+      const item = tourismCache.get(review.dataset.id);
+      if (item) openReviewModal(item, {
+        title: 'مراجعة كاملة — ' + (item.name || 'مكان'),
+        onApprove: async (id) => {
+          const { error } = await sb.from('tourism_places').update({ status:'approved', reviewed_by:adminUser.id, reviewed_at:new Date().toISOString() }).eq('id', id);
+          if (error) throw error;
+          document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
+          await refreshPendingCounts(); renderSidebar();
+          if(!mount.querySelector('.admin-card')) mount.innerHTML = `<div class="admin-empty">✅ ما في أماكن معلّقة.</div>`;
+        },
+        onReject: async (id) => {
+          const { error } = await sb.from('tourism_places').update({ status:'rejected', reviewed_by:adminUser.id, reviewed_at:new Date().toISOString() }).eq('id', id);
+          if (error) throw error;
+          document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
+          await refreshPendingCounts(); renderSidebar();
+          if(!mount.querySelector('.admin-card')) mount.innerHTML = `<div class="admin-empty">✅ ما في أماكن معلّقة.</div>`;
+        },
+      });
+      return;
+    }
     const approve = e.target.closest('.tourism-approve');
     const reject  = e.target.closest('.tourism-reject');
     if(!approve && !reject) return;
@@ -577,8 +727,9 @@ async function renderTourismPending(mount){
     const { error } = await sb.from('tourism_places').update(patch).eq('id', id);
     if(error){ alert('تعذّر الحفظ: '+error.message); btn.disabled=false; btn.textContent = approve?'موافقة':'رفض'; return; }
     document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
+    await refreshPendingCounts(); renderSidebar();
     if(!mount.querySelector('.admin-card')) mount.innerHTML = `<div class="admin-empty">✅ ما في أماكن معلّقة.</div>`;
-  }, { once:true });
+  });
 }
 
 /* =========================================================
@@ -646,7 +797,8 @@ async function renderMalaabPending(mount, type){
           <div style="font-size:.85em;color:var(--muted);">${escapeHTML(META[type](x))}</div>
           ${videoRows}
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0;">
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+          <button class="btn btn-outline mlb-review" data-id="${x.id}" style="font-size:.8em;padding:6px 12px;">👁 كل التفاصيل</button>
           <button class="btn btn-primary mlb-approve" data-id="${x.id}" style="font-size:.85em;padding:8px 14px;">موافقة</button>
           <button class="btn btn-danger mlb-reject" data-id="${x.id}" style="font-size:.85em;padding:8px 14px;">رفض</button>
         </div>
@@ -654,6 +806,28 @@ async function renderMalaabPending(mount, type){
   }).join('');
 
   mount.addEventListener('click', async (e)=>{
+    const review = e.target.closest('.mlb-review');
+    if (review) {
+      const item = cache.get(review.dataset.id);
+      if (item) openReviewModal(item, {
+        title: 'مراجعة كاملة — ' + NAMES[type] + ' — ' + (item.name || ''),
+        onApprove: async (id) => {
+          await MalaabakAPI.setStatus(type, id, 'approved');
+          document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
+          cache.delete(id);
+          await refreshPendingCounts(); renderSidebar();
+          if (!cache.size) mount.innerHTML = `<div class="admin-empty">✅ ما في طلبات معلّقة بـ${NAMES[type]}.</div>`;
+        },
+        onReject: async (id) => {
+          await MalaabakAPI.setStatus(type, id, 'rejected');
+          document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
+          cache.delete(id);
+          await refreshPendingCounts(); renderSidebar();
+          if (!cache.size) mount.innerHTML = `<div class="admin-empty">✅ ما في طلبات معلّقة بـ${NAMES[type]}.</div>`;
+        },
+      });
+      return;
+    }
     const approve = e.target.closest('.mlb-approve');
     const reject  = e.target.closest('.mlb-reject');
     if(!approve && !reject) return;
@@ -706,12 +880,13 @@ async function renderMalaabPending(mount, type){
       await MalaabakAPI.setStatus(type, id, status);
       document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
       cache.delete(id);
+      await refreshPendingCounts(); renderSidebar();
       if(!cache.size) mount.innerHTML = `<div class="admin-empty">✅ ما في طلبات معلّقة بـ${NAMES[type]}.</div>`;
     } catch(err){
       alert('تعذّر الحفظ: '+err.message);
       btn.disabled=false; btn.textContent = approve?'موافقة':'رفض';
     }
-  }, { once:true });
+  });
 }
 
 /* =========================================================

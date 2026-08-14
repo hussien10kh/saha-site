@@ -20,6 +20,46 @@
 <meta name="apple-mobile-web-app-title" content="ساحة">
 <style>
   @media (max-width:920px){ #sidebarToggle{display:flex !important;} }
+  /* Badge أحمر بجانب كل تبويب فيه طلبات معلّقة */
+  .admin-nav-item{position:relative;}
+  .admin-nav-badge{
+    background:#d93025;color:#fff;font-size:11px;font-weight:800;line-height:1;
+    padding:3px 7px;border-radius:999px;margin-inline-start:auto;min-width:20px;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  /* Modal للمراجعة الكاملة */
+  .admin-review-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;
+    display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;
+  }
+  .admin-review-modal{
+    background:var(--surface,#fff);color:var(--text,#0f172a);border-radius:16px;
+    max-width:720px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);
+  }
+  .admin-review-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:16px 20px;border-bottom:1px solid var(--border,#e5e7eb);position:sticky;top:0;
+    background:var(--surface,#fff);z-index:2;
+  }
+  .admin-review-head h2{font-size:17px;margin:0;font-weight:800;}
+  .admin-review-close{
+    background:none;border:0;font-size:24px;cursor:pointer;color:var(--muted,#6b7280);
+    width:32px;height:32px;border-radius:8px;
+  }
+  .admin-review-close:hover{background:var(--border,#e5e7eb);}
+  .admin-review-body{padding:16px 20px;}
+  .admin-review-gallery{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;}
+  .admin-review-gallery img{width:180px;height:120px;object-fit:cover;border-radius:10px;flex-shrink:0;}
+  .admin-review-field{display:grid;grid-template-columns:130px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--border,#f0f0f0);font-size:13.5px;}
+  .admin-review-field:last-child{border-bottom:0;}
+  .admin-review-field .k{color:var(--muted,#6b7280);font-weight:700;}
+  .admin-review-field .v{color:var(--text,#0f172a);word-break:break-word;}
+  .admin-review-field a{color:var(--primary,#2540d0);}
+  .admin-review-actions{
+    display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--border,#e5e7eb);
+    position:sticky;bottom:0;background:var(--surface,#fff);
+  }
+  .admin-review-actions .btn{flex:1;}
 </style>
 </head>
 <body>
