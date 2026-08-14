@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>بذر المعالم الأثرية — ساحة سياحة</title>
+<style>
+  body{font-family:'Cairo','Tajawal',system-ui,sans-serif;background:#f4f6fa;color:#182333;padding:24px;max-width:720px;margin:0 auto;direction:rtl;}
+  h1{color:#15264a;margin-top:0;}
+  .card{background:#fff;border:1px solid #e6e9f0;border-radius:12px;padding:16px;margin:12px 0;}
+  .row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed #e6e9f0;}
+  .row:last-child{border-bottom:none;}
+  .name{flex:1;font-weight:700;}
+  .status{font-size:.85em;padding:4px 10px;border-radius:999px;}
+  .status.pending{background:#eef;color:#59f;}
+  .status.ok{background:#e6f7ec;color:#1a9c5e;}
+  .status.err{background:#fde8e6;color:#e0453d;}
+  button{background:#15264a;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:700;font-family:inherit;cursor:pointer;font-size:15px;}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+  .note{background:#fffbe6;border:1px solid #f0dc9a;border-radius:8px;padding:12px;color:#7a5a11;font-size:.9em;margin-top:12px;}
+  #log{background:#0c1424;color:#7fdbff;padding:12px;border-radius:8px;font-family:monospace;font-size:.85em;max-height:200px;overflow:auto;margin-top:12px;white-space:pre-wrap;}
+</style>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/media-processor.js"></script>
+<script src="places-data.js"></script>
+</head>
+<body>
+
+<h1>بذر المعالم الأثرية</h1>
+<p>يُشغّل مرة واحدة فقط. يقرأ المعالم من <code>places-data.js</code>، يضغط صورها بـ<code>MediaProcessor</code> (WebP + علامة "ساحة")، يرفعها لـSupabase Storage، ويدرجها في <code>tourism_places</code> بحالة <code>approved</code>.</p>
+
+<div class="note">⚠️ يتطلب تسجيل دخول بحساب <b>أدمن</b> (<code>profiles.is_admin=true</code>). يتخطّى العناصر الموجودة مسبقاً في القاعدة.</div>
+
+<div class="card" id="list"></div>
+
+<button id="runBtn">ابدأ البذر</button>
+<button id="checkBtn" style="background:#374151;">فحص فقط</button>
+
+<div id="log"></div>
+
+<script>
+const items = PLACES_DATA.filter(p => p.category === 'landmark');
+const listEl = document.getElementById('list');
+const logEl = document.getElementById('log');
+const runBtn = document.getElementById('runBtn');
+const checkBtn = document.getElementById('checkBtn');
+
+function log(msg){ logEl.textContent += msg + "\n"; logEl.scrollTop = logEl.scrollHeight; }
+function render(){
+  listEl.innerHTML = items.map(p => `
+    <div class="row" data-id="${p.id}">
+      <span class="name">${p.name}</span>
+      <span class="muted" style="font-size:.85em;color:#6b7686;">${p.city}</span>
+      <span class="status pending" id="s-${p.id}">في الانتظار</span>
+    </div>
+  `).join('');
+}
+render();
+
+async function ensureAdmin(){
+  const { data:{user} } = await sb.auth.getUser();
+  if(!user) throw new Error('لازم تسجّل دخول أول. اذهب لـ../login.html');
+  const { data:profile } = await sb.from('profiles').select('is_admin,id').eq('id', user.id).single();
+  if(!profile?.is_admin) throw new Error('حسابك ليس أدمن.');
+  return user;
+}
+
+checkBtn.addEventListener('click', async () => {
+  logEl.textContent = '';
+  try {
+    const user = await ensureAdmin();
+    log('✓ أدمن: ' + user.id.slice(0,8) + '...');
+    const { data, error, count } = await sb.from('tourism_places').select('id,name', { count:'exact' }).eq('category','landmark');
+    if(error) throw error;
+    log(`📊 موجود حالياً بـtourism_places (landmark): ${count}`);
+    data.forEach(r => log(`   - ${r.name}`));
+  } catch(err) { log('❌ ' + err.message); }
+});
+
+runBtn.addEventListener('click', async () => {
+  logEl.textContent = '';
+  runBtn.disabled = true; runBtn.textContent = 'جاري البذر...';
+  try {
+    const user = await ensureAdmin();
+    log('✓ أدمن مؤكّد.');
+
+    // نتفادى التكرار: نجيب الأسماء الموجودة
+    const { data:existing } = await sb.from('tourism_places').select('name').eq('category','landmark');
+    const existingNames = new Set((existing||[]).map(r => r.name));
+
+    let inserted = 0, skipped = 0;
+    for (const p of items) {
+      const badge = document.getElementById('s-' + p.id);
+      if (existingNames.has(p.name)) {
+        badge.textContent = 'موجود مسبقاً'; badge.className = 'status ok';
+        log(`⏭  ${p.name} — موجود، تخطّي.`); skipped++;
+        continue;
+      }
+
+      badge.textContent = 'جاري الرفع...';
+      try {
+        // 1) اجلب الصورة من مسارها المحلي
+        const imgResp = await fetch(p.image);
+        if (!imgResp.ok) throw new Error('فشل جلب الصورة: ' + p.image);
+        const imgBlob = await imgResp.blob();
+
+        // 2) اضغطها + طبع علامة "ساحة"
+        const processed = await MediaProcessor.processImage(imgBlob, { label: 'ساحة', output: 'blob' });
+
+        // 3) ارفعها إلى sahat-media/<uid>/tourism/landmarks/<slug>.webp
+        const key = `${user.id}/tourism/landmarks/${p.id}.webp`;
+        const { error:upErr } = await sb.storage.from('sahat-media').upload(key, processed, {
+          contentType:'image/webp', upsert:true, cacheControl:'3600',
+        });
+        if(upErr) throw upErr;
+        const { data:{ publicUrl } } = sb.storage.from('sahat-media').getPublicUrl(key);
+
+        // 4) أدرج بـtourism_places (status=approved، لأنها معالم رسمية موثّقة)
+        const { error:insErr } = await sb.from('tourism_places').insert({
+          added_by: user.id,
+          name: p.name,
+          category: 'landmark',
+          region: p.city,
+          city: p.area || p.city,
+          lat: p.lat, lng: p.lng,
+          description: p.desc,
+          images: [publicUrl],
+          status: 'approved',
+          reviewed_by: user.id,
+          reviewed_at: new Date().toISOString(),
+        });
+        if(insErr) throw insErr;
+
+        badge.textContent = '✓ تم'; badge.className = 'status ok';
+        log(`✅ ${p.name} — رُفعت (${Math.round(processed.size/1024)}KB) وأُدرجت.`);
+        inserted++;
+      } catch(err) {
+        badge.textContent = 'خطأ'; badge.className = 'status err';
+        log(`❌ ${p.name}: ${err.message}`);
+      }
+    }
+    log(`\n🎉 انتهى. أُدرج: ${inserted}، مُتخطّى: ${skipped}.`);
+  } catch(err) {
+    log('❌ ' + err.message);
+  } finally {
+    runBtn.disabled = false; runBtn.textContent = 'ابدأ البذر';
+  }
+});
+</script>
+
+</body>
+</html>

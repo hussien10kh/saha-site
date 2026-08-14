@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>المباريات - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="list-page.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "matches", hideAddVenue: true });</script>
+
+<section class="hero">
+  <h1>العب اكثر</h1>
+  <p>انضم الى احدى الفعاليات او انشئ فعاليتك الخاصة</p>
+
+  <div class="search-box">
+    <div class="field search-field">
+      <input type="text" id="freeSearch" placeholder="ابحث عن مباراة أو منطقة">
+    </div>
+
+    <div class="search-filters-row">
+      <div class="field filter-field">
+        <label><span class="icon">📅</span> التاريخ</label>
+        <div class="date-select-group">
+          <select id="filterDay" aria-label="اليوم"></select>
+          <select id="filterMonth" aria-label="الشهر"></select>
+          <select id="filterYear" aria-label="السنة"></select>
+        </div>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">🏅</span> نوع الرياضة</label>
+        <select id="filterSport">
+          <option value="">كل الرياضات</option>
+          <option value="كرة قدم">كرة قدم</option>
+          <option value="كرة صالات">كرة صالات</option>
+          <option value="كرة سلة">كرة سلة</option>
+          <option value="تنس">تنس</option>
+          <option value="تنس طاولة">تنس طاولة</option>
+          <option value="كرة طائرة">كرة طائرة</option>
+          <option value="سباحة">سباحة</option>
+          <option value="جيم">جيم</option>
+          <option value="رياضات قتالية">رياضات قتالية</option>
+        </select>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">🗺️</span> المحافظة</label>
+        <select id="filterGovernorate">
+          <option value="">كل المحافظات</option>
+        </select>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">📍</span> المدينة / المنطقة</label>
+        <input type="text" id="filterCity" list="cityOptions" placeholder="اكتب أو اختر منطقة">
+        <datalist id="cityOptions"></datalist>
+      </div>
+      <button type="button" id="searchBtn" class="btn btn-primary"><span class="search-icon"></span> ابحث الآن</button>
+    </div>
+  </div>
+</section>
+
+<div class="section">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h2>المباريات</h2>
+    <a href="add-match.html" class="btn btn-primary">+ إنشاء مباراة</a>
+  </div>
+  <div class="venues-layout">
+    <aside class="venues-sidebar">
+      <h3>تصفية النتائج</h3>
+
+      <div class="filter-group">
+        <label for="sbSport">نوع الرياضة</label>
+        <select id="sbSport"><option value="">كل الرياضات</option></select>
+      </div>
+
+      <div class="filter-group">
+        <label>توقيت المباراة</label>
+        <div class="filter-radios" id="sbMatchTiming">
+          <label><input type="radio" name="sbMatchTiming" value="" checked> الكل</label>
+          <label><input type="radio" name="sbMatchTiming" value="اليوم"> اليوم</label>
+          <label><input type="radio" name="sbMatchTiming" value="بكرة"> بكرة</label>
+          <label><input type="radio" name="sbMatchTiming" value="ضمن اسبوع"> ضمن أسبوع</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>المستوى</label>
+        <div class="filter-checks" id="sbLevel">
+          <label><input type="checkbox" value="مبتدئ"> مبتدئ</label>
+          <label><input type="checkbox" value="متوسط"> متوسط</label>
+          <label><input type="checkbox" value="محترف"> محترف</label>
+          <label><input type="checkbox" value="دوري"> دوري</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>الفئة العمرية</label>
+        <div class="filter-checks" id="sbAgeGroup">
+          <label><input type="checkbox" value="اقل من 18"> أقل من 18</label>
+          <label><input type="checkbox" value="18-25"> 18 - 25</label>
+          <label><input type="checkbox" value="26-35"> 26 - 35</label>
+          <label><input type="checkbox" value="36 فأكثر"> 36 فأكثر</label>
+          <label><input type="checkbox" value="فريق"> فريق</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="sbFee" class="filter-price-label">رسوم المشاركة <span class="filter-price-hint">(حتى <span id="sbFeeValue" class="filter-price-value">8000</span> ل.س)</span></label>
+        <input type="range" id="sbFee" min="1000" max="8000" step="500" value="8000">
+        <input type="number" id="sbFeeInput" class="filter-price-input" min="1000" max="8000" step="500" value="8000" aria-label="أدخل رسوم المشاركة بالضبط">
+      </div>
+
+      <button type="button" id="sbClear" class="btn btn-outline filter-clear-btn">مسح جميع الفلاتر</button>
+    </aside>
+
+    <div class="venues-main">
+      <div class="venues-toolbar">
+        <span id="matchesCount" class="muted"></span>
+        <select id="sbSort">
+          <option value="default">ترتيب حسب: الأقرب</option>
+          <option value="fee-asc">الرسوم: من الأقل للأعلى</option>
+          <option value="fee-desc">الرسوم: من الأعلى للأقل</option>
+        </select>
+      </div>
+      <div class="venues-grid" id="matchesGrid"></div>
+      <div id="matchesNoResults" class="search-empty">
+        <div class="search-empty-icon">🔍</div>
+        <p class="search-empty-title">لا توجد نتيجة متطابقة</p>
+        <p class="search-empty-hint" id="matchesNoResultsHint"></p>
+        <button type="button" class="btn btn-outline" id="matchesClearSearch">مسح البحث</button>
+      </div>
+      <div class="venues-pagination" id="matchesPagination"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="padding-top:0;">
+  <div class="features-strip">
+    <div class="feature-item">
+      <span class="feature-icon">🎧</span>
+      <div class="feature-title">أنشئ مباراتك الخاصة</div>
+      <div class="feature-sub">ادعُ لاعبين لمباراتك بملعبك المفضل</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">👤</span>
+      <div class="feature-title">ابحث عن لاعبين</div>
+      <div class="feature-sub">ابحث عن لاعبين حسب مركز اللعب</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🏆</span>
+      <div class="feature-title">تحديات ومكافآت</div>
+      <div class="feature-sub">شارك واكسب النقاط والجوائز</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🔔</span>
+      <div class="feature-title">إشعارات فورية</div>
+      <div class="feature-sub">لن تفوّتك أي مباراة مناسبة لك</div>
+    </div>
+  </div>
+</div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+// المحافظات/المدن + حقول التاريخ صاروا بـsite-core.js (كانوا 3 نسخ متطابقة بـ3 صفحات)
+SiteCore.fillDateSelects();
+const { govSelect, cityInput, refreshCityOptions } = SiteCore.setupGovCity();
+
+// ===== صفحة المباريات: إعدادات فقط - كل منطق الشبكة/الترقيم/الفيض/البحث بـlist-page.js =====
+(async function setupMatches() {
+  await DataBridge.load("matches");
+  const sbSport = document.getElementById("sbSport");
+  const sbFee = document.getElementById("sbFee");
+  const sbFeeInput = document.getElementById("sbFeeInput");
+  const sbFeeValue = document.getElementById("sbFeeValue");
+  const sbSort = document.getElementById("sbSort");
+  const sbClear = document.getElementById("sbClear");
+  const sbLevelBoxes = [...document.querySelectorAll("#sbLevel input")];
+  const sbAgeGroupBoxes = [...document.querySelectorAll("#sbAgeGroup input")];
+  const sbTimingRadios = [...document.querySelectorAll('input[name="sbMatchTiming"]')];
+
+  [...new Set(SITE_DATA.matches.map((m) => m.sport))].forEach((sport) => {
+    sbSport.appendChild(new Option(sport, sport));
+  });
+
+  // مدى الرسوم مبني على البيانات الفعلية (أدنى لأسفل لأقرب 500، أقصى لفوق لأقرب 1000)
+  const allFees = SITE_DATA.matches.map((m) => m.fee);
+  const feeMin = Math.floor(Math.min(...allFees) / 500) * 500;
+  const feeMax = Math.ceil(Math.max(...allFees) / 1000) * 1000;
+  sbFee.min = sbFeeInput.min = feeMin;
+  sbFee.max = sbFeeInput.max = feeMax;
+  sbFee.value = sbFeeInput.value = feeMax;
+  sbFeeValue.textContent = feeMax.toLocaleString("en-US");
+
+  // "ضمن اسبوع" بتشمل أيام الأسبوع المسمّاة (مش "اليوم"/"غداً" - هدول إلهم خيارين مستقلين)
+  const WEEK_DAY_NAMES = ["الجمعة", "السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+  function matchesTiming(day, timing) {
+    if (!timing) return true;
+    if (timing === "اليوم") return day === "اليوم";
+    if (timing === "بكرة") return day === "غداً";
+    if (timing === "ضمن اسبوع") return WEEK_DAY_NAMES.includes(day);
+    return true;
+  }
+
+  function matchCardHTML(m) {
+    const isFull = m.participants >= m.maxParticipants;
+    const badgeClass = isFull ? " unavailable" : "";
+    const badgeText = isFull ? "مكتملة" : m.day;
+    return `
+      <a href="match-detail.html?id=${m.id}" class="venue-card">
+        <div class="venue-card-image"><span class="venue-card-emoji">${m.image}</span><span class="venue-card-badge${badgeClass}">${badgeText}</span></div>
+        <div class="venue-card-body">
+          <div class="venue-card-title-row"><h3>${m.title}</h3><span class="badge">${m.sport}</span></div>
+          <p class="muted">${m.venueName} - ${m.city}</p>
+          <p class="muted">${m.time}</p>
+          <div class="venue-card-amenities"><span class="tag">المستوى: ${m.level}</span><span class="tag">${m.participants}/${m.maxParticipants} لاعب</span><button type="button" class="venue-card-amenities-toggle">»</button><div class="venue-card-amenities-panel"></div></div>
+          <div class="venue-card-footer">
+            <span class="price">${m.fee.toLocaleString("en-US")} ل.س / لاعب</span>
+            <span class="btn btn-primary">${isFull ? "مكتملة" : "انضم الآن"}</span>
+          </div>
+        </div>
+      </a>`;
+  }
+
+  const page = ListPage.create({
+    data: () => SITE_DATA.matches,
+    ids: {
+      grid: "matchesGrid", noResults: "matchesNoResults", hint: "matchesNoResultsHint",
+      clearSearch: "matchesClearSearch", count: "matchesCount", pagination: "matchesPagination",
+    },
+    cardHTML: matchCardHTML,
+    haystack: (m) => MalaabakSearch.matchHaystack(m),
+    hero: { sportField: "sport", govField: "governorate", cityFields: ["city", "venueName"], sidebarSport: () => sbSport },
+    refreshCityOptions,
+    readQueryParams: true,
+    countText: (n) => `تم العثور على ${n} ${n <= 2 ? "مباراة" : "مباريات"}`,
+
+    filter(m) {
+      const timing = document.querySelector('input[name="sbMatchTiming"]:checked').value;
+      const levels = sbLevelBoxes.filter((b) => b.checked).map((b) => b.value);
+      const ageGroups = sbAgeGroupBoxes.filter((b) => b.checked).map((b) => b.value);
+      if (sbSport.value && m.sport !== sbSport.value) return false;
+      if (m.fee > Number(sbFee.value)) return false;
+      if (levels.length && !levels.includes(m.level)) return false;
+      if (ageGroups.length && !ageGroups.includes(m.ageGroup)) return false;
+      if (!matchesTiming(m.day, timing)) return false;
+      return true;
+    },
+    sort(list) {
+      if (sbSort.value === "fee-asc") return [...list].sort((a, b) => a.fee - b.fee);
+      if (sbSort.value === "fee-desc") return [...list].sort((a, b) => b.fee - a.fee);
+      return list;
+    },
+    isFilterActive() {
+      const timing = document.querySelector('input[name="sbMatchTiming"]:checked').value;
+      return !!sbSport.value || Number(sbFee.value) < Number(sbFee.max) || !!timing
+        || sbLevelBoxes.some((b) => b.checked) || sbAgeGroupBoxes.some((b) => b.checked);
+    },
+    watch: [sbSport, sbSort, ...sbLevelBoxes, ...sbAgeGroupBoxes, ...sbTimingRadios],
+    clearBtn: sbClear,
+    onClearFilters() {
+      sbSport.value = "";
+      sbFee.value = sbFee.max;
+      sbFeeInput.value = sbFee.max;
+      sbFeeValue.textContent = Number(sbFee.max).toLocaleString("en-US");
+      sbLevelBoxes.forEach((b) => { b.checked = false; });
+      sbAgeGroupBoxes.forEach((b) => { b.checked = false; });
+      document.querySelector('input[name="sbMatchTiming"][value=""]').checked = true;
+      sbSort.value = "default";
+    },
+  });
+
+  sbFee.addEventListener("input", () => {
+    sbFeeInput.value = sbFee.value;
+    sbFeeValue.textContent = Number(sbFee.value).toLocaleString("en-US");
+    page.resetAndRender();
+  });
+  sbFeeInput.addEventListener("input", () => {
+    const val = Number(sbFeeInput.value);
+    if (Number.isNaN(val)) return;
+    sbFee.value = Math.min(Number(sbFeeInput.max), Math.max(Number(sbFeeInput.min), val));
+    sbFeeValue.textContent = Number(sbFee.value).toLocaleString("en-US");
+    page.resetAndRender();
+  });
+  sbFeeInput.addEventListener("blur", () => { sbFeeInput.value = sbFee.value; });
+})();
+</script>
+
+</body>
+</html>

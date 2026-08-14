@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تفاصيل المدرب - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="detail-core.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+<script src="review-widget.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "coaches" });</script>
+
+<div class="section" id="detailRoot"></div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+(async function setupCoachDetail() {
+  await DataBridge.load("coaches");
+  const root = document.getElementById("detailRoot");
+  const c = DetailCore.fromQuery(SITE_DATA.coaches.filter((x) => x.status === "approved"));
+  if (!c) { root.innerHTML = DetailCore.notFoundHTML("coaches.html", "رجوع للمدربين"); return; }
+
+  document.title = `${c.name} - ملعبك`;
+  const near = DetailCore.nearest(c, SITE_DATA.coaches.filter((x) => x.status === "approved"));
+
+  const nearHTML = near.map((x) => `
+      <a href="coach-detail.html?id=${x.id}" class="coach-card">
+        <div class="coach-avatar">${x.image}</div>
+        <h3>${x.name}</h3>
+        <p class="coach-specialty">${x.specialty}</p>
+        <p class="coach-rating">${x.rating.toFixed(1)} ${DetailCore.stars(x.rating)}</p>
+        <p class="coach-meta">📍 يبعد ${DetailCore.fmtDistance(x.km)}<br>خبرة ${x.experience} سنوات</p>
+        <div class="coach-card-footer">
+          <span class="price">${x.pricePerSession.toLocaleString("en-US")} ل.س / الحصة</span>
+          <span class="btn btn-primary">عرض الملف</span>
+        </div>
+      </a>`).join("");
+
+  root.innerHTML = `
+    ${DetailCore.breadcrumbHTML([{ href: "coaches.html", label: "المدربين" }, { label: c.governorate }, { label: c.name }])}
+
+    <div class="detail-hero">
+      <div class="detail-info">
+        <div class="detail-title-row">
+          <h1>${c.name}</h1>
+          <span class="detail-rating-badge">${c.rating.toFixed(1)} ★</span>
+        </div>
+        <p class="detail-sport">مدرب ${c.specialty}</p>
+        <p class="detail-address">📍 ${c.governorate} - ${c.city}<br>🎓 خبرة ${c.experience} سنوات<br>⭐ ${c.reviews} تقييم</p>
+        <div class="detail-actions">
+          <a href="#booking" class="btn btn-primary">احجز حصة</a>
+          <button type="button" class="btn btn-outline" id="shareBtn">مشاركة</button>
+        </div>
+      </div>
+      <div class="detail-gallery">
+        <div class="detail-main-img">${c.image}</div>
+      </div>
+    </div>
+
+    ${DetailCore.specsHTML([
+      { icon: "🎓", label: "الخبرة", value: `${c.experience} سنوات` },
+      { icon: "🏅", label: "التخصص", value: c.specialty },
+      { icon: "⭐", label: "التقييم", value: c.rating.toFixed(1) },
+      { icon: "👤", label: "الجنس", value: c.gender },
+      { icon: "💰", label: "سعر الحصة", value: `${c.pricePerSession.toLocaleString("en-US")}` },
+    ])}
+
+    <div class="detail-body">
+      <div class="detail-col-main">
+        <div class="detail-panel" id="booking">
+          <h3>احجز حصة تدريب</h3>
+          <div class="slot-grid">${DetailCore.slotsHTML(c.id)}</div>
+          <div class="slot-legend"><span class="free">متاح</span><span class="busy">محجوز</span></div>
+          <button type="button" class="btn btn-primary" id="bookBtn" style="display:block;width:100%;margin-top:0.9em;">احجز الوقت المحدد</button>
+          <p class="muted" id="bookHint" style="font-size:0.78em;text-align:center;margin-top:0.5em;">اختر وقت متاح من فوق</p>
+        </div>
+        ${DetailCore.reviewsHTML(c.reviewList, c.rating, c.reviews)}
+      </div>
+      <div class="detail-col-side">
+        <div class="detail-panel">
+          <h3>عن المدرب</h3>
+          <p class="muted" style="font-size:0.85em;line-height:1.8;">
+            مدرب ${c.specialty} بخبرة ${c.experience} سنوات، متخصص بتطوير اللاعبين من كل المستويات.
+            الحصة الواحدة بـ${c.pricePerSession.toLocaleString("en-US")} ل.س.
+          </p>
+        </div>
+        ${DetailCore.mapPanelHTML(`${c.governorate} - ${c.city}`)}
+      </div>
+    </div>
+
+    ${near.length ? `<h2 style="margin-top:1.5em;">أقرب المدربين</h2><div class="venues-grid">${nearHTML}</div>` : ""}
+  `;
+
+  DetailCore.wireShare(root.querySelector("#shareBtn"), c.name);
+  DetailCore.wireSlots(root, (slot) => { root.querySelector("#bookHint").textContent = `الوقت المختار: ${slot}`; });
+  const cBookBtn = root.querySelector("#bookBtn");
+  const cBookHint = root.querySelector("#bookHint");
+  cBookBtn.addEventListener("click", async () => {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      cBookHint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent(location.pathname + location.search); }, 1000);
+      return;
+    }
+    cBookBtn.disabled = true; cBookBtn.textContent = "جاري الحجز...";
+    try {
+      await MalaabakAPI.book("venue", c.id);  // نستعمل target_type=venue بشكل عام (سجل بسيط)
+      cBookBtn.textContent = "✓ تم إرسال الطلب"; cBookHint.textContent = "تم تسجيل طلب حصة. رح يتواصل معك المدرب.";
+    } catch (err) {
+      if (err.code === "23505") { cBookBtn.textContent = "✓ عندك طلب سابق"; cBookHint.textContent = "عندك طلب حصة سابق."; }
+      else { cBookBtn.disabled = false; cBookBtn.textContent = "احجز الحصة"; cBookHint.textContent = "تعذّر الحجز: " + err.message; }
+    }
+  });
+
+  const reviewsSlot = document.createElement("div");
+  reviewsSlot.className = "detail-panel";
+  root.appendChild(reviewsSlot);
+  ReviewWidget.mount(reviewsSlot, "coach", c.id);
+})();
+</script>
+
+</body>
+</html>

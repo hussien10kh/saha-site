@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سجّل كمدرب - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="terms.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/media-processor.js"></script>
+<script src="malaabak-api.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "coaches" });</script>
+
+<div class="form-box" style="max-width:520px;">
+  <h1>سجّل كمدرب</h1>
+  <p class="muted" style="text-align:center;margin-top:-10px;margin-bottom:20px;">
+    ملفك رح يوصل للوحة التحكم للمراجعة، وبعد الموافقة بيظهر بصفحة المدربين.
+  </p>
+
+  <div class="field">
+    <label>الاسم الكامل</label>
+    <input type="text" id="cName" placeholder="مثال: أحمد سلمان">
+  </div>
+  <div class="field">
+    <label>التخصص</label>
+    <select id="cSpecialty">
+      <option value="">اختر التخصص</option>
+      <option>كرة قدم</option>
+      <option>لياقة بدنية</option>
+      <option>حراس مرمى</option>
+      <option>يوغا</option>
+      <option>كروس فت</option>
+      <option>تأهيل إصابات</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>المحافظة</label>
+    <input type="text" id="cGov" placeholder="مثال: دمشق">
+  </div>
+  <div class="field">
+    <label>المدينة / المنطقة</label>
+    <input type="text" id="cCity" placeholder="مثال: المزة">
+  </div>
+  <div class="field">
+    <label>سنوات الخبرة</label>
+    <input type="number" id="cExperience" placeholder="مثال: 8" min="0" max="50">
+  </div>
+  <div class="field">
+    <label>سعر الحصة (ل.س)</label>
+    <input type="number" id="cPrice" placeholder="مثال: 30000" min="0" step="1000">
+  </div>
+  <div class="field">
+    <label>الجنس</label>
+    <div class="role-picker" id="cGender">
+      <div class="selected" data-value="ذكر">ذكر</div>
+      <div data-value="أنثى">أنثى</div>
+    </div>
+  </div>
+  <div class="field">
+    <label>صورة المدرب</label>
+    <div class="venue-image-uploader">
+      <div class="venue-image-preview" id="coachImagePreview">
+        <span class="venue-image-placeholder">اضغط لاختيار صورة</span>
+        <span class="media-watermark" id="coachWatermark" style="display:none;">ملعبك</span>
+      </div>
+      <input type="file" accept="image/*" id="coachImageInput" hidden>
+    </div>
+    <p class="muted" style="font-size:12px;margin-top:6px;text-align:center;">علامة "ملعبك" المائية رح تنطبع تلقائياً على الصورة عند النشر.</p>
+  </div>
+
+  <div id="termsSlot"></div>
+  <script>document.getElementById("termsSlot").innerHTML = MalaabakTerms.block(); MalaabakTerms.init();</script>
+
+  <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إرسال للمراجعة</button>
+  <p class="muted" id="formHint" style="font-size:0.8em;text-align:center;margin-top:0.6em;">
+    بعد الموافقة بيظهر ملفك بصفحة المدربين.
+  </p>
+</div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+// ===== حفظ ملف المدرب =====
+// status:"pending" - بيظهر بلوحة التحكم للمراجعة، ومخفي عن صفحة المدربين لحد الموافقة.
+(function setupAddCoach() {
+  const $ = (id) => document.getElementById(id);
+  const hint = $("formHint");
+  const EMOJI = { "كرة قدم": "⚽", "لياقة بدنية": "💪", "حراس مرمى": "🧤", "يوغا": "🧘", "كروس فت": "🏋️", "تأهيل إصابات": "🩺" };
+
+  // معاينة الصورة + إظهار العلامة المائية (الطبع الفعلي داخل الملف بده سيرفر)
+  const preview = $("coachImagePreview");
+  const input = $("coachImageInput");
+  const placeholder = preview.querySelector(".venue-image-placeholder");
+  const watermark = $("coachWatermark");
+  preview.addEventListener("click", () => { if (!preview.classList.contains("has-image")) input.click(); });
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (!file) return;
+    preview.style.backgroundImage = `url('${URL.createObjectURL(file)}')`;
+    preview.style.backgroundPosition = "center";
+    preview.classList.add("has-image");
+    placeholder.style.display = "none";
+    watermark.style.display = "";
+  });
+
+  let gender = "ذكر";
+  $("cGender").addEventListener("click", (e) => {
+    const opt = e.target.closest("[data-value]");
+    if (!opt) return;
+    $("cGender").querySelectorAll("div").forEach((d) => d.classList.remove("selected"));
+    opt.classList.add("selected");
+    gender = opt.dataset.value;
+  });
+
+  $("submitBtn").addEventListener("click", async () => {
+    const name = $("cName").value.trim();
+    const specialty = $("cSpecialty").value;
+    const governorate = $("cGov").value.trim();
+    const city = $("cCity").value.trim();
+    const experience = Number($("cExperience").value);
+    const pricePerSession = Number($("cPrice").value);
+    const imageFile = $("coachImageInput").files[0];
+
+    if (!name || !specialty || !governorate || !city) {
+      hint.textContent = "لازم تعبّي: الاسم، التخصص، المحافظة، والمدينة."; return;
+    }
+    if (Number.isNaN(experience) || experience < 0) { hint.textContent = "أدخل سنوات خبرة صحيحة."; return; }
+    if (!pricePerSession || pricePerSession <= 0) { hint.textContent = "أدخل سعر حصة صحيح."; return; }
+    if (!$("agreeTerms").checked) { hint.textContent = "لازم توافق على شروط النشر قبل الإرسال."; return; }
+
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      hint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent("add-coach.html"); }, 1200);
+      return;
+    }
+    $("submitBtn").disabled = true;
+    $("submitBtn").textContent = "جاري الرفع...";
+    try {
+      let imageUrl = null;
+      if (imageFile) {
+        const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        imageUrl = await MalaabakAPI.uploadImage(imageFile, `coaches/${MalaabakAPI.slugify(name)}-${Date.now()}`, "ملعبك");
+      }
+      await MalaabakAPI.create("coaches", {
+        name, specialty, governorate, city,
+        experience, price_per_session: pricePerSession, gender,
+        image: imageUrl || null,
+      });
+      hint.textContent = "تم الإرسال للمراجعة ✓ ملفك بيظهر بعد موافقة الإدارة. عم نحوّلك...";
+      setTimeout(() => { location.href = "admin.html"; }, 1200);
+    } catch (err) {
+      console.error(err); hint.textContent = "تعذّر الحفظ: " + (err.message || "حاول مرة أخرى.");
+      $("submitBtn").disabled = false; $("submitBtn").textContent = "إرسال للمراجعة";
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

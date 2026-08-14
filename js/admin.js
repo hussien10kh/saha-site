@@ -44,18 +44,40 @@ async function initAdmin(){
 
 function renderSidebar(){
   const mount = document.getElementById('adminSidebar');
-  const items = [
-    {id:'overview', label:'نظرة عامة', icon:ADMIN_ICONS.overview},
-    {id:'ads', label:'الإعلانات', icon:ADMIN_ICONS.ads},
-    {id:'visitors', label:'الزوار', icon:ADMIN_ICONS.visitors},
-    {id:'errors', label:'الأخطاء', icon:ADMIN_ICONS.errors},
-    {id:'comments', label:'التعليقات', icon:ADMIN_ICONS.comments},
-    {id:'settings', label:'الإعدادات', icon:ADMIN_ICONS.settings},
+  // ثلاثة أقسام: الإعلانات (ساحة الأصلية) · السياحة · الرياضة (ملعبك).
+  // كل قسم عنوان + بنوده. نفس نمط "أزرار التبويب" الحالي — بلا تغيير على أي شي موجود.
+  const sections = [
+    { title:'الإعلانات', items:[
+      {id:'overview', label:'نظرة عامة', icon:ADMIN_ICONS.overview},
+      {id:'ads',      label:'الإعلانات', icon:ADMIN_ICONS.ads},
+      {id:'visitors', label:'الزوار',    icon:ADMIN_ICONS.visitors},
+      {id:'errors',   label:'الأخطاء',   icon:ADMIN_ICONS.errors},
+      {id:'comments', label:'التعليقات', icon:ADMIN_ICONS.comments},
+      {id:'settings', label:'الإعدادات', icon:ADMIN_ICONS.settings},
+    ]},
+    { title:'السياحة', items:[
+      {id:'tourism-pending', label:'أماكن معلّقة',      icon:ADMIN_ICONS.overview},
+      {id:'tourism-reviews', label:'تعليقات السياحة',  icon:ADMIN_ICONS.comments},
+    ]},
+    { title:'الرياضة (ملعبك)', items:[
+      {id:'malaab-venues',    label:'ملاعب معلّقة',    icon:ADMIN_ICONS.overview},
+      {id:'malaab-coaches',   label:'مدربين معلّقين',  icon:ADMIN_ICONS.overview},
+      {id:'malaab-academies', label:'أكاديميات معلّقة', icon:ADMIN_ICONS.overview},
+      {id:'malaab-talents',   label:'مواهب معلّقة',   icon:ADMIN_ICONS.overview},
+      {id:'malaab-reviews',   label:'تقييمات ملعبك',  icon:ADMIN_ICONS.comments},
+      {id:'malaab-bookings',  label:'حجوزات ملعبك',   icon:ADMIN_ICONS.ads},
+    ]},
+    { title:'الحسابات', items:[
+      {id:'users-all',    label:'كل الحسابات',   icon:ADMIN_ICONS.visitors},
+      {id:'users-admins', label:'المشرفون',       icon:ADMIN_ICONS.settings},
+    ]},
   ];
+  const renderItem = (i) => `<button class="admin-nav-item ${currentTab===i.id?'active':''}" data-tab="${i.id}">${i.icon}<span>${i.label}</span></button>`;
   mount.innerHTML = `
     <div class="admin-logo">ساحة<span>.</span> إدارة</div>
-    ${items.map(i=>`
-      <button class="admin-nav-item ${currentTab===i.id?'active':''}" data-tab="${i.id}">${i.icon}<span>${i.label}</span></button>
+    ${sections.map((s,idx)=>`
+      <div class="admin-nav-heading" style="font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;padding:${idx===0?'0':'14px 12px 6px'};margin-top:${idx===0?'0':'6px'};border-top:${idx===0?'none':'1px solid var(--border)'};">${s.title}</div>
+      ${s.items.map(renderItem).join('')}
     `).join('')}
     <div class="admin-nav-spacer"></div>
     <a class="admin-nav-item" href="index.html" target="_blank">${ICONS.home}<span>عرض الموقع</span></a>
@@ -77,7 +99,20 @@ function renderSidebar(){
 }
 
 function renderTopbar(){
-  const titles = {overview:'نظرة عامة', ads:'إدارة الإعلانات', visitors:'الزوار', errors:'الأخطاء', comments:'إدارة التعليقات', settings:'الإعدادات'};
+  const titles = {
+    overview:'نظرة عامة', ads:'إدارة الإعلانات', visitors:'الزوار', errors:'الأخطاء',
+    comments:'إدارة التعليقات', settings:'الإعدادات',
+    'tourism-pending':'السياحة — أماكن معلّقة',
+    'tourism-reviews':'السياحة — التعليقات',
+    'malaab-venues':'ملعبك — ملاعب معلّقة',
+    'malaab-coaches':'ملعبك — مدربين معلّقين',
+    'malaab-academies':'ملعبك — أكاديميات معلّقة',
+    'malaab-talents':'ملعبك — مواهب معلّقة',
+    'malaab-reviews':'ملعبك — التقييمات',
+    'malaab-bookings':'ملعبك — الحجوزات',
+    'users-all':'الحسابات — كل المستخدمين',
+    'users-admins':'الحسابات — المشرفون',
+  };
   document.getElementById('adminTopbar').innerHTML = `
     <button class="admin-icon-btn" id="sidebarToggle" style="display:none;">${ADMIN_ICONS.menu}</button>
     <div class="admin-title">${titles[currentTab]}</div>
@@ -95,6 +130,13 @@ function renderTab(){
   if(currentTab==='errors') return renderErrorsTab(mount);
   if(currentTab==='comments') return renderCommentsTab(mount);
   if(currentTab==='settings') return renderSettingsTab(mount);
+  if(currentTab==='tourism-pending') return renderTourismPending(mount);
+  if(currentTab==='tourism-reviews') return renderTourismReviews(mount);
+  if(currentTab==='malaab-reviews') return renderMalaabReviews(mount);
+  if(currentTab==='malaab-bookings') return renderMalaabBookings(mount);
+  if(currentTab==='users-all')    return renderUsers(mount, false);
+  if(currentTab==='users-admins') return renderUsers(mount, true);
+  if(currentTab && currentTab.startsWith('malaab-')) return renderMalaabPending(mount, currentTab.slice('malaab-'.length));
 }
 
 /* Admin needs to see EVERY ad (including expired ones), so it fetches
@@ -483,3 +525,304 @@ function renderSettingsTab(mount){
 }
 
 document.addEventListener('DOMContentLoaded', initAdmin);
+
+/* =========================================================
+   السياحة — أماكن معلّقة (tourism_places status='pending')
+   يقرأ ويعرض ويوافق/يرفض عبر Supabase مباشرة (RLS بيتحقق من is_admin للتعديل).
+   ========================================================= */
+async function renderTourismPending(mount){
+  mount.innerHTML = '<div class="admin-empty">جاري التحميل...</div>';
+  const { data:rows, error } = await sb.from('tourism_places')
+    .select('*').eq('status','pending').order('created_at',{ascending:false});
+  if(error){ mount.innerHTML = `<div class="admin-empty">تعذّر التحميل: ${escapeHTML(error.message)}</div>`; return; }
+  if(!rows.length){ mount.innerHTML = `<div class="admin-empty">✅ ما في أماكن معلّقة.</div>`; return; }
+  mount.innerHTML = rows.map(r=>{
+    const img = (r.images && r.images[0]) ? `<img src="${escapeHTML(r.images[0])}" alt="" style="width:70px;height:70px;object-fit:cover;border-radius:10px;">` : '<div style="width:70px;height:70px;background:var(--border);border-radius:10px;"></div>';
+    return `
+      <div class="admin-card" data-id="${r.id}" style="display:flex;gap:14px;align-items:center;padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface);">
+        ${img}
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:800;">${escapeHTML(r.name)}</div>
+          <div style="font-size:.85em;color:var(--muted);">${escapeHTML(r.category)} · ${escapeHTML(r.region)} - ${escapeHTML(r.city)}</div>
+          ${r.description ? `<div style="font-size:.82em;color:var(--muted);margin-top:4px;">${escapeHTML(r.description).slice(0,140)}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="btn btn-primary tourism-approve" data-id="${r.id}" style="font-size:.85em;padding:8px 14px;">موافقة</button>
+          <button class="btn btn-danger tourism-reject" data-id="${r.id}" style="font-size:.85em;padding:8px 14px;">رفض</button>
+        </div>
+      </div>`;
+  }).join('');
+  mount.addEventListener('click', async (e)=>{
+    const approve = e.target.closest('.tourism-approve');
+    const reject  = e.target.closest('.tourism-reject');
+    if(!approve && !reject) return;
+    const id = (approve||reject).dataset.id;
+    const status = approve ? 'approved' : 'rejected';
+    const btn = approve || reject;
+    btn.disabled = true; btn.textContent = '...';
+    const { error } = await sb.from('tourism_places')
+      .update({ status, reviewed_by: adminUser.id, reviewed_at: new Date().toISOString() }).eq('id', id);
+    if(error){ alert('تعذّر الحفظ: '+error.message); btn.disabled=false; btn.textContent = approve?'موافقة':'رفض'; return; }
+    document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
+    if(!mount.querySelector('.admin-card')) mount.innerHTML = `<div class="admin-empty">✅ ما في أماكن معلّقة.</div>`;
+  }, { once:true });
+}
+
+/* =========================================================
+   ملعبك — طلبات معلّقة حسب النوع (venues/coaches/academies/talents)
+   ========================================================= */
+async function renderMalaabPending(mount, type){
+  const NAMES = { venues:'الملاعب', coaches:'المدربين', academies:'الأكاديميات', talents:'المواهب' };
+  const META = {
+    venues:    (x)=>`${x.sport} · ${x.governorate} - ${x.city}`,
+    coaches:   (x)=>`${x.specialty} · ${x.governorate} - ${x.city}`,
+    academies: (x)=>`${(x.sports||[]).join('، ')} · ${x.governorate} - ${x.city}`,
+    talents:   (x)=>`${x.sport} · ${x.position||''} · ${x.age||'?'} سنة · ${x.governorate}`,
+  };
+  mount.innerHTML = '<div class="admin-empty">جاري التحميل...</div>';
+  let items;
+  try { items = await MalaabakAPI.pending(type); }
+  catch(err){ mount.innerHTML = `<div class="admin-empty">تعذّر التحميل: ${escapeHTML(err.message)}</div>`; return; }
+  if(!items.length){ mount.innerHTML = `<div class="admin-empty">✅ ما في طلبات معلّقة بـ${NAMES[type]}.</div>`; return; }
+  const cache = new Map(items.map(x=>[x.id, x]));
+
+  mount.innerHTML = items.map(x=>{
+    const image = (x.images && x.images[0]) || x.image || '';
+    const imgHTML = image.startsWith && image.startsWith('http')
+      ? `<img src="${escapeHTML(image)}" style="width:70px;height:70px;object-fit:cover;border-radius:10px;">`
+      : `<div style="width:70px;height:70px;background:var(--border);border-radius:10px;display:grid;place-items:center;font-size:1.8em;">${escapeHTML(image||'📄')}</div>`;
+    let videoRows = '';
+    if(type==='talents' && x.videos && x.videos.length){
+      videoRows = '<div style="margin-top:8px;font-size:.82em;">' + x.videos.map((v,i)=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+          <span style="flex:1;">🎬 ${escapeHTML(v.title||`فيديو ${i+1}`)}</span>
+          ${v.videoUrl?`<a href="${escapeHTML(v.videoUrl)}" target="_blank" style="color:var(--primary);">فتح ↗</a>`:''}
+          <select class="mlb-vaction" data-id="${x.id}" data-idx="${i}" style="border:1px solid var(--border);border-radius:6px;padding:2px 6px;">
+            <option value="asis"${(v.action||'asis')==='asis'?' selected':''}>نشر كما هو</option>
+            <option value="muted"${v.action==='muted'?' selected':''}>حذف الصوت</option>
+            <option value="deleted"${v.action==='deleted'?' selected':''}>حذف الفيديو</option>
+          </select>
+        </div>`).join('') + '</div>';
+    }
+    return `
+      <div class="admin-card" data-id="${x.id}" style="display:flex;gap:14px;align-items:flex-start;padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface);">
+        ${imgHTML}
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:800;">${escapeHTML(x.name)}</div>
+          <div style="font-size:.85em;color:var(--muted);">${escapeHTML(META[type](x))}</div>
+          ${videoRows}
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="btn btn-primary mlb-approve" data-id="${x.id}" style="font-size:.85em;padding:8px 14px;">موافقة</button>
+          <button class="btn btn-danger mlb-reject" data-id="${x.id}" style="font-size:.85em;padding:8px 14px;">رفض</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  mount.addEventListener('click', async (e)=>{
+    const approve = e.target.closest('.mlb-approve');
+    const reject  = e.target.closest('.mlb-reject');
+    if(!approve && !reject) return;
+    const id = (approve||reject).dataset.id;
+    const status = approve ? 'approved' : 'rejected';
+    const btn = approve || reject;
+    btn.disabled = true; btn.textContent = '...';
+    try {
+      await MalaabakAPI.setStatus(type, id, status);
+      document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
+      cache.delete(id);
+      if(!cache.size) mount.innerHTML = `<div class="admin-empty">✅ ما في طلبات معلّقة بـ${NAMES[type]}.</div>`;
+    } catch(err){
+      alert('تعذّر الحفظ: '+err.message);
+      btn.disabled=false; btn.textContent = approve?'موافقة':'رفض';
+    }
+  }, { once:true });
+
+  mount.addEventListener('change', async (e)=>{
+    const sel = e.target.closest('.mlb-vaction');
+    if(!sel) return;
+    const id = sel.dataset.id; const idx = Number(sel.dataset.idx); const val = sel.value;
+    const item = cache.get(id); if(!item) return;
+    item.videos[idx] = { ...item.videos[idx], action: val };
+    try { await MalaabakAPI.update(type, id, { videos: item.videos }); }
+    catch(err){ alert('تعذّر حفظ قرار الفيديو: '+err.message); }
+  });
+}
+
+/* =========================================================
+   السياحة — التعليقات (tourism_reviews)
+   ========================================================= */
+async function renderTourismReviews(mount){
+  mount.innerHTML = '<div class="admin-empty">جاري التحميل...</div>';
+  const { data:rows, error } = await sb.from('tourism_reviews')
+    .select('*, tourism_places(name)').order('created_at',{ascending:false}).limit(200);
+  if(error){ mount.innerHTML = `<div class="admin-empty">تعذّر التحميل: ${escapeHTML(error.message)}</div>`; return; }
+  if(!rows.length){ mount.innerHTML = `<div class="admin-empty">لا توجد تعليقات بعد.</div>`; return; }
+  mount.innerHTML = rows.map(r=>{
+    const place = r.tourism_places?.name || '—';
+    const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+    const when = new Date(r.created_at).toLocaleDateString('ar');
+    return `
+      <div class="admin-card" data-id="${r.id}" style="padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+          <div style="min-width:0;flex:1;">
+            <div style="font-weight:800;">${escapeHTML(r.name)} <span style="color:var(--warning,#eab308);">${stars}</span></div>
+            <div style="font-size:.85em;color:var(--muted);margin-top:2px;">على مكان: <b>${escapeHTML(place)}</b> · ${when}</div>
+            ${r.text ? `<div style="margin-top:8px;">${escapeHTML(r.text)}</div>` : ''}
+          </div>
+          <button class="btn btn-danger tr-del" data-id="${r.id}" style="font-size:.85em;padding:6px 12px;flex-shrink:0;">حذف</button>
+        </div>
+      </div>`;
+  }).join('');
+  mount.addEventListener('click', async (e)=>{
+    const del = e.target.closest('.tr-del'); if(!del) return;
+    if(!confirm('حذف هذا التعليق؟')) return;
+    const id = del.dataset.id;
+    const { error } = await sb.from('tourism_reviews').delete().eq('id', id);
+    if(error){ alert('تعذّر الحذف: '+error.message); return; }
+    document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
+    if(!mount.querySelector('.admin-card')) mount.innerHTML = `<div class="admin-empty">لا توجد تعليقات بعد.</div>`;
+  }, { once:true });
+}
+
+/* =========================================================
+   ملعبك — التقييمات (malaabak_reviews)
+   ========================================================= */
+async function renderMalaabReviews(mount){
+  mount.innerHTML = '<div class="admin-empty">جاري التحميل...</div>';
+  const { data:rows, error } = await sb.from('malaabak_reviews')
+    .select('*').order('created_at',{ascending:false}).limit(200);
+  if(error){ mount.innerHTML = `<div class="admin-empty">تعذّر التحميل: ${escapeHTML(error.message)}</div>`; return; }
+  if(!rows.length){ mount.innerHTML = `<div class="admin-empty">لا توجد تقييمات بعد.</div>`; return; }
+  const TYPE_LABEL = { venue:'ملعب', coach:'مدرب', academy:'أكاديمية' };
+  mount.innerHTML = rows.map(r=>{
+    const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+    const when = new Date(r.created_at).toLocaleDateString('ar');
+    return `
+      <div class="admin-card" data-id="${r.id}" style="padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+          <div style="min-width:0;flex:1;">
+            <div style="font-weight:800;">${escapeHTML(r.name)} <span style="color:var(--warning,#eab308);">${stars}</span></div>
+            <div style="font-size:.85em;color:var(--muted);margin-top:2px;">على ${escapeHTML(TYPE_LABEL[r.target_type]||r.target_type)}: <code style="font-size:.85em;">${escapeHTML(String(r.target_id).slice(0,8))}...</code> · ${when}</div>
+            ${r.text ? `<div style="margin-top:8px;">${escapeHTML(r.text)}</div>` : ''}
+          </div>
+          <button class="btn btn-danger mr-del" data-id="${r.id}" style="font-size:.85em;padding:6px 12px;flex-shrink:0;">حذف</button>
+        </div>
+      </div>`;
+  }).join('');
+  mount.addEventListener('click', async (e)=>{
+    const del = e.target.closest('.mr-del'); if(!del) return;
+    if(!confirm('حذف هذا التقييم؟')) return;
+    const id = del.dataset.id;
+    const { error } = await sb.from('malaabak_reviews').delete().eq('id', id);
+    if(error){ alert('تعذّر الحذف: '+error.message); return; }
+    document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
+    if(!mount.querySelector('.admin-card')) mount.innerHTML = `<div class="admin-empty">لا توجد تقييمات بعد.</div>`;
+  }, { once:true });
+}
+
+/* =========================================================
+   ملعبك — الحجوزات (malaabak_bookings)
+   ========================================================= */
+async function renderMalaabBookings(mount){
+  mount.innerHTML = '<div class="admin-empty">جاري التحميل...</div>';
+  const { data:rows, error } = await sb.from('malaabak_bookings')
+    .select('*, profiles!malaabak_bookings_user_id_fkey(name)').order('created_at',{ascending:false}).limit(200);
+  // fallback إذا اسم العلاقة غير موجود (لأن Postgres يسمّي المفتاح تلقائياً — قد يختلف):
+  let list = rows;
+  if(error){
+    const r2 = await sb.from('malaabak_bookings').select('*').order('created_at',{ascending:false}).limit(200);
+    if(r2.error){ mount.innerHTML = `<div class="admin-empty">تعذّر التحميل: ${escapeHTML(r2.error.message)}</div>`; return; }
+    list = r2.data;
+  }
+  if(!list.length){ mount.innerHTML = `<div class="admin-empty">لا توجد حجوزات بعد.</div>`; return; }
+  const TYPE_LABEL = { match:'مباراة', training:'تمرين', event:'فعالية', venue:'ملعب' };
+  const STATUS_LABEL = { requested:'قيد الطلب', confirmed:'مؤكّد', cancelled:'ملغى' };
+  mount.innerHTML = list.map(r=>{
+    const userName = r.profiles?.name || '—';
+    const when = new Date(r.created_at).toLocaleString('ar');
+    const statusColor = r.status==='confirmed'?'#1a9c5e': r.status==='cancelled'?'#94a0b2':'#0d9488';
+    return `
+      <div class="admin-card" data-id="${r.id}" style="padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+          <div style="min-width:0;flex:1;">
+            <div style="font-weight:800;">${escapeHTML(userName)} → ${escapeHTML(TYPE_LABEL[r.target_type]||r.target_type)}</div>
+            <div style="font-size:.85em;color:var(--muted);margin-top:2px;"><code>${escapeHTML(String(r.target_id).slice(0,8))}...</code> · ${when}</div>
+            ${r.note ? `<div style="font-size:.85em;margin-top:6px;">📝 ${escapeHTML(r.note)}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+            <span style="font-size:.8em;padding:4px 10px;border-radius:999px;background:${statusColor}22;color:${statusColor};font-weight:700;">${STATUS_LABEL[r.status]||r.status}</span>
+            ${r.status!=='confirmed'?`<button class="btn btn-primary mb-confirm" data-id="${r.id}" style="font-size:.8em;padding:6px 10px;">تأكيد</button>`:''}
+            ${r.status!=='cancelled'?`<button class="btn btn-outline mb-cancel" data-id="${r.id}" style="font-size:.8em;padding:6px 10px;">إلغاء</button>`:''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  async function setBookingStatus(id, status){
+    const { error } = await sb.from('malaabak_bookings').update({ status }).eq('id', id);
+    if(error){ alert('تعذّر الحفظ: '+error.message); return false; }
+    return true;
+  }
+  mount.addEventListener('click', async (e)=>{
+    const confirmBtn = e.target.closest('.mb-confirm');
+    const cancelBtn  = e.target.closest('.mb-cancel');
+    if(!confirmBtn && !cancelBtn) return;
+    const btn = confirmBtn || cancelBtn;
+    const id = btn.dataset.id;
+    btn.disabled = true; btn.textContent = '...';
+    const ok = await setBookingStatus(id, confirmBtn ? 'confirmed' : 'cancelled');
+    if(ok) renderMalaabBookings(mount); else { btn.disabled=false; btn.textContent = confirmBtn?'تأكيد':'إلغاء'; }
+  });
+}
+
+/* =========================================================
+   الحسابات — كل المستخدمين / المشرفين
+   ========================================================= */
+async function renderUsers(mount, adminsOnly){
+  mount.innerHTML = '<div class="admin-empty">جاري التحميل...</div>';
+  let q = sb.from('profiles').select('id, name, phone, avatar_url, is_admin, created_at').order('created_at',{ascending:false}).limit(500);
+  if(adminsOnly) q = q.eq('is_admin', true);
+  const { data, error } = await q;
+  if(error){ mount.innerHTML = `<div class="admin-empty">تعذّر التحميل: ${escapeHTML(error.message)}</div>`; return; }
+  if(!data.length){ mount.innerHTML = `<div class="admin-empty">${adminsOnly?'لا يوجد مشرفون.':'لا يوجد مستخدمون.'}</div>`; return; }
+
+  const searchBar = `<div style="margin-bottom:12px;"><input type="search" id="usrSearch" placeholder="بحث بالاسم أو الرقم..." style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;"></div>`;
+  const listId = 'usrList';
+  mount.innerHTML = searchBar + `<div id="${listId}"></div>
+    <p class="admin-empty" style="font-size:.85em;color:var(--muted);margin-top:10px;">إجمالي: ${data.length}</p>`;
+
+  function render(filter){
+    const filtered = filter ? data.filter(u => (u.name||'').includes(filter) || (u.phone||'').includes(filter) || (u.id||'').includes(filter)) : data;
+    document.getElementById(listId).innerHTML = filtered.map(u=>{
+      const name = u.name || '<span style="color:var(--muted);">(بلا اسم)</span>';
+      const when = new Date(u.created_at).toLocaleDateString('ar');
+      const badge = u.is_admin ? '<span style="font-size:.75em;padding:2px 8px;border-radius:999px;background:#0412ad22;color:#0412ad;font-weight:700;margin-inline-start:6px;">مشرف</span>' : '';
+      const isMe = adminUser && u.id === adminUser.id;
+      const toggleLabel = u.is_admin ? 'إلغاء الإشراف' : 'ترقية لمشرف';
+      return `
+        <div class="admin-card" data-id="${u.id}" style="display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--surface);">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--border);display:grid;place-items:center;font-weight:700;color:var(--muted);flex-shrink:0;">${(u.name||'؟').slice(0,1)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;">${name}${badge}${isMe?'<span style="color:var(--muted);font-size:.8em;margin-inline-start:6px;">(أنت)</span>':''}</div>
+            <div style="font-size:.8em;color:var(--muted);">${escapeHTML(u.phone||'—')} · انضم ${when} · <code style="font-size:.85em;">${u.id.slice(0,8)}...</code></div>
+          </div>
+          ${isMe ? '' : `<button class="btn ${u.is_admin?'btn-outline':'btn-primary'} usr-toggle" data-id="${u.id}" data-admin="${u.is_admin?'1':'0'}" style="font-size:.8em;padding:6px 12px;flex-shrink:0;">${toggleLabel}</button>`}
+        </div>`;
+    }).join('') || `<div class="admin-empty">لا نتائج مطابقة.</div>`;
+  }
+  render('');
+  document.getElementById('usrSearch').addEventListener('input', (e)=> render(e.target.value.trim()));
+
+  mount.addEventListener('click', async (e)=>{
+    const btn = e.target.closest('.usr-toggle'); if(!btn) return;
+    const id = btn.dataset.id;
+    const makeAdmin = btn.dataset.admin === '0';
+    if(!confirm(makeAdmin ? 'ترقية هذا الحساب لمشرف؟' : 'إلغاء صلاحية الإشراف؟')) return;
+    btn.disabled = true; btn.textContent = '...';
+    const { error } = await sb.from('profiles').update({ is_admin: makeAdmin }).eq('id', id);
+    if(error){ alert('تعذّر الحفظ: '+error.message); btn.disabled = false; return; }
+    // حدّث السطر بالكاش والعرض
+    const u = data.find(x=>x.id===id); if(u) u.is_admin = makeAdmin;
+    render(document.getElementById('usrSearch').value.trim());
+  });
+}

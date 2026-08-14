@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تفاصيل الأكاديمية - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="detail-core.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+<script src="review-widget.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "academies" });</script>
+
+<div class="section" id="detailRoot"></div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+(async function setupAcademyDetail() {
+  await DataBridge.load("academies");
+  const root = document.getElementById("detailRoot");
+  const a = DetailCore.fromQuery(SITE_DATA.academies.filter((x) => x.status === "approved"));
+  if (!a) { root.innerHTML = DetailCore.notFoundHTML("academies.html", "رجوع للأكاديميات"); return; }
+
+  document.title = `${a.name} - ملعبك`;
+  const near = DetailCore.nearest(a, SITE_DATA.academies.filter((x) => x.status === "approved"));
+
+  const sportsTags = a.sports.map((s) => `<span class="tag">${s}</span>`).join("");
+  const ageTags = a.ageGroups.map((g) => `<span class="tag">${g} سنة</span>`).join("");
+
+  const nearHTML = near.map((x) => `
+      <a href="academy-detail.html?id=${x.id}" class="venue-card">
+        <div class="venue-card-image"><span class="venue-card-emoji">${x.image}</span><span class="venue-card-badge">${x.players} لاعب</span></div>
+        <div class="venue-card-body">
+          <div class="venue-card-title-row"><h3>${x.name}</h3><span class="badge">${x.rating.toFixed(1)} ★</span></div>
+          <p class="muted">${x.governorate} - ${x.city}</p>
+          <div class="venue-card-amenities"><span class="tag">📍 يبعد ${DetailCore.fmtDistance(x.km)}</span></div>
+          <div class="venue-card-footer">
+            <span class="price">${x.monthlyFee.toLocaleString("en-US")} ل.س / شهرياً</span>
+            <span class="btn btn-primary">التفاصيل</span>
+          </div>
+        </div>
+      </a>`).join("");
+
+  root.innerHTML = `
+    ${DetailCore.breadcrumbHTML([{ href: "academies.html", label: "الأكاديميات" }, { label: a.governorate }, { label: a.name }])}
+
+    <div class="detail-hero">
+      <div class="detail-info">
+        <div class="detail-title-row">
+          <h1>${a.name}</h1>
+          <span class="detail-rating-badge">${a.rating.toFixed(1)} ★</span>
+        </div>
+        <p class="detail-sport">${a.sports.join(" · ")}</p>
+        <p class="detail-address">📍 ${a.governorate} - ${a.city}<br>👦 الفئات: ${a.ageGroups.join("، ")} سنة<br>👥 ${a.players} لاعب مسجّل</p>
+        <div class="detail-actions">
+          <a href="#subscribe" class="btn btn-primary">سجّل ابنك</a>
+          <button type="button" class="btn btn-outline" id="shareBtn">مشاركة</button>
+        </div>
+      </div>
+      <div class="detail-gallery">
+        <div class="detail-main-img">${a.image}</div>
+      </div>
+    </div>
+
+    ${DetailCore.specsHTML([
+      { icon: "🏅", label: "الرياضات", value: a.sports.length },
+      { icon: "👥", label: "اللاعبين", value: a.players },
+      { icon: "⭐", label: "التقييم", value: a.rating.toFixed(1) },
+      { icon: "👦", label: "الفئات العمرية", value: a.ageGroups.length },
+      { icon: "💰", label: "الاشتراك الشهري", value: `${a.monthlyFee.toLocaleString("en-US")}` },
+    ])}
+
+    <div class="detail-body">
+      <div class="detail-col-main">
+        <div class="detail-panel" id="subscribe">
+          <h3>الرياضات والفئات</h3>
+          <p class="muted" style="font-size:0.85em;margin-bottom:0.6em;">الرياضات المتاحة:</p>
+          <div class="venue-card-amenities" style="margin-bottom:1em;">${sportsTags}</div>
+          <p class="muted" style="font-size:0.85em;margin-bottom:0.6em;">الفئات العمرية:</p>
+          <div class="venue-card-amenities">${ageTags}</div>
+          <div class="price-hint">الاشتراك الشهري: ${a.monthlyFee.toLocaleString("en-US")} ل.س — خصم للإخوة والتسجيل السنوي</div>
+          <button type="button" class="btn btn-primary" id="subBtn" style="display:block;width:100%;margin-top:0.9em;">سجّل الآن</button>
+          <p class="muted" id="subHint" style="font-size:0.78em;text-align:center;margin-top:0.5em;"></p>
+        </div>
+        ${DetailCore.reviewsHTML(a.reviewList, a.rating, a.reviews)}
+      </div>
+      <div class="detail-col-side">
+        <div class="detail-panel">
+          <h3>عن الأكاديمية</h3>
+          <p class="muted" style="font-size:0.85em;line-height:1.8;">
+            أكاديمية رياضية بـ${a.governorate} تدرّب ${a.players} لاعب على ${a.sports.join(" و")}
+            بإشراف مدربين معتمدين. برامج مدروسة حسب العمر مع متابعة مستمرة.
+          </p>
+        </div>
+        ${DetailCore.mapPanelHTML(`${a.governorate} - ${a.city}`)}
+      </div>
+    </div>
+
+    ${near.length ? `<h2 style="margin-top:1.5em;">أقرب الأكاديميات</h2><div class="venues-grid">${nearHTML}</div>` : ""}
+  `;
+
+  DetailCore.wireShare(root.querySelector("#shareBtn"), a.name);
+  const subBtn = root.querySelector("#subBtn");
+  const subHint = root.querySelector("#subHint");
+  subBtn.addEventListener("click", async () => {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      subHint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent(location.pathname + location.search); }, 1000);
+      return;
+    }
+    subBtn.disabled = true; subBtn.textContent = "جاري التسجيل...";
+    try {
+      await MalaabakAPI.book("venue", a.id);
+      subBtn.textContent = "✓ تم إرسال طلب التسجيل"; subHint.textContent = "تم تسجيل طلبك. رح تتواصل معك الأكاديمية.";
+    } catch (err) {
+      if (err.code === "23505") { subBtn.textContent = "✓ عندك طلب سابق"; subHint.textContent = "عندك طلب تسجيل سابق."; }
+      else { subBtn.disabled = false; subBtn.textContent = "سجّل بالأكاديمية"; subHint.textContent = "تعذّر التسجيل: " + err.message; }
+    }
+  });
+
+  const reviewsSlot = document.createElement("div");
+  reviewsSlot.className = "detail-panel";
+  root.appendChild(reviewsSlot);
+  ReviewWidget.mount(reviewsSlot, "academy", a.id);
+})();
+</script>
+
+</body>
+</html>

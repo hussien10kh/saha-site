@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تفاصيل التمرين - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="detail-core.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "training", hideAddVenue: true });</script>
+
+<div class="section" id="detailRoot"></div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+// ===== صفحة تفاصيل التمرين =====
+(async function setupTrainingDetail() {
+  await DataBridge.load("trainings");
+  const root = document.getElementById("detailRoot");
+  const approved = SITE_DATA.trainings.filter((x) => x.status === "approved");
+  const t = DetailCore.fromQuery(approved);
+  if (!t) { root.innerHTML = DetailCore.notFoundHTML("training.html", "رجوع للتمارين"); return; }
+
+  document.title = `${t.title} - ملعبك`;
+  const isFull = t.participants >= t.maxParticipants;
+  const spots = Math.max(0, t.maxParticipants - t.participants);
+  const pct = Math.round((t.participants / t.maxParticipants) * 100);
+  const near = DetailCore.related(t, approved);
+
+  const nearHTML = near.map((x) => {
+    const full = x.participants >= x.maxParticipants;
+    return `
+      <a href="training-detail.html?id=${x.id}" class="venue-card">
+        <div class="venue-card-image"><span class="venue-card-emoji">${x.image}</span><span class="venue-card-badge${full ? " unavailable" : ""}">${full ? "مكتمل" : x.dateLabel}</span></div>
+        <div class="venue-card-body">
+          <div class="venue-card-title-row"><h3>${x.title}</h3><span class="badge">${x.type}</span></div>
+          <p class="muted">${x.venueName} - ${x.city}</p>
+          <p class="muted">${x.day} · ${x.time}</p>
+          <div class="venue-card-footer">
+            <span class="price">${x.fee.toLocaleString("en-US")} ل.س</span>
+            <span class="btn btn-primary">التفاصيل</span>
+          </div>
+        </div>
+      </a>`;
+  }).join("");
+
+  root.innerHTML = `
+    ${DetailCore.breadcrumbHTML([{ href: "training.html", label: "التمارين" }, { label: t.governorate }, { label: t.title }])}
+
+    <div class="detail-hero">
+      <div class="detail-info">
+        <div class="detail-title-row">
+          <h1>${t.title}</h1>
+          <span class="detail-rating-badge">${t.type}</span>
+        </div>
+        <p class="detail-sport">مع المدرب ${t.coach}</p>
+        <p class="detail-address">📍 ${t.venueName} - ${t.governorate} · ${t.city}<br>🗓️ ${t.day} · ${t.dateLabel}<br>🕐 ${t.time} (${t.period})</p>
+        <div class="detail-actions">
+          <a href="#join" class="btn btn-primary">${isFull ? "التمرين مكتمل" : "سجّل الآن"}</a>
+          <button type="button" class="btn btn-outline" id="shareBtn">مشاركة</button>
+        </div>
+      </div>
+      <div class="detail-gallery">
+        <div class="detail-main-img">${t.image}</div>
+      </div>
+    </div>
+
+    ${DetailCore.specsHTML([
+      { icon: "🏅", label: "نوع التمرين", value: t.type },
+      { icon: "🧑‍🏫", label: "المدرب", value: t.coach },
+      { icon: "👥", label: "المشاركين", value: `${t.participants}/${t.maxParticipants}` },
+      { icon: "⏰", label: "التوقيت", value: t.period },
+      { icon: "💰", label: "الرسوم", value: `${t.fee.toLocaleString("en-US")}` },
+    ])}
+
+    <div class="detail-body">
+      <div class="detail-col-main">
+        <div class="detail-panel" id="join">
+          <h3>التسجيل بالتمرين</h3>
+          <div class="review-bar-row" style="margin-bottom:0.6em;">
+            <span>${t.participants}/${t.maxParticipants} مشارك</span>
+            <span class="review-bar"><span class="review-bar-fill" style="width:${pct}%"></span></span>
+            <span>${isFull ? "مكتمل" : `باقي ${spots}`}</span>
+          </div>
+          <p class="muted" style="font-size:0.85em;line-height:1.8;">
+            تمرين ${t.type} مع المدرب ${t.coach} على ${t.venueName}، ${t.day} ${t.dateLabel} (${t.time}).
+            الرسوم ${t.fee.toLocaleString("en-US")} ل.س.
+          </p>
+          <button type="button" class="btn btn-primary" id="joinBtn"${isFull ? " disabled" : ""} style="display:block;width:100%;margin-top:0.9em;">${isFull ? "التمرين مكتمل" : "سجّل بالتمرين"}</button>
+          <p class="muted" id="joinHint" style="font-size:0.78em;text-align:center;margin-top:0.5em;">${isFull ? "ما في أماكن متاحة حالياً." : "التسجيل الفعلي بده تسجيل دخول وربط بالباك إند."}</p>
+        </div>
+      </div>
+      <div class="detail-col-side">
+        <div class="detail-panel">
+          <h3>عن التمرين</h3>
+          <p class="muted" style="font-size:0.85em;line-height:1.8;">
+            جلسة ${t.type} موجّهة، بإشراف ${t.coach}. مناسبة لمن يريد التطوّر ضمن مجموعة منظّمة
+            بتوقيت ${t.period}.
+          </p>
+        </div>
+        ${DetailCore.mapPanelHTML(`${t.venueName} - ${t.governorate} · ${t.city}`)}
+      </div>
+    </div>
+
+    ${near.length ? `<h2 style="margin-top:1.5em;">تمارين أخرى</h2><div class="venues-grid">${nearHTML}</div>` : ""}
+  `;
+
+  DetailCore.wireShare(root.querySelector("#shareBtn"), t.title);
+  const joinBtn = root.querySelector("#joinBtn");
+  const joinHint = root.querySelector("#joinHint");
+  if (joinBtn && !isFull) {
+    joinBtn.addEventListener("click", async () => {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        joinHint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+        setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent(location.pathname + location.search); }, 1000);
+        return;
+      }
+      joinBtn.disabled = true; joinBtn.textContent = "جاري التسجيل...";
+      try {
+        await MalaabakAPI.book("training", t.id);
+        joinBtn.textContent = "✓ تم تسجيلك"; joinHint.textContent = "تم التسجيل بالتمرين بنجاح.";
+      } catch (err) {
+        if (err.code === "23505" || (err.message || "").includes("duplicate")) {
+          joinBtn.textContent = "✓ مسجّل بالفعل"; joinHint.textContent = "أنت مسجّل بهذا التمرين.";
+        } else {
+          joinBtn.disabled = false; joinBtn.textContent = "سجّل بالتمرين";
+          joinHint.textContent = "تعذّر التسجيل: " + err.message;
+        }
+      }
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

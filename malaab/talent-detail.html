@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تفاصيل الموهبة - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="detail-core.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "talents" });</script>
+
+<div class="section" id="detailRoot"></div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+(async function setupTalentDetail() {
+  await DataBridge.load("talents");
+  const root = document.getElementById("detailRoot");
+  const t = DetailCore.fromQuery(SITE_DATA.talents.filter((x) => x.status === "approved"));
+  if (!t) { root.innerHTML = DetailCore.notFoundHTML("talents.html", "رجوع للمواهب"); return; }
+
+  document.title = `${t.name} - ملعبك`;
+  const near = DetailCore.nearest(t, SITE_DATA.talents.filter((x) => x.status === "approved"));
+
+  // غلاف كل فيديو (facade) - الملف ما بينحمّل إلا عند الضغط، واللوغو بينطبع فوقه
+  const videosHTML = t.videos.length
+    ? `<div class="talent-videos">${t.videos.map((v) => `
+        <div>
+          <div class="video-thumb" data-src="${v.videoUrl || ""}" role="button" tabindex="0" aria-label="شغّل ${v.title}">
+            <span class="video-logo">ملعبك</span>
+          </div>
+          <p class="video-title">${v.title}</p>
+        </div>`).join("")}</div>`
+    : `<p class="muted" style="font-size:0.85em;">ما في فيديوهات بعد.</p>`;
+
+  const nearHTML = near.map((x) => `
+      <div class="venue-card" style="padding:0.9em;">
+        <div class="venue-card-title-row"><h3>${x.name}</h3><span class="badge">${x.sport}</span></div>
+        <p class="muted">${x.position} · ${x.age} سنة</p>
+        <p class="muted">📍 ${x.governorate} - ${x.city}</p>
+        <a href="talent-detail.html?id=${x.id}" class="btn btn-primary" style="display:block;text-align:center;margin-top:0.5em;">عرض الملف</a>
+      </div>`).join("");
+
+  root.innerHTML = `
+    ${DetailCore.breadcrumbHTML([{ href: "talents.html", label: "المواهب" }, { label: t.governorate }, { label: t.name }])}
+
+    <div class="detail-hero">
+      <div class="detail-info">
+        <div class="detail-title-row">
+          <h1>${t.name}</h1>
+          <span class="detail-rating-badge">${t.age} سنة</span>
+        </div>
+        <p class="detail-sport">${t.sport} · ${t.position}</p>
+        <p class="detail-address">📍 ${t.governorate} - ${t.city}<br>🦶 القدم المفضلة: ${t.foot}<br>🎬 ${t.videos.length} فيديو</p>
+        <div class="detail-actions">
+          <a href="#" class="btn btn-primary">تواصل مع الموهبة</a>
+          <button type="button" class="btn btn-outline" id="shareBtn">مشاركة</button>
+        </div>
+      </div>
+      <div class="detail-gallery">
+        <div class="detail-main-img">${t.image}</div>
+      </div>
+    </div>
+
+    ${DetailCore.specsHTML([
+      { icon: "🏅", label: "الرياضة", value: t.sport },
+      { icon: "🎯", label: "المركز", value: t.position },
+      { icon: "🎂", label: "العمر", value: `${t.age} سنة` },
+      { icon: "🦶", label: "القدم", value: t.foot },
+      { icon: "🎬", label: "الفيديوهات", value: t.videos.length },
+    ])}
+
+    <div class="detail-body">
+      <div class="detail-col-main">
+        <div class="detail-panel">
+          <h3>فيديوهات الموهبة</h3>
+          ${videosHTML}
+        </div>
+      </div>
+      <div class="detail-col-side">
+        <div class="detail-panel">
+          <h3>معلومات اللاعب</h3>
+          <p class="muted" style="font-size:0.85em;line-height:1.8;">
+            ${t.name}، لاعب ${t.sport} بمركز ${t.position}، عمره ${t.age} سنة من ${t.governorate}.
+            القدم المفضلة ${t.foot}. الفيديوهات مراجَعة ومعتمدة من الإدارة.
+          </p>
+        </div>
+        ${DetailCore.mapPanelHTML(`${t.governorate} - ${t.city}`)}
+      </div>
+    </div>
+
+    ${near.length ? `<h2 style="margin-top:1.5em;">مواهب أخرى</h2><div class="venues-grid">${nearHTML}</div>` : ""}
+  `;
+
+  DetailCore.wireShare(root.querySelector("#shareBtn"), t.name);
+
+  // تشغيل الفيديو عند الطلب فقط - واللوغو يضل ظاهر أثناء التشغيل
+  root.querySelector(".detail-col-main").addEventListener("click", (e) => {
+    const thumb = e.target.closest(".video-thumb");
+    if (!thumb || thumb.classList.contains("playing")) return;
+    const src = thumb.dataset.src;
+    const logo = thumb.querySelector(".video-logo");
+    thumb.classList.add("playing");
+    thumb.innerHTML = src
+      ? `<video src="${src}" controls autoplay playsinline></video>`
+      : `<p style="color:#fff;font-size:0.75em;text-align:center;padding:1em;">الفيديو رح يظهر هون بعد الرفع والموافقة</p>`;
+    if (logo) thumb.appendChild(logo);
+  });
+})();
+</script>
+
+</body>
+</html>

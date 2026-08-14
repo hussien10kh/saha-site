@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تفاصيل المباراة - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="detail-core.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "matches", hideAddVenue: true });</script>
+
+<div class="section" id="detailRoot"></div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+// ===== صفحة تفاصيل المباراة =====
+// بتقرا ?id= من الرابط وبتبني الصفحة من SITE_DATA.matches (مع المباريات المُضافة من الفورم).
+(async function setupMatchDetail() {
+  await DataBridge.load("matches");
+  const root = document.getElementById("detailRoot");
+  const m = DetailCore.fromQuery(SITE_DATA.matches);
+  if (!m) { root.innerHTML = DetailCore.notFoundHTML("matches.html", "رجوع للمباريات"); return; }
+
+  document.title = `${m.title} - ملعبك`;
+  const isFull = m.participants >= m.maxParticipants;
+  const spots = Math.max(0, m.maxParticipants - m.participants);
+  const pct = Math.round((m.participants / m.maxParticipants) * 100);
+  const near = DetailCore.related(m, SITE_DATA.matches);
+
+  const nearHTML = near.map((x) => {
+    const full = x.participants >= x.maxParticipants;
+    return `
+      <a href="match-detail.html?id=${x.id}" class="venue-card">
+        <div class="venue-card-image"><span class="venue-card-emoji">${x.image}</span><span class="venue-card-badge${full ? " unavailable" : ""}">${full ? "مكتملة" : x.day}</span></div>
+        <div class="venue-card-body">
+          <div class="venue-card-title-row"><h3>${x.title}</h3><span class="badge">${x.sport}</span></div>
+          <p class="muted">${x.venueName} - ${x.city}</p>
+          <p class="muted">${x.time}</p>
+          <div class="venue-card-footer">
+            <span class="price">${x.fee.toLocaleString("en-US")} ل.س / لاعب</span>
+            <span class="btn btn-primary">التفاصيل</span>
+          </div>
+        </div>
+      </a>`;
+  }).join("");
+
+  root.innerHTML = `
+    ${DetailCore.breadcrumbHTML([{ href: "matches.html", label: "المباريات" }, { label: m.governorate }, { label: m.title }])}
+
+    <div class="detail-hero">
+      <div class="detail-info">
+        <div class="detail-title-row">
+          <h1>${m.title}</h1>
+          <span class="detail-rating-badge">${m.sport}</span>
+        </div>
+        <p class="detail-sport">${m.level} · الفئة ${m.ageGroup || "مفتوحة"}</p>
+        <p class="detail-address">📍 ${m.venueName} - ${m.governorate} · ${m.city}<br>🗓️ ${m.day}<br>🕐 ${m.time}</p>
+        <div class="detail-actions">
+          <a href="#join" class="btn btn-primary">${isFull ? "المباراة مكتملة" : "انضم الآن"}</a>
+          <button type="button" class="btn btn-outline" id="shareBtn">مشاركة</button>
+        </div>
+      </div>
+      <div class="detail-gallery">
+        <div class="detail-main-img">${m.image}</div>
+      </div>
+    </div>
+
+    ${DetailCore.specsHTML([
+      { icon: "🏅", label: "الرياضة", value: m.sport },
+      { icon: "📊", label: "المستوى", value: m.level },
+      { icon: "👥", label: "اللاعبين", value: `${m.participants}/${m.maxParticipants}` },
+      { icon: "🎂", label: "الفئة العمرية", value: m.ageGroup || "مفتوحة" },
+      { icon: "💰", label: "رسوم اللاعب", value: `${m.fee.toLocaleString("en-US")}` },
+    ])}
+
+    <div class="detail-body">
+      <div class="detail-col-main">
+        <div class="detail-panel" id="join">
+          <h3>الانضمام للمباراة</h3>
+          <div class="review-bar-row" style="margin-bottom:0.6em;">
+            <span>${m.participants}/${m.maxParticipants} لاعب</span>
+            <span class="review-bar"><span class="review-bar-fill" style="width:${pct}%"></span></span>
+            <span>${isFull ? "مكتملة" : `باقي ${spots}`}</span>
+          </div>
+          <p class="muted" style="font-size:0.85em;line-height:1.8;">
+            مباراة ${m.sport} بمستوى ${m.level} على ${m.venueName}، يوم ${m.day} (${m.time}).
+            رسوم المشاركة ${m.fee.toLocaleString("en-US")} ل.س للاعب.
+          </p>
+          <button type="button" class="btn btn-primary" id="joinBtn"${isFull ? " disabled" : ""} style="display:block;width:100%;margin-top:0.9em;">${isFull ? "المباراة مكتملة" : "انضم للمباراة"}</button>
+          <p class="muted" id="joinHint" style="font-size:0.78em;text-align:center;margin-top:0.5em;">${isFull ? "ما في أماكن متاحة حالياً." : "الانضمام الفعلي بده تسجيل دخول وربط بالباك إند."}</p>
+        </div>
+      </div>
+      <div class="detail-col-side">
+        ${DetailCore.mapPanelHTML(`${m.venueName} - ${m.governorate} · ${m.city}`)}
+      </div>
+    </div>
+
+    ${near.length ? `<h2 style="margin-top:1.5em;">مباريات أخرى</h2><div class="venues-grid">${nearHTML}</div>` : ""}
+  `;
+
+  DetailCore.wireShare(root.querySelector("#shareBtn"), m.title);
+  const joinBtn = root.querySelector("#joinBtn");
+  const joinHint = root.querySelector("#joinHint");
+  if (joinBtn && !isFull) {
+    joinBtn.addEventListener("click", async () => {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        joinHint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+        setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent(location.pathname + location.search); }, 1000);
+        return;
+      }
+      joinBtn.disabled = true; joinBtn.textContent = "جاري التسجيل...";
+      try {
+        await MalaabakAPI.book("match", m.id);
+        joinBtn.textContent = "✓ تم انضمامك";
+        joinHint.textContent = "تم تسجيل انضمامك بنجاح. رح يتواصل معك المنظّم.";
+      } catch (err) {
+        // خطأ شائع: مكرّر (unique constraint) — يعني سبق أن انضم
+        const msg = err.message || "";
+        if (msg.includes("duplicate") || err.code === "23505") {
+          joinBtn.textContent = "✓ منضم بالفعل"; joinHint.textContent = "أنت منضم لهذه المباراة سابقاً.";
+        } else {
+          joinBtn.disabled = false; joinBtn.textContent = "انضم للمباراة";
+          joinHint.textContent = "تعذّر التسجيل: " + msg;
+        }
+      }
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سجّل أكاديميتك - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="terms.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/media-processor.js"></script>
+<script src="malaabak-api.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "academies" });</script>
+
+<div class="form-box" style="max-width:520px;">
+  <h1>سجّل أكاديميتك</h1>
+  <p class="muted" style="text-align:center;margin-top:-10px;margin-bottom:20px;">
+    أكاديميتك رح توصل للوحة التحكم للمراجعة، وبعد الموافقة بتظهر بصفحة الأكاديميات.
+  </p>
+
+  <div class="field">
+    <label>اسم الأكاديمية</label>
+    <input type="text" id="aName" placeholder="مثال: أكاديمية النجوم">
+  </div>
+  <div class="field">
+    <label>الرياضات (اختر واحدة أو أكثر)</label>
+    <div class="filter-checks" id="aSports">
+      <label><input type="checkbox" value="كرة قدم"> كرة قدم</label>
+      <label><input type="checkbox" value="كرة سلة"> كرة سلة</label>
+      <label><input type="checkbox" value="كرة صالات"> كرة صالات</label>
+      <label><input type="checkbox" value="كرة طائرة"> كرة طائرة</label>
+      <label><input type="checkbox" value="سباحة"> سباحة</label>
+      <label><input type="checkbox" value="تنس"> تنس</label>
+    </div>
+  </div>
+  <div class="field">
+    <label>المحافظة</label>
+    <input type="text" id="aGov" placeholder="مثال: دمشق">
+  </div>
+  <div class="field">
+    <label>المدينة / المنطقة</label>
+    <input type="text" id="aCity" placeholder="مثال: المزة">
+  </div>
+  <div class="field">
+    <label>الفئات العمرية (اختر واحدة أو أكثر)</label>
+    <div class="filter-checks" id="aAges">
+      <label><input type="checkbox" value="6-10"> 6 - 10 سنوات</label>
+      <label><input type="checkbox" value="11-14"> 11 - 14 سنة</label>
+      <label><input type="checkbox" value="15-18"> 15 - 18 سنة</label>
+    </div>
+  </div>
+  <div class="field">
+    <label>الاشتراك الشهري (ل.س)</label>
+    <input type="number" id="aFee" placeholder="مثال: 120000" min="0" step="5000">
+  </div>
+  <div class="field">
+    <label>صورة / شعار الأكاديمية</label>
+    <div class="venue-image-uploader">
+      <div class="venue-image-preview" id="acadImagePreview">
+        <span class="venue-image-placeholder">اضغط لاختيار صورة</span>
+        <span class="media-watermark" id="acadWatermark" style="display:none;">ملعبك</span>
+      </div>
+      <input type="file" accept="image/*" id="acadImageInput" hidden>
+    </div>
+    <p class="muted" style="font-size:12px;margin-top:6px;text-align:center;">علامة "ملعبك" المائية رح تنطبع تلقائياً على الصورة عند النشر.</p>
+  </div>
+
+  <div id="termsSlot"></div>
+  <script>document.getElementById("termsSlot").innerHTML = MalaabakTerms.block(); MalaabakTerms.init();</script>
+
+  <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إرسال للمراجعة</button>
+  <p class="muted" id="formHint" style="font-size:0.8em;text-align:center;margin-top:0.6em;">
+    بعد الموافقة بتظهر أكاديميتك بصفحة الأكاديميات.
+  </p>
+</div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+// ===== حفظ الأكاديمية =====
+// status:"pending" - بتظهر بلوحة التحكم للمراجعة، ومخفية عن صفحة الأكاديميات لحد الموافقة.
+(function setupAddAcademy() {
+  const $ = (id) => document.getElementById(id);
+  const hint = $("formHint");
+  const EMOJI = { "كرة قدم": "⚽", "كرة سلة": "🏀", "كرة صالات": "🥅", "كرة طائرة": "🏐", "سباحة": "🏊", "تنس": "🎾" };
+
+  // معاينة الصورة + إظهار العلامة المائية (الطبع الفعلي داخل الملف بده سيرفر)
+  const preview = $("acadImagePreview");
+  const input = $("acadImageInput");
+  const placeholder = preview.querySelector(".venue-image-placeholder");
+  const watermark = $("acadWatermark");
+  preview.addEventListener("click", () => { if (!preview.classList.contains("has-image")) input.click(); });
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (!file) return;
+    preview.style.backgroundImage = `url('${URL.createObjectURL(file)}')`;
+    preview.style.backgroundPosition = "center";
+    preview.classList.add("has-image");
+    placeholder.style.display = "none";
+    watermark.style.display = "";
+  });
+
+  const sportsBoxes = [...document.querySelectorAll("#aSports input")];
+  const agesBoxes = [...document.querySelectorAll("#aAges input")];
+
+  $("submitBtn").addEventListener("click", async () => {
+    const name = $("aName").value.trim();
+    const sports = sportsBoxes.filter((b) => b.checked).map((b) => b.value);
+    const governorate = $("aGov").value.trim();
+    const city = $("aCity").value.trim();
+    const ageGroups = agesBoxes.filter((b) => b.checked).map((b) => b.value);
+    const monthlyFee = Number($("aFee").value);
+    const imageFile = $("acadImageInput").files[0];
+
+    if (!name || !governorate || !city) {
+      hint.textContent = "لازم تعبّي: الاسم، المحافظة، والمدينة."; return;
+    }
+    if (!sports.length) { hint.textContent = "اختر رياضة واحدة على الأقل."; return; }
+    if (!ageGroups.length) { hint.textContent = "اختر فئة عمرية واحدة على الأقل."; return; }
+    if (!monthlyFee || monthlyFee <= 0) { hint.textContent = "أدخل اشتراك شهري صحيح."; return; }
+    if (!$("agreeTerms").checked) { hint.textContent = "لازم توافق على شروط النشر قبل الإرسال."; return; }
+
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      hint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent("add-academy.html"); }, 1200);
+      return;
+    }
+    $("submitBtn").disabled = true; $("submitBtn").textContent = "جاري الرفع...";
+    try {
+      let imageUrl = null;
+      if (imageFile) {
+        const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        imageUrl = await MalaabakAPI.uploadImage(imageFile, `academies/${MalaabakAPI.slugify(name)}-${Date.now()}`, "ملعبك");
+      }
+      await MalaabakAPI.create("academies", {
+        name, sports, governorate, city,
+        age_groups: ageGroups, monthly_fee: monthlyFee, players: 0,
+        image: imageUrl || null,
+      });
+      hint.textContent = "تم الإرسال للمراجعة ✓ أكاديميتك بتظهر بعد موافقة الإدارة. عم نحوّلك...";
+      setTimeout(() => { location.href = "admin.html"; }, 1200);
+    } catch (err) {
+      console.error(err); hint.textContent = "تعذّر الحفظ: " + (err.message || "حاول مرة أخرى.");
+      $("submitBtn").disabled = false; $("submitBtn").textContent = "إرسال للمراجعة";
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -965,36 +965,54 @@ textarea {
 .mobile-nav {
   display: none;
   position: fixed;
-  bottom: 6px;
-  right: 14px;
-  left: 14px;
+  bottom: 1px;
+  right: 0;
+  left: 0;
   height: 58px;
   z-index: 200;
   transition: transform .25s ease;
+  /* ظل علوي لكامل الناف، ياخذ شكله بزوايا علوية مدوّرة يمين/يسار */
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -5px 18px rgba(16, 26, 46, .16);
 }
 
-.mnav-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 8px 20px rgba(16, 26, 46, .18));
+/* شريط من 3 قطع: يمين 35% | وسط 28% (فراغ 1% كل جهة) | يسار 35% */
+.mobile-nav { align-items: stretch; }
+
+.mnav-side {
+  flex: 0 0 37%;
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 6px 18px rgba(16, 26, 46, .10);
 }
 
-.mnav-svg path {
-  fill: var(--surface);
-  stroke: var(--border);
-  stroke-width: 1;
-}
+.mnav-side.mnav-right { border-radius: 0 10px 0 0; }
+.mnav-side.mnav-left  { border-radius: 10px 0 0 0; }
 
-.mnav-items {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+.mnav-center {
+  flex: 1 1 auto;
+  display: flex;
   align-items: center;
-  justify-items: center;
-  padding: 0 22px;
+  justify-content: center;
+  text-align: center;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+  line-height: 1.25;
+  font-size: clamp(11px, 3.6vw, 14.5px);
+  text-decoration: none;
+  border-radius: 0;
+  box-shadow: 0 9px 22px color-mix(in srgb, var(--accent) 42%, transparent), 0 2px 6px rgba(16, 26, 46, .16);
+}
+
+.mnav-vdiv {
+  flex: 0 0 1px;
+  align-self: center;
+  width: 1px;
+  height: 50%;
+  background: var(--border);
 }
 
 .mobile-nav.mnav-hidden {
@@ -1011,24 +1029,28 @@ textarea {
   animation: mnavPop .45s cubic-bezier(.34,1.56,.64,1) forwards;
 }
 
-.mobile-nav a,
-.mnav-icon-btn {
+.mnav-tab {
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--muted);
   position: relative;
+  color: var(--accent);
   background: none;
   border: none;
   padding: 0;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
 }
 
-.mobile-nav a.active {
-  color: var(--primary);
-}
+.mnav-tab svg { width: 21px; height: 21px; }
+.mnav-tab span { white-space: nowrap; }
 
 .mnav-badge {
   position: absolute;
@@ -1072,32 +1094,6 @@ textarea {
   height: 100%;
 }
 
-.mnav-items svg {
-  width: 22px;
-  height: 22px;
-}
-
-.mobile-nav .fab {
-  position: absolute;
-  top: 0;
-  right: 50%;
-  transform: translate(50%, -50%);
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--primary);
-  border: 4px solid var(--bg);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 20px rgba(16, 26, 46, .45);
-}
-
-.mobile-nav .fab svg {
-  width: 26px;
-  height: 26px;
-}
 
 /* ---------- Listing / detail page ---------- */
 .detail-panel {
@@ -2004,7 +2000,7 @@ textarea {
   }
 
   .mobile-nav {
-    display: block;
+    display: flex;
   }
 
   .gallery-main img {
@@ -2764,3 +2760,69 @@ textarea {
   border-color: var(--primary);
   color: var(--primary);
 }
+.saaha-portal{ margin:26px auto; padding:0 14px; }
+/* ============ شريط أقسام ساحة (مكوّن موحّد) — لا تعدّل يدوياً ============ */
+.saaha-portal{
+  --sp-panel:#ffffff; --sp-bd:#e7ebf3; --sp-cardbg:#e8ecf2; --sp-line:#dbe1ea; --sp-chev:#9aa7c0;
+  --sp-muted:#64748b; --sp-discA:#22345c; --sp-discB:#101f3d; --sp-ring:#8ba3d6;
+  --sp-ads:#2540d0; --sp-ads2:#4f6bf0; --sp-tour:#0d9488; --sp-tour2:#2bb6d6; --sp-sport:#16803c; --sp-sport2:#3fbe6a;
+  direction:rtl; max-width:1000px; margin:0 auto;
+}
+.saaha-portal .orbit{ container-type:inline-size; background:var(--sp-panel); border:1px solid var(--sp-bd);
+  border-radius:16px; padding:clamp(12px,3.2cqi,28px); box-shadow:0 6px 20px rgba(20,33,64,.06); }
+.saaha-portal .orbit-row{ display:flex; align-items:stretch; justify-content:center; gap:0; }
+.saaha-portal .oside{ --c:var(--sp-ads); --c2:var(--sp-ads2); flex:1 1 0; min-width:0; display:flex; align-items:center;
+  gap:clamp(7px,2cqi,12px); text-decoration:none; background:var(--sp-cardbg);
+  border:1px solid color-mix(in srgb,var(--c) 22%, var(--sp-line)); border-radius:clamp(11px,2.5cqi,15px);
+  padding:clamp(9px,2.4cqi,15px); transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease; }
+.saaha-portal .oside.k-ads{ --c:var(--sp-ads); --c2:var(--sp-ads2); }
+.saaha-portal .oside.k-tour{ --c:var(--sp-tour); --c2:var(--sp-tour2); }
+.saaha-portal .oside.k-sport{ --c:var(--sp-sport); --c2:var(--sp-sport2); }
+.saaha-portal .oside:hover{ transform:translateY(-2px); background:var(--c); border-color:var(--c);
+  box-shadow:0 9px 22px color-mix(in srgb,var(--c) 38%, transparent); }
+.saaha-portal .oside:hover .onm,.saaha-portal .oside:hover .ochev{ color:#fff; }
+.saaha-portal .oside:hover .ods{ color:rgba(255,255,255,.9); }
+.saaha-portal .oside:hover .oic{ background:#fff; }
+.saaha-portal .oside:hover .oic svg{ color:var(--c); }
+.saaha-portal .oside:focus-visible{ outline:2px solid var(--c); outline-offset:2px; }
+.saaha-portal .oic{ flex:0 0 auto; width:clamp(30px,9.5cqi,46px); height:clamp(30px,9.5cqi,46px); border-radius:50%;
+  display:grid; place-items:center; background:linear-gradient(140deg,var(--c),var(--c2));
+  box-shadow:0 4px 11px color-mix(in srgb,var(--c) 42%, transparent); }
+.saaha-portal .oic svg{ width:56%; height:56%; color:#fff; }
+.saaha-portal .otxt{ flex:1 1 auto; min-width:0; text-align:center; }
+.saaha-portal .onm{ font-size:clamp(.74rem,3.3cqi,1.12rem); font-weight:800; color:var(--c); line-height:1.2; }
+.saaha-portal .ods{ font-size:clamp(.62rem,2.5cqi,.83rem); color:var(--sp-muted); margin-top:3px; line-height:1.35; }
+.saaha-portal .ochev{ flex:0 0 auto; color:var(--sp-chev); display:grid; place-items:center; }
+.saaha-portal .ochev svg{ width:clamp(15px,4cqi,22px); height:clamp(15px,4cqi,22px); }
+.saaha-portal .oside:hover .ochev{ color:#fff; }
+@container (max-width:400px){ .saaha-portal .ochev{ display:none; } }
+.saaha-portal .oconn{ flex:0 0 clamp(7px,2.6cqi,40px); height:2px; position:relative; align-self:center; }
+.saaha-portal .oconn::before{ content:""; position:absolute; inset:0; border-top:2px dashed var(--sp-line); }
+.saaha-portal .oconn .cdot{ position:absolute; top:50%; left:50%; width:clamp(7px,2cqi,9px); height:clamp(7px,2cqi,9px);
+  border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 0 3px var(--sp-panel); }
+.saaha-portal .ocenter{ flex:0 0 auto; align-self:center; position:relative; display:grid; place-items:center;
+  width:clamp(54px,16cqi,110px); height:clamp(54px,16cqi,110px); }
+.saaha-portal .odisc{ width:clamp(44px,13cqi,88px); height:clamp(44px,13cqi,88px); border-radius:50%;
+  background:radial-gradient(circle at 36% 30%, var(--sp-discA), var(--sp-discB));
+  display:grid; place-items:center; color:#fff; font-weight:800; font-size:clamp(1.05rem,5.2cqi,1.9rem);
+  font-family:'AlwiSahafa','ElgharibAlwiSahafa','Cairo',sans-serif; padding-bottom:.08em;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), 0 8px 20px rgba(10,18,40,.3); z-index:2; }
+.saaha-portal .ocenter::before{ content:""; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:clamp(48px,14.5cqi,98px); height:clamp(48px,14.5cqi,98px); border-radius:50%; border:2px dashed var(--sp-ring); opacity:.55; }
+.saaha-portal .ocenter::after{ content:""; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:clamp(56px,16.5cqi,112px); height:clamp(56px,16.5cqi,112px); border-radius:50%; border:2px dotted var(--sp-ring); opacity:.28; }
+/* ============ نهاية شريط أقسام ساحة ============ */
+/* ===== حقوق ساحة الموحّدة (خط بعرض الفوتر + سطر الحقوق) ===== */
+.saaha-copy-wrap{ border-top:1px solid rgba(150,160,180,.28); margin:5px 0 0; padding-bottom:10px; }
+.saaha-copy{ max-width:1100px; margin:0 auto; padding:13px 16px 2px; direction:rtl;
+  display:flex; flex-wrap:wrap; justify-content:flex-start; align-items:center; gap:4px 18px;
+  font-size:clamp(10px,2.6vw,13px); line-height:1.7; }
+.saaha-copy-name{ font-weight:700; }
+.saaha-copy-slogan{ opacity:.82; }
+@media (max-width:520px){ .saaha-copy{ justify-content:flex-start; } }
+
+/* saaha-copy alignment override — يحاذي بداية محتوى الفوتر */
+.saaha-copy{ max-width:1240px; padding:13px 24px 2px; }
+
+/* مساحة أسفل الحقوق عشان ناف الموبايل العائم يتراكب فوق فراغ فقط (بدل .container.footer-bottom القديمة) */
+@media (max-width:720px){ .saaha-copy-wrap{ padding-bottom:70px; } }

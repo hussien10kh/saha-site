@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>المدربين - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="list-page.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "coaches" });</script>
+
+<section class="hero">
+  <h1>المدربين المحترفين</h1>
+  <p>تعلّم من الأفضل وطوّر من مستواك</p>
+
+  <div class="search-box">
+    <div class="field search-field">
+      <input type="text" id="freeSearch" placeholder="ابحث عن مدرب أو تخصص">
+    </div>
+
+    <div class="search-filters-row">
+      <div class="field filter-field">
+        <label><span class="icon">📅</span> التاريخ</label>
+        <div class="date-select-group">
+          <select id="filterDay" aria-label="اليوم"></select>
+          <select id="filterMonth" aria-label="الشهر"></select>
+          <select id="filterYear" aria-label="السنة"></select>
+        </div>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">🏅</span> التخصص</label>
+        <select id="filterSport">
+          <option value="">كل التخصصات</option>
+          <option value="كرة قدم">كرة قدم</option>
+          <option value="لياقة بدنية">لياقة بدنية</option>
+          <option value="حراس مرمى">حراس مرمى</option>
+          <option value="يوغا">يوغا</option>
+          <option value="كروس فت">كروس فت</option>
+          <option value="تأهيل إصابات">تأهيل إصابات</option>
+        </select>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">🗺️</span> المحافظة</label>
+        <select id="filterGovernorate">
+          <option value="">كل المحافظات</option>
+        </select>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">📍</span> المدينة / المنطقة</label>
+        <input type="text" id="filterCity" list="cityOptions" placeholder="اكتب أو اختر منطقة">
+        <datalist id="cityOptions"></datalist>
+      </div>
+      <button type="button" id="searchBtn" class="btn btn-primary"><span class="search-icon"></span> ابحث الآن</button>
+    </div>
+  </div>
+</section>
+
+<div class="section">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h2>المدربين</h2>
+    <a href="add-coach.html" class="btn btn-primary">+ سجّل كمدرب</a>
+  </div>
+  <div class="venues-layout">
+    <aside class="venues-sidebar">
+      <h3>تصفية النتائج</h3>
+
+      <div class="filter-group">
+        <label for="sbCity">المدينة</label>
+        <select id="sbCity"><option value="">كل المدن</option></select>
+      </div>
+
+      <div class="filter-group">
+        <label>التخصص</label>
+        <div class="filter-checks" id="sbSpecialty">
+          <label><input type="checkbox" value="كرة قدم"> كرة قدم</label>
+          <label><input type="checkbox" value="لياقة بدنية"> لياقة بدنية</label>
+          <label><input type="checkbox" value="حراس مرمى"> حراس مرمى</label>
+          <label><input type="checkbox" value="يوغا"> يوغا</label>
+          <label><input type="checkbox" value="كروس فت"> كروس فت</label>
+          <label><input type="checkbox" value="تأهيل إصابات"> تأهيل إصابات</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>تقييم المدرب</label>
+        <div class="filter-radios" id="sbRating">
+          <label><input type="radio" name="sbRating" value="" checked> الكل</label>
+          <label><input type="radio" name="sbRating" value="4.5"> 4.5 فأكثر</label>
+          <label><input type="radio" name="sbRating" value="4"> 4 فأكثر</label>
+          <label><input type="radio" name="sbRating" value="3"> 3 فأكثر</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>الجنس</label>
+        <div class="filter-radios" id="sbGender">
+          <label><input type="radio" name="sbGender" value="" checked> الكل</label>
+          <label><input type="radio" name="sbGender" value="ذكر"> ذكر</label>
+          <label><input type="radio" name="sbGender" value="أنثى"> أنثى</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="sbPrice" class="filter-price-label">السعر للحصة <span class="filter-price-hint">(حتى <span id="sbPriceValue" class="filter-price-value">35000</span> ل.س)</span></label>
+        <input type="range" id="sbPrice" min="15000" max="35000" step="1000" value="35000">
+        <input type="number" id="sbPriceInput" class="filter-price-input" min="15000" max="35000" step="1000" value="35000" aria-label="أدخل السعر بالضبط">
+      </div>
+
+      <button type="button" id="sbClear" class="btn btn-outline filter-clear-btn">مسح جميع الفلاتر</button>
+    </aside>
+
+    <div class="venues-main">
+      <div class="venues-toolbar">
+        <span id="coachesCount" class="muted"></span>
+        <select id="sbSort">
+          <option value="default">ترتيب حسب: الأعلى تقييماً</option>
+          <option value="price-asc">السعر: من الأقل للأعلى</option>
+          <option value="price-desc">السعر: من الأعلى للأقل</option>
+          <option value="experience">الأكثر خبرة</option>
+        </select>
+      </div>
+      <div class="venues-grid" id="coachesGrid"></div>
+      <div id="coachesNoResults" class="search-empty">
+        <div class="search-empty-icon">🔍</div>
+        <p class="search-empty-title">لا توجد نتيجة متطابقة</p>
+        <p class="search-empty-hint" id="coachesNoResultsHint"></p>
+        <button type="button" class="btn btn-outline" id="coachesClearSearch">مسح البحث</button>
+      </div>
+      <div class="venues-pagination" id="coachesPagination"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="padding-top:0;">
+  <div class="cta-banner">
+    <div class="cta-banner-text">
+      <h3>هل أنت مدرب؟</h3>
+      <p>انضم لمنصتنا ووصّل خبرتك لآلاف اللاعبين بسوريا</p>
+    </div>
+    <a href="add-coach.html" class="btn">سجّل كمدرب الآن</a>
+  </div>
+</div>
+
+<div class="section" style="padding-top:0;">
+  <div class="features-strip">
+    <div class="feature-item">
+      <span class="feature-icon">⭐</span>
+      <div class="feature-title">ابنِ سمعتك</div>
+      <div class="feature-sub">تقييمات حقيقية من لاعبين</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">💰</span>
+      <div class="feature-title">زيد دخلك</div>
+      <div class="feature-sub">احصل على دخل إضافي</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">📅</span>
+      <div class="feature-title">حدد مواعيدك</div>
+      <div class="feature-sub">تحكّم بجدولك الخاص</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🎯</span>
+      <div class="feature-title">اعرض خدماتك</div>
+      <div class="feature-sub">قدّم خبراتك ومهاراتك</div>
+    </div>
+  </div>
+</div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+SiteCore.fillDateSelects();
+const { govSelect, cityInput, refreshCityOptions } = SiteCore.setupGovCity();
+
+// ===== صفحة المدربين: إعدادات فقط - كل منطق الشبكة/الترقيم/البحث بـlist-page.js =====
+(async function setupCoaches() {
+  await DataBridge.load("coaches");
+  const sbCity = document.getElementById("sbCity");
+  const sbPrice = document.getElementById("sbPrice");
+  const sbPriceInput = document.getElementById("sbPriceInput");
+  const sbPriceValue = document.getElementById("sbPriceValue");
+  const sbSort = document.getElementById("sbSort");
+  const sbClear = document.getElementById("sbClear");
+  const sbSpecialtyBoxes = [...document.querySelectorAll("#sbSpecialty input")];
+  const sbRatingRadios = [...document.querySelectorAll('input[name="sbRating"]')];
+  const sbGenderRadios = [...document.querySelectorAll('input[name="sbGender"]')];
+
+  // النشر مشروط بموافقة الإدارة - الصفحة تعرض المعتمدين فقط
+  const approved = () => SITE_DATA.coaches.filter((c) => c.status === "approved");
+
+  [...new Set(approved().map((c) => c.city))].forEach((city) => {
+    sbCity.appendChild(new Option(city, city));
+  });
+
+  // مدى السعر مبني على البيانات الفعلية بتقريب لأرقام نظيفة
+  const prices = approved().map((c) => c.pricePerSession);
+  const priceMin = Math.floor(Math.min(...prices) / 1000) * 1000;
+  const priceMax = Math.ceil(Math.max(...prices) / 5000) * 5000;
+  sbPrice.min = sbPriceInput.min = priceMin;
+  sbPrice.max = sbPriceInput.max = priceMax;
+  sbPrice.value = sbPriceInput.value = priceMax;
+  sbPriceValue.textContent = priceMax.toLocaleString("en-US");
+
+  function coachCardHTML(c) {
+    const stars = "★".repeat(Math.round(c.rating)) + "☆".repeat(5 - Math.round(c.rating));
+    return `
+      <a href="coach-detail.html?id=${c.id}" class="coach-card">
+        <div class="coach-avatar">${c.image}</div>
+        <h3>${c.name}</h3>
+        <p class="coach-specialty">${c.specialty}</p>
+        <p class="coach-rating">${c.rating.toFixed(1)} ${stars} (${c.reviews})</p>
+        <p class="coach-meta">📍 ${c.governorate} - ${c.city}<br>خبرة ${c.experience} سنوات</p>
+        <div class="coach-card-footer">
+          <span class="price">${c.pricePerSession.toLocaleString("en-US")} ل.س / الحصة</span>
+          <span class="btn btn-primary">عرض الملف</span>
+        </div>
+      </a>`;
+  }
+
+  const page = ListPage.create({
+    data: approved,
+    cardSelector: ".coach-card",
+    ids: {
+      grid: "coachesGrid", noResults: "coachesNoResults", hint: "coachesNoResultsHint",
+      clearSearch: "coachesClearSearch", count: "coachesCount", pagination: "coachesPagination",
+    },
+    cardHTML: coachCardHTML,
+    haystack: (c) => MalaabakSearch.coachHaystack(c),
+    // التخصص عند المدرب هو نظير الرياضة - نفس حقل الهيرو #filterSport
+    hero: { sportField: "specialty", govField: "governorate", cityFields: ["city", "name"] },
+    refreshCityOptions,
+    readQueryParams: true,
+    countText: (n) => `تم العثور على ${n} ${n <= 2 ? "مدرب" : "مدربين"}`,
+
+    filter(c) {
+      const minRating = document.querySelector('input[name="sbRating"]:checked').value;
+      const gender = document.querySelector('input[name="sbGender"]:checked').value;
+      const specialties = sbSpecialtyBoxes.filter((b) => b.checked).map((b) => b.value);
+      if (sbCity.value && c.city !== sbCity.value) return false;
+      if (c.pricePerSession > Number(sbPrice.value)) return false;
+      if (minRating && c.rating < Number(minRating)) return false;
+      if (gender && c.gender !== gender) return false;
+      if (specialties.length && !specialties.includes(c.specialty)) return false;
+      return true;
+    },
+    sort(list) {
+      if (sbSort.value === "price-asc") return [...list].sort((a, b) => a.pricePerSession - b.pricePerSession);
+      if (sbSort.value === "price-desc") return [...list].sort((a, b) => b.pricePerSession - a.pricePerSession);
+      if (sbSort.value === "experience") return [...list].sort((a, b) => b.experience - a.experience);
+      return [...list].sort((a, b) => b.rating - a.rating); // الافتراضي: الأعلى تقييماً
+    },
+    isFilterActive() {
+      const minRating = document.querySelector('input[name="sbRating"]:checked').value;
+      const gender = document.querySelector('input[name="sbGender"]:checked').value;
+      return !!sbCity.value || Number(sbPrice.value) < Number(sbPrice.max)
+        || !!minRating || !!gender || sbSpecialtyBoxes.some((b) => b.checked);
+    },
+    watch: [sbCity, sbSort, ...sbSpecialtyBoxes, ...sbRatingRadios, ...sbGenderRadios],
+    clearBtn: sbClear,
+    onClearFilters() {
+      sbCity.value = "";
+      sbPrice.value = sbPrice.max;
+      sbPriceInput.value = sbPrice.max;
+      sbPriceValue.textContent = Number(sbPrice.max).toLocaleString("en-US");
+      sbSpecialtyBoxes.forEach((b) => { b.checked = false; });
+      document.querySelector('input[name="sbRating"][value=""]').checked = true;
+      document.querySelector('input[name="sbGender"][value=""]').checked = true;
+      sbSort.value = "default";
+    },
+  });
+
+  sbPrice.addEventListener("input", () => {
+    sbPriceInput.value = sbPrice.value;
+    sbPriceValue.textContent = Number(sbPrice.value).toLocaleString("en-US");
+    page.resetAndRender();
+  });
+  sbPriceInput.addEventListener("input", () => {
+    const val = Number(sbPriceInput.value);
+    if (Number.isNaN(val)) return;
+    sbPrice.value = Math.min(Number(sbPriceInput.max), Math.max(Number(sbPriceInput.min), val));
+    sbPriceValue.textContent = Number(sbPrice.value).toLocaleString("en-US");
+    page.resetAndRender();
+  });
+  sbPriceInput.addEventListener("blur", () => { sbPriceInput.value = sbPrice.value; });
+})();
+</script>
+
+</body>
+</html>

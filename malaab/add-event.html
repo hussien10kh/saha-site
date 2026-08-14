@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إنشاء فعالية - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "events", hideAddVenue: true });</script>
+
+<div class="form-box" style="max-width:520px;">
+  <h1>أنشئ فعالية</h1>
+  <p class="muted" style="text-align:center;margin-top:-10px;margin-bottom:20px;">
+    نظّم بطولة أو يوم رياضي - رح تظهر بصفحة الفعاليات فوراً.
+  </p>
+
+  <div class="field">
+    <label>عنوان الفعالية</label>
+    <input type="text" id="eTitle" placeholder="مثال: بطولة دمشق للخماسيات">
+  </div>
+  <div class="field">
+    <label>نوع الفعالية</label>
+    <select id="eType">
+      <option value="">اختر النوع</option>
+      <option>بطولة</option>
+      <option>دوري</option>
+      <option>يوم رياضي</option>
+      <option>مهرجان رياضي</option>
+      <option>مباراة استعراضية</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>الملعب / المكان</label>
+    <input type="text" id="eVenue" placeholder="مثال: ملعب النجوم">
+  </div>
+  <div class="field">
+    <label>المحافظة</label>
+    <input type="text" id="eGov" placeholder="مثال: دمشق">
+  </div>
+  <div class="field">
+    <label>المدينة / المنطقة</label>
+    <input type="text" id="eCity" placeholder="مثال: المزة">
+  </div>
+  <div class="field">
+    <label>التاريخ</label>
+    <input type="text" id="eDate" placeholder="مثال: 5 حزيران">
+  </div>
+  <div class="field">
+    <label>الوقت</label>
+    <input type="text" id="eTime" placeholder="مثال: 4:00 م - 10:00 م">
+  </div>
+  <div class="field">
+    <label>عدد الفرق المطلوب</label>
+    <input type="number" id="eTeams" placeholder="مثال: 16" min="2">
+  </div>
+  <div class="field">
+    <label>رسوم المشاركة للفريق (ل.س) — اتركها 0 للمجاني</label>
+    <input type="number" id="eFee" placeholder="مثال: 50000" min="0" step="1000">
+  </div>
+
+  <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إنشاء الفعالية</button>
+  <p class="muted" id="formHint" style="font-size:0.8em;text-align:center;margin-top:0.6em;">املأ الحقول المطلوبة وراح تظهر فعاليتك بصفحة الفعاليات فوراً.</p>
+</div>
+
+<script>
+// ===== حفظ الفعالية =====
+// الفعاليات تنعرض فوراً (مو ضمن لوحة المراجعة الحالية) - منحفظها status:"approved".
+(function setupAddEvent() {
+  const $ = (id) => document.getElementById(id);
+  const hint = $("formHint");
+  const EMOJI = { "بطولة": "🏆", "دوري": "🥇", "يوم رياضي": "🎉", "مهرجان رياضي": "🎪", "مباراة استعراضية": "⭐" };
+
+  $("submitBtn").addEventListener("click", async () => {
+    const title = $("eTitle").value.trim();
+    const type = $("eType").value;
+    const venueName = $("eVenue").value.trim();
+    const governorate = $("eGov").value.trim();
+    const city = $("eCity").value.trim();
+    const dateLabel = $("eDate").value.trim();
+    const time = $("eTime").value.trim();
+    const maxTeams = Number($("eTeams").value);
+    const fee = Number($("eFee").value);
+
+    if (!title || !type || !governorate || !city) {
+      hint.textContent = "لازم تعبّي: العنوان، النوع، المحافظة، والمدينة."; return;
+    }
+    if (!maxTeams || maxTeams < 2) {
+      hint.textContent = "عدد الفرق لازم يكون 2 على الأقل."; return;
+    }
+
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      hint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent("add-event.html"); }, 1200);
+      return;
+    }
+    $("submitBtn").disabled = true;
+    try {
+      await MalaabakAPI.create("events", {
+        title, type, governorate, city,
+        venue_name: venueName || "يحدّد لاحقاً",
+        date_label: dateLabel || "قريباً", day: null, time: time || "يحدّد لاحقاً",
+        fee: fee || 0, teams: 0, max_teams: maxTeams,
+        image: EMOJI[type] || "🏆",
+      });
+      hint.textContent = "تم إنشاء الفعالية ✓ عم نحوّلك لصفحة الفعاليات...";
+      setTimeout(() => { location.href = "events.html"; }, 900);
+    } catch (err) {
+      console.error(err); hint.textContent = "تعذّر الحفظ: " + (err.message || "حاول مرة أخرى.");
+      $("submitBtn").disabled = false;
+    }
+  });
+})();
+</script>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+</body>
+</html>

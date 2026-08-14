@@ -1028,6 +1028,7 @@ async function renderFooter(){
   if(!mount) return;
   const auth = await safeAuthLinkHTML();
   mount.innerHTML = `
+  <div class="saaha-portal"><div class="orbit"><div class="orbit-row"><a class="oside k-tour" href="tourism/index.html"><span class="oic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.1 7 13 7 13s7-7.9 7-13a7 7 0 0 0-7-7Z"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg></span><div class="otxt"><div class="onm">سياحة</div><div class="ods">اكتشف كل الجمال في سوريا</div></div><span class="ochev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span></a><span class="oconn"><i class="cdot" style="background:#0d9488"></i></span><div class="ocenter"><div class="odisc">ساحة</div></div><span class="oconn"><i class="cdot" style="background:#16803c"></i></span><a class="oside k-sport" href="malaab/index.html"><span class="ochev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span><div class="otxt"><div class="onm">ملعبك</div><div class="ods">صاحب موهبة أو رياضي</div></div><span class="oic"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="14.2" cy="3.7" r="1.9"/><path d="M12.4 6 8.6 7.7 5 9l.6 1.9 3.9-1.4 1-.6-.7 2.8-3.2 4.3 1.6 1.1 2.7-3.4 1.1 3 1.7-.5-1.2-3.2.9-1.3 1.9 2.4 2.6-.6-2.2-3.2-1.3-2.6 2-1.1z"/><circle cx="18.6" cy="19" r="2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></span></a></div></div></div>
   <footer class="site-footer">
     <div class="container footer-top">
       <div class="footer-logo">ساحة</div>
@@ -1076,9 +1077,7 @@ async function renderFooter(){
         </div>
       </div>
     </div>
-    <div class="container footer-bottom">
-      <span>© ${new Date().getFullYear()} ساحة. جميع الحقوق محفوظة.</span>
-    </div>
+    <div class="saaha-copy-wrap"><div class="saaha-copy"><span class="saaha-copy-name">ساحة — 2026</span><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
   </footer>`;
   syncInstallButtons();
 }
@@ -1132,18 +1131,20 @@ async function renderMobileNav(active){
 
   mount.innerHTML = `
   <nav class="mobile-nav mnav-hidden">
-    <svg class="mnav-svg" id="mnavSvg" preserveAspectRatio="none"><path id="mnavPath"></path></svg>
-    <div class="mnav-items">
-      <a href="index.html" class="${active==='home'?'active':''}">${ICONS.home}<span>الرئيسية</span></a>
-      <button type="button" class="mnav-icon-btn" id="mnavSearchBtn">${ICONS.search}<span>بحث</span></button>
-      <div></div>
-      <button type="button" class="mnav-icon-btn" id="mnavAlertsBtn">
+    <div class="mnav-side mnav-right">
+      <a href="index.html" class="mnav-tab ${active==='home'?'active':''}">${ICONS.home}<span>الرئيسية</span></a>
+      <span class="mnav-vdiv"></span>
+      <button type="button" class="mnav-tab" id="mnavSearchBtn">${ICONS.search}<span>بحث</span></button>
+    </div>
+    <a href="${addAdHref()}" class="mnav-center">أضف إعلانك</a>
+    <div class="mnav-side mnav-left">
+      <button type="button" class="mnav-tab" id="mnavAlertsBtn">
         ${ICONS.bell}${badgeOn ? '<span class="mnav-badge"></span>' : ''}
         <span>إشعارات</span>
       </button>
-      <a href="${accountHref}" class="${active==='account'?'active':''}">${ICONS.user}<span>${accountLabel}</span></a>
+      <span class="mnav-vdiv"></span>
+      <a href="${accountHref}" class="mnav-tab ${active==='account'?'active':''}">${ICONS.user}<span>${accountLabel}</span></a>
     </div>
-    <a href="${addAdHref()}" class="fab">${ICONS.plus}</a>
   </nav>
   <div class="mnav-popup" id="mnavSearchBox">
     <form id="mnavSearchForm" style="display:flex;gap:8px;">
@@ -1160,8 +1161,6 @@ async function renderMobileNav(active){
   </div>`;
 
   const navEl = mount.querySelector('.mobile-nav');
-  renderMnavNotch(navEl);
-  window.addEventListener('resize', ()=> renderMnavNotch(navEl));
   syncInstallButtons();
 
   const searchBtn = document.getElementById('mnavSearchBtn');

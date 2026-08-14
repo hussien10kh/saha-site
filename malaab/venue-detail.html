@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تفاصيل الملعب - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+<script src="review-widget.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "venues" });</script>
+
+<div class="section" id="detailRoot"></div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+// ===== صفحة تفاصيل الملعب =====
+// بتقرا ?id= من الرابط وبتبني الصفحة من SITE_DATA.venues. لو ما في id أو الملعب مش موجود
+// بتعرض حالة واضحة بدل صفحة فاضية.
+(async function setupVenueDetail() {
+  await DataBridge.load("venues");
+  const root = document.getElementById("detailRoot");
+  const id = Number(new URLSearchParams(location.search).get("id"));
+  const v = SITE_DATA.venues.find((x) => x.id === id) || SITE_DATA.venues[0];
+
+  if (!v) {
+    root.innerHTML = `
+      <div class="search-empty show">
+        <div class="search-empty-icon">🔍</div>
+        <p class="search-empty-title">ما لقينا هالملعب</p>
+        <p class="search-empty-hint">يمكن الرابط قديم أو الملعب انحذف.</p>
+        <a href="venues.html" class="btn btn-outline">رجوع لكل الملاعب</a>
+      </div>`;
+    return;
+  }
+
+  document.title = `${v.name} - ملعبك`;
+
+  const stars = (n) => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
+
+  // توزيع النجوم محسوب من التقييمات الفعلية (مو أرقام ثابتة)
+  function ratingBreakdown() {
+    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    v.reviews.forEach((r) => { counts[r.rating] = (counts[r.rating] || 0) + 1; });
+    const total = v.reviews.length || 1;
+    return [5, 4, 3, 2, 1].map((s) => ({ star: s, count: counts[s], pct: Math.round((counts[s] / total) * 100) }));
+  }
+
+  // فترات اليوم - بعضها "محجوز" بشكل ثابت حسب رقم الملعب عشان العرض يضل ثابت مو عشوائي بكل تحديث
+  const HOURS = ["10:00 - 9:00", "9:00 - 8:00", "8:00 - 7:00", "7:00 - 6:00", "6:00 - 5:00", "5:00 - 4:00"];
+  const slotsHTML = HOURS.map((h, i) => {
+    const booked = (i + v.id) % 3 === 0;
+    return `<button type="button" class="slot${booked ? " booked" : ""}"${booked ? " disabled" : ""} data-slot="${h}">
+      <span class="slot-time">${h}</span>
+      <span class="slot-state">${booked ? "محجوز" : "متاح"}</span>
+    </button>`;
+  }).join("");
+
+  const servicesHTML = v.services.map((s) =>
+    `<div class="service-item"><span class="service-item-icon">${serviceIcon(s)}</span>${s}</div>`
+  ).join("");
+
+  function serviceIcon(name) {
+    const map = {
+      "إضاءة ليلية": "💡", "مواقف سيارات": "🅿️", "غرف تبديل": "🚪", "دورات مياه": "🚻",
+      "كافتيريا": "☕", "كاميرات مراقبة": "📹", "إسعافات أولية": "🩹", "إنترنت": "📶",
+      "تأجير كرات": "⚽", "تأجير صداريات": "🎽", "تأجير مضارب": "🎾", "حكم": "🧑‍⚖️",
+      "تصوير المباريات": "🎥", "بث مباشر": "📡",
+    };
+    return map[name] || "✅";
+  }
+
+  const reviewsHTML = v.reviews.map((r) => `
+    <div class="review-card">
+      <div class="review-card-head">
+        <span class="review-card-name">${r.name}</span>
+        <span class="review-card-when">${r.when}</span>
+      </div>
+      <div class="review-card-stars">${stars(r.rating)}</div>
+      <p class="review-card-text">${r.text}</p>
+    </div>`).join("");
+
+  const barsHTML = ratingBreakdown().map((b) => `
+    <div class="review-bar-row">
+      <span>${b.star} ★</span>
+      <span class="review-bar"><span class="review-bar-fill" style="width:${b.pct}%"></span></span>
+      <span>${b.count}</span>
+    </div>`).join("");
+
+  // الملاعب المقترحة = الأقرب فعلياً بالمسافة (Haversine على الإحداثيات)، مو اختيار عشوائي.
+  // بينرتبوا تصاعدياً حسب البعد وبتنعرض المسافة على كل بطاقة.
+  function distanceKm(a, b) {
+    const R = 6371; // نصف قطر الأرض بالكيلومتر
+    const toRad = (d) => (d * Math.PI) / 180;
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const h = Math.sin(dLat / 2) ** 2
+      + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  function fmtDistance(km) {
+    return km < 1 ? `${Math.round(km * 1000)} م` : `${km.toFixed(km < 10 ? 1 : 0)} كم`;
+  }
+
+  const similar = SITE_DATA.venues
+    .filter((x) => x.id !== v.id)
+    .map((x) => ({ ...x, km: distanceKm(v, x) }))
+    .sort((a, b) => a.km - b.km)
+    .slice(0, 4);
+
+  const similarHTML = similar.map((s) => `
+      <a href="venue-detail.html?id=${s.id}" class="venue-card">
+        <div class="venue-card-image"><span class="venue-card-emoji">${s.image}</span><span class="venue-card-badge${s.available ? "" : " unavailable"}">${s.available ? "متاح" : "غير متاح"}</span></div>
+        <div class="venue-card-body">
+          <div class="venue-card-title-row"><h3>${s.name}</h3><span class="badge">${s.rating.toFixed(1)} ★</span></div>
+          <p class="muted">${s.governorate} - ${s.city}</p>
+          <div class="venue-card-amenities"><span class="tag">📍 يبعد ${fmtDistance(s.km)}</span></div>
+          <div class="venue-card-footer">
+            <span class="price">${s.price.toLocaleString("en-US")} ل.س / ساعة</span>
+            <span class="btn btn-primary">التفاصيل</span>
+          </div>
+        </div>
+      </a>`).join("");
+
+  const daysText = v.days.length === 7 ? "كل أيام الأسبوع" : v.days.join("، ");
+
+  root.innerHTML = `
+    <p class="detail-breadcrumb">
+      <a href="venues.html">الملاعب</a><span>›</span>${v.governorate}<span>›</span>${v.name}
+    </p>
+
+    <div class="detail-hero">
+      <div class="detail-info">
+        <div class="detail-title-row">
+          <h1>${v.name}</h1>
+          <span class="detail-rating-badge">${v.rating.toFixed(1)} ★</span>
+        </div>
+        <p class="detail-sport">ملعب ${v.sport}</p>
+        <p class="detail-address">📍 ${v.address}<br>🗓️ ${daysText}<br>🕐 ${v.time.join(" · ")}</p>
+        <div class="detail-actions">
+          <a href="#booking" class="btn btn-primary">احجز الآن</a>
+          <a href="tel:${v.phone}" class="btn btn-outline">اتصل</a>
+          <button type="button" class="btn btn-outline" id="shareBtn">مشاركة</button>
+        </div>
+      </div>
+      <div class="detail-gallery">
+        <div class="detail-main-img" id="mainImg">
+          ${v.image}
+          <span class="detail-img-count">1 / 5</span>
+        </div>
+        <div class="detail-thumbs" id="thumbs">
+          ${[0,1,2,3,4].map((i) => `<div class="detail-thumb${i===0?" active":""}" data-i="${i}">${v.image}</div>`).join("")}
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-specs">
+      <div class="detail-spec"><div class="detail-spec-icon">🥅</div><div class="detail-spec-label">عدد الملاعب</div><div class="detail-spec-value">${v.fieldCount}</div></div>
+      <div class="detail-spec"><div class="detail-spec-icon">📐</div><div class="detail-spec-label">المساحة</div><div class="detail-spec-value">${v.area.toLocaleString("en-US")} م²</div></div>
+      <div class="detail-spec"><div class="detail-spec-icon">🌱</div><div class="detail-spec-label">نوع الأرضية</div><div class="detail-spec-value">${v.surface}</div></div>
+      <div class="detail-spec"><div class="detail-spec-icon">💡</div><div class="detail-spec-label">إضاءة ليلية</div><div class="detail-spec-value">${v.amenities.includes("إضاءة ليلية") ? "متوفرة" : "غير متوفرة"}</div></div>
+      <div class="detail-spec"><div class="detail-spec-icon">🅿️</div><div class="detail-spec-label">مواقف سيارات</div><div class="detail-spec-value">${v.amenities.includes("مواقف سيارات") ? "متوفرة" : "غير متوفرة"}</div></div>
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-col-main">
+        <div class="detail-panel" id="booking">
+          <h3>جدول الحجوزات - اليوم</h3>
+          <div class="slot-grid" id="slotGrid">${slotsHTML}</div>
+          <div class="slot-legend"><span class="free">متاح</span><span class="busy">محجوز</span></div>
+          <button type="button" class="btn btn-primary" id="bookBtn" style="display:block;width:100%;margin-top:0.9em;">احجز الوقت المحدد</button>
+          <p class="muted" id="bookHint" style="font-size:0.78em;text-align:center;margin-top:0.5em;">اختر وقت متاح من فوق</p>
+        </div>
+
+        <div class="detail-panel">
+          <h3>الأسعار</h3>
+          <div class="price-tiers">
+            <div class="price-tier"><div class="price-tier-label">☀️ ساعات النهار</div><div class="price-tier-value">${v.pricing.day.toLocaleString("en-US")}</div><div class="price-tier-note">ل.س / ساعة</div></div>
+            <div class="price-tier"><div class="price-tier-label">🌙 ساعات الليل</div><div class="price-tier-value">${v.pricing.night.toLocaleString("en-US")}</div><div class="price-tier-note">ل.س / ساعة</div></div>
+            <div class="price-tier"><div class="price-tier-label">📅 عطلة نهاية الأسبوع</div><div class="price-tier-value">${v.pricing.weekend.toLocaleString("en-US")}</div><div class="price-tier-note">ل.س / ساعة</div></div>
+          </div>
+          <p class="price-hint">خصم 10% للحجوزات فوق 3 ساعات</p>
+        </div>
+
+        <div class="detail-panel">
+          <h3>التقييمات (${v.reviews.length})</h3>
+          <div class="review-summary">
+            <div class="review-score">
+              <div class="review-score-num">${v.rating.toFixed(1)}</div>
+              <div class="review-card-stars">${stars(v.rating)}</div>
+              <div class="review-score-meta">${v.reviews.length} تقييم</div>
+            </div>
+            <div class="review-bars">${barsHTML}</div>
+          </div>
+          ${reviewsHTML}
+        </div>
+      </div>
+
+      <div class="detail-col-side">
+        <div class="detail-panel">
+          <h3>الخدمات المتوفرة</h3>
+          <div class="services-grid">${servicesHTML}</div>
+        </div>
+
+        <div class="detail-panel">
+          <h3>الموقع</h3>
+          <div class="detail-map">🗺️</div>
+          <p class="muted" style="font-size:0.78em;">${v.address}</p>
+          <a href="#" class="btn btn-outline" style="display:block;text-align:center;">الاتجاهات</a>
+        </div>
+      </div>
+    </div>
+
+    ${similar.length ? `
+    <h2 style="margin-top:1.5em;">أقرب الملاعب لهون</h2>
+    <div class="venues-grid">${similarHTML}</div>` : ""}
+  `;
+
+  // ---------- التفاعلات ----------
+  // المعرض: الضغط على مصغّرة بيبدّل الصورة الكبيرة (نفس الإيموجي هون - بالنسخة الحقيقية صور فعلية)
+  const thumbs = root.querySelector("#thumbs");
+  const imgCount = root.querySelector(".detail-img-count");
+  thumbs.addEventListener("click", (e) => {
+    const t = e.target.closest(".detail-thumb");
+    if (!t) return;
+    thumbs.querySelectorAll(".detail-thumb").forEach((x) => x.classList.remove("active"));
+    t.classList.add("active");
+    imgCount.textContent = `${Number(t.dataset.i) + 1} / 5`;
+  });
+
+  // اختيار فترة الحجز - المحجوزة معطّلة أصلاً بالـHTML
+  const slotGrid = root.querySelector("#slotGrid");
+  const bookHint = root.querySelector("#bookHint");
+  let selected = null;
+  slotGrid.addEventListener("click", (e) => {
+    const s = e.target.closest(".slot");
+    if (!s || s.classList.contains("booked")) return;
+    slotGrid.querySelectorAll(".slot").forEach((x) => x.classList.remove("selected"));
+    s.classList.add("selected");
+    selected = s.dataset.slot;
+    bookHint.textContent = `الوقت المختار: ${selected}`;
+  });
+  const bookBtn = root.querySelector("#bookBtn");
+  bookBtn.addEventListener("click", async () => {
+    if (!selected) { bookHint.textContent = "اختر وقت متاح أول."; return; }
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      bookHint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent(location.pathname + location.search); }, 1000);
+      return;
+    }
+    bookBtn.disabled = true; bookBtn.textContent = "جاري الحجز...";
+    try {
+      await MalaabakAPI.book("venue", v.id, `الوقت المطلوب: ${selected}`);
+      bookBtn.textContent = "✓ تم إرسال طلب الحجز";
+      bookHint.textContent = `تم تسجيل طلب حجز ${selected}. رح يتواصل معك الملعب للتأكيد.`;
+    } catch (err) {
+      if (err.code === "23505" || (err.message || "").includes("duplicate")) {
+        bookBtn.textContent = "✓ عندك طلب سابق"; bookHint.textContent = "عندك طلب حجز لهذا الملعب مسبقاً.";
+      } else {
+        bookBtn.disabled = false; bookBtn.textContent = "احجز الوقت المحدد";
+        bookHint.textContent = "تعذّر الحجز: " + err.message;
+      }
+    }
+  });
+
+  root.querySelector("#shareBtn").addEventListener("click", async () => {
+    const url = location.href;
+    try {
+      if (navigator.share) await navigator.share({ title: v.name, url });
+      else { await navigator.clipboard.writeText(url); alert("تم نسخ الرابط"); }
+    } catch (err) { /* المستخدم لغى المشاركة - ما في شي نعمله */ }
+  });
+
+  // ودجت المراجعات الحقيقي على Supabase (يحلّ محل قائمة v.reviews القديمة الوهمية)
+  const reviewsSlot = document.createElement("div");
+  reviewsSlot.className = "detail-panel";
+  root.appendChild(reviewsSlot);
+  ReviewWidget.mount(reviewsSlot, "venue", v.id);
+})();
+</script>
+
+</body>
+</html>

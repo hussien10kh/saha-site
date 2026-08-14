@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تفاصيل الفعالية - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="detail-core.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "events", hideAddVenue: true });</script>
+
+<div class="section" id="detailRoot"></div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+// ===== صفحة تفاصيل الفعالية =====
+(async function setupEventDetail() {
+  await DataBridge.load("events");
+  const root = document.getElementById("detailRoot");
+  const approved = SITE_DATA.events.filter((x) => x.status === "approved");
+  const ev = DetailCore.fromQuery(approved);
+  if (!ev) { root.innerHTML = DetailCore.notFoundHTML("events.html", "رجوع للفعاليات"); return; }
+
+  document.title = `${ev.title} - ملعبك`;
+  const isFull = ev.teams >= ev.maxTeams;
+  const spots = Math.max(0, ev.maxTeams - ev.teams);
+  const pct = Math.round((ev.teams / ev.maxTeams) * 100);
+  const feeText = ev.fee === 0 ? "مجاني" : `${ev.fee.toLocaleString("en-US")} ل.س`;
+  const near = DetailCore.related(ev, approved);
+
+  const nearHTML = near.map((x) => {
+    const full = x.teams >= x.maxTeams;
+    const xFee = x.fee === 0 ? "مجاني" : `${x.fee.toLocaleString("en-US")} ل.س`;
+    return `
+      <a href="event-detail.html?id=${x.id}" class="venue-card">
+        <div class="venue-card-image"><span class="venue-card-emoji">${x.image}</span><span class="venue-card-badge${full ? " unavailable" : ""}">${full ? "اكتمل" : x.dateLabel}</span></div>
+        <div class="venue-card-body">
+          <div class="venue-card-title-row"><h3>${x.title}</h3><span class="badge">${x.type}</span></div>
+          <p class="muted">${x.venueName} - ${x.city}</p>
+          <p class="muted">${x.day} · ${x.time}</p>
+          <div class="venue-card-footer">
+            <span class="price">${xFee}</span>
+            <span class="btn btn-primary">التفاصيل</span>
+          </div>
+        </div>
+      </a>`;
+  }).join("");
+
+  root.innerHTML = `
+    ${DetailCore.breadcrumbHTML([{ href: "events.html", label: "الفعاليات" }, { label: ev.governorate }, { label: ev.title }])}
+
+    <div class="detail-hero">
+      <div class="detail-info">
+        <div class="detail-title-row">
+          <h1>${ev.title}</h1>
+          <span class="detail-rating-badge">${ev.type}</span>
+        </div>
+        <p class="detail-sport">${feeText === "مجاني" ? "دخول مجاني" : `رسوم المشاركة ${feeText}`}</p>
+        <p class="detail-address">📍 ${ev.venueName} - ${ev.governorate} · ${ev.city}<br>🗓️ ${ev.day} · ${ev.dateLabel}<br>🕐 ${ev.time}</p>
+        <div class="detail-actions">
+          <a href="#join" class="btn btn-primary">${isFull ? "اكتمل التسجيل" : "سجّل الآن"}</a>
+          <button type="button" class="btn btn-outline" id="shareBtn">مشاركة</button>
+        </div>
+      </div>
+      <div class="detail-gallery">
+        <div class="detail-main-img">${ev.image}</div>
+      </div>
+    </div>
+
+    ${DetailCore.specsHTML([
+      { icon: "🏆", label: "نوع الفعالية", value: ev.type },
+      { icon: "📅", label: "التاريخ", value: ev.dateLabel },
+      { icon: "👥", label: "المشاركون", value: `${ev.teams}/${ev.maxTeams}` },
+      { icon: "🕐", label: "التوقيت", value: ev.time },
+      { icon: "💰", label: "الرسوم", value: feeText },
+    ])}
+
+    <div class="detail-body">
+      <div class="detail-col-main">
+        <div class="detail-panel" id="join">
+          <h3>التسجيل بالفعالية</h3>
+          <div class="review-bar-row" style="margin-bottom:0.6em;">
+            <span>${ev.teams}/${ev.maxTeams} مشارك</span>
+            <span class="review-bar"><span class="review-bar-fill" style="width:${pct}%"></span></span>
+            <span>${isFull ? "اكتمل" : `باقي ${spots}`}</span>
+          </div>
+          <p class="muted" style="font-size:0.85em;line-height:1.8;">
+            ${ev.type} على ${ev.venueName}، ${ev.day} ${ev.dateLabel} (${ev.time}).
+            ${feeText === "مجاني" ? "الدخول مجاني للجميع." : `رسوم المشاركة ${feeText}.`}
+          </p>
+          <button type="button" class="btn btn-primary" id="joinBtn"${isFull ? " disabled" : ""} style="display:block;width:100%;margin-top:0.9em;">${isFull ? "اكتمل التسجيل" : "سجّل بالفعالية"}</button>
+          <p class="muted" id="joinHint" style="font-size:0.78em;text-align:center;margin-top:0.5em;">${isFull ? "ما في أماكن متاحة حالياً." : "التسجيل الفعلي بده تسجيل دخول وربط بالباك إند."}</p>
+        </div>
+      </div>
+      <div class="detail-col-side">
+        <div class="detail-panel">
+          <h3>عن الفعالية</h3>
+          <p class="muted" style="font-size:0.85em;line-height:1.8;">
+            ${ev.title} — ${ev.type} تُقام في ${ev.governorate}. ${feeText === "مجاني" ? "فعالية مفتوحة بدون رسوم." : `رسوم المشاركة ${feeText}.`}
+          </p>
+        </div>
+        ${DetailCore.mapPanelHTML(`${ev.venueName} - ${ev.governorate} · ${ev.city}`)}
+      </div>
+    </div>
+
+    ${near.length ? `<h2 style="margin-top:1.5em;">فعاليات أخرى</h2><div class="venues-grid">${nearHTML}</div>` : ""}
+  `;
+
+  DetailCore.wireShare(root.querySelector("#shareBtn"), ev.title);
+  const joinBtn = root.querySelector("#joinBtn");
+  const joinHint = root.querySelector("#joinHint");
+  if (joinBtn && !isFull) {
+    joinBtn.addEventListener("click", async () => {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        joinHint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+        setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent(location.pathname + location.search); }, 1000);
+        return;
+      }
+      joinBtn.disabled = true; joinBtn.textContent = "جاري التسجيل...";
+      try {
+        await MalaabakAPI.book("event", ev.id);
+        joinBtn.textContent = "✓ تم تسجيلك"; joinHint.textContent = "تم التسجيل بالفعالية بنجاح.";
+      } catch (err) {
+        if (err.code === "23505" || (err.message || "").includes("duplicate")) {
+          joinBtn.textContent = "✓ مسجّل بالفعل"; joinHint.textContent = "أنت مسجّل بهذه الفعالية.";
+        } else {
+          joinBtn.disabled = false; joinBtn.textContent = "سجّل بالفعالية";
+          joinHint.textContent = "تعذّر التسجيل: " + err.message;
+        }
+      }
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الفعاليات - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="list-page.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "events" });</script>
+
+<section class="hero">
+  <h1>الفعاليات الرياضية</h1>
+  <p>بطولات ودورات وأيام رياضية بكل المحافظات</p>
+
+  <div class="search-box">
+    <div class="field search-field">
+      <input type="text" id="freeSearch" placeholder="ابحث عن فعالية أو بطولة">
+    </div>
+
+    <div class="search-filters-row">
+      <div class="field filter-field">
+        <label><span class="icon">📅</span> التاريخ</label>
+        <div class="date-select-group">
+          <select id="filterDay" aria-label="اليوم"></select>
+          <select id="filterMonth" aria-label="الشهر"></select>
+          <select id="filterYear" aria-label="السنة"></select>
+        </div>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">🏅</span> نوع الفعالية</label>
+        <select id="filterSport">
+          <option value="">كل الأنواع</option>
+          <option value="بطولة">بطولة</option>
+          <option value="دورة">دورة</option>
+          <option value="يوم رياضي">يوم رياضي</option>
+          <option value="ماراثون">ماراثون</option>
+        </select>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">🗺️</span> المحافظة</label>
+        <select id="filterGovernorate">
+          <option value="">كل المحافظات</option>
+        </select>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">📍</span> المدينة / المنطقة</label>
+        <input type="text" id="filterCity" list="cityOptions" placeholder="اكتب أو اختر منطقة">
+        <datalist id="cityOptions"></datalist>
+      </div>
+      <button type="button" id="searchBtn" class="btn btn-primary"><span class="search-icon"></span> ابحث الآن</button>
+    </div>
+  </div>
+</section>
+
+<div class="section">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h2>الفعاليات القادمة</h2>
+    <a href="add-event.html" class="btn btn-primary">+ أنشئ فعالية</a>
+  </div>
+  <div class="venues-layout">
+    <aside class="venues-sidebar">
+      <h3>تصفية النتائج</h3>
+
+      <div class="filter-group">
+        <label for="sbCity">المدينة</label>
+        <select id="sbCity"><option value="">كل المدن</option></select>
+      </div>
+
+      <div class="filter-group">
+        <label>نوع الفعالية</label>
+        <div class="filter-checks" id="sbType">
+          <label><input type="checkbox" value="بطولة"> بطولة</label>
+          <label><input type="checkbox" value="دورة"> دورة</label>
+          <label><input type="checkbox" value="يوم رياضي"> يوم رياضي</label>
+          <label><input type="checkbox" value="ماراثون"> ماراثون</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>الرسوم</label>
+        <div class="filter-radios" id="sbCost">
+          <label><input type="radio" name="sbCost" value="" checked> الكل</label>
+          <label><input type="radio" name="sbCost" value="free"> مجاني فقط</label>
+          <label><input type="radio" name="sbCost" value="paid"> مدفوع</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>التسجيل</label>
+        <div class="filter-checks" id="sbAvailability">
+          <label><input type="checkbox" id="sbHasSpace" value="1"> التسجيل لسا مفتوح</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="sbPrice" class="filter-price-label">الرسوم <span class="filter-price-hint">(حتى <span id="sbPriceValue" class="filter-price-value">80000</span> ل.س)</span></label>
+        <input type="range" id="sbPrice" min="0" max="80000" step="5000" value="80000">
+        <input type="number" id="sbPriceInput" class="filter-price-input" min="0" max="80000" step="5000" value="80000" aria-label="أدخل الرسوم بالضبط">
+      </div>
+
+      <button type="button" id="sbClear" class="btn btn-outline filter-clear-btn">مسح جميع الفلاتر</button>
+    </aside>
+
+    <div class="venues-main">
+      <div class="venues-toolbar">
+        <span id="eventsCount" class="muted"></span>
+        <select id="sbSort">
+          <option value="default">ترتيب حسب: الأقرب</option>
+          <option value="price-asc">الرسوم: من الأقل للأعلى</option>
+          <option value="price-desc">الرسوم: من الأعلى للأقل</option>
+        </select>
+      </div>
+      <div class="venues-grid" id="eventsGrid"></div>
+      <div id="eventsNoResults" class="search-empty">
+        <div class="search-empty-icon">🔍</div>
+        <p class="search-empty-title">لا توجد نتيجة متطابقة</p>
+        <p class="search-empty-hint" id="eventsNoResultsHint"></p>
+        <button type="button" class="btn btn-outline" id="eventsClearSearch">مسح البحث</button>
+      </div>
+      <div class="venues-pagination" id="eventsPagination"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="padding-top:0;">
+  <div class="features-strip">
+    <div class="feature-item">
+      <span class="feature-icon">🏆</span>
+      <div class="feature-title">بطولات منظّمة</div>
+      <div class="feature-sub">تنظيم احترافي وجوائز</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🎟️</span>
+      <div class="feature-title">تسجيل سهل</div>
+      <div class="feature-sub">سجّل فريقك بخطوات بسيطة</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🎉</span>
+      <div class="feature-title">فعاليات مجانية</div>
+      <div class="feature-sub">أيام رياضية مفتوحة للكل</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">📣</span>
+      <div class="feature-title">وصول أوسع</div>
+      <div class="feature-sub">اعرض فعاليتك لآلاف اللاعبين</div>
+    </div>
+  </div>
+</div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+SiteCore.fillDateSelects();
+const { govSelect, cityInput, refreshCityOptions } = SiteCore.setupGovCity();
+
+// ===== صفحة الفعاليات: إعدادات فقط =====
+(async function setupEvents() {
+  await DataBridge.load("events");
+  const sbCity = document.getElementById("sbCity");
+  const sbPrice = document.getElementById("sbPrice");
+  const sbPriceInput = document.getElementById("sbPriceInput");
+  const sbPriceValue = document.getElementById("sbPriceValue");
+  const sbSort = document.getElementById("sbSort");
+  const sbClear = document.getElementById("sbClear");
+  const sbHasSpace = document.getElementById("sbHasSpace");
+  const sbTypeBoxes = [...document.querySelectorAll("#sbType input")];
+  const sbCostRadios = [...document.querySelectorAll('input[name="sbCost"]')];
+
+  const approved = () => SITE_DATA.events.filter((e) => e.status === "approved");
+
+  [...new Set(approved().map((e) => e.city))].forEach((city) => {
+    sbCity.appendChild(new Option(city, city));
+  });
+
+  const fees = approved().map((e) => e.fee);
+  const feeMax = Math.ceil(Math.max(...fees) / 10000) * 10000;
+  sbPrice.min = sbPriceInput.min = 0; // في فعاليات مجانية، فالحد الأدنى صفر
+  sbPrice.max = sbPriceInput.max = feeMax;
+  sbPrice.value = sbPriceInput.value = feeMax;
+  sbPriceValue.textContent = feeMax.toLocaleString("en-US");
+
+  function eventCardHTML(e) {
+    const isFull = e.teams >= e.maxTeams;
+    const badgeClass = isFull ? " unavailable" : "";
+    const badgeText = isFull ? "اكتمل" : e.dateLabel;
+    const priceText = e.fee === 0 ? "مجاني" : `${e.fee.toLocaleString("en-US")} ل.س`;
+    return `
+      <a href="event-detail.html?id=${e.id}" class="venue-card">
+        <div class="venue-card-image"><span class="venue-card-emoji">${e.image}</span><span class="venue-card-badge${badgeClass}">${badgeText}</span></div>
+        <div class="venue-card-body">
+          <div class="venue-card-title-row"><h3>${e.title}</h3><span class="badge">${e.type}</span></div>
+          <p class="muted">${e.venueName} - ${e.city}</p>
+          <p class="muted">${e.day} · ${e.time}</p>
+          <div class="venue-card-amenities"><span class="tag">${e.teams}/${e.maxTeams} مشارك</span>${e.fee === 0 ? '<span class="tag">مجاني</span>' : ""}<button type="button" class="venue-card-amenities-toggle">»</button><div class="venue-card-amenities-panel"></div></div>
+          <div class="venue-card-footer">
+            <span class="price">${priceText}</span>
+            <span class="btn btn-primary">${isFull ? "اكتمل" : "سجّل الآن"}</span>
+          </div>
+        </div>
+      </a>`;
+  }
+
+  const page = ListPage.create({
+    data: approved,
+    ids: {
+      grid: "eventsGrid", noResults: "eventsNoResults", hint: "eventsNoResultsHint",
+      clearSearch: "eventsClearSearch", count: "eventsCount", pagination: "eventsPagination",
+    },
+    cardHTML: eventCardHTML,
+    haystack: (e) => MalaabakSearch.eventHaystack(e),
+    // نوع الفعالية هو نظير الرياضة بهالصفحة
+    hero: { sportField: "type", govField: "governorate", cityFields: ["city", "venueName"] },
+    refreshCityOptions,
+    readQueryParams: true,
+    countText: (n) => `تم العثور على ${n} ${n <= 2 ? "فعالية" : "فعاليات"}`,
+
+    filter(e) {
+      const cost = document.querySelector('input[name="sbCost"]:checked').value;
+      const types = sbTypeBoxes.filter((b) => b.checked).map((b) => b.value);
+      if (sbCity.value && e.city !== sbCity.value) return false;
+      if (e.fee > Number(sbPrice.value)) return false;
+      if (cost === "free" && e.fee !== 0) return false;
+      if (cost === "paid" && e.fee === 0) return false;
+      if (types.length && !types.includes(e.type)) return false;
+      if (sbHasSpace.checked && e.teams >= e.maxTeams) return false;
+      return true;
+    },
+    sort(list) {
+      if (sbSort.value === "price-asc") return [...list].sort((a, b) => a.fee - b.fee);
+      if (sbSort.value === "price-desc") return [...list].sort((a, b) => b.fee - a.fee);
+      return list;
+    },
+    isFilterActive() {
+      const cost = document.querySelector('input[name="sbCost"]:checked').value;
+      return !!sbCity.value || Number(sbPrice.value) < Number(sbPrice.max) || !!cost
+        || sbTypeBoxes.some((b) => b.checked) || sbHasSpace.checked;
+    },
+    watch: [sbCity, sbSort, sbHasSpace, ...sbTypeBoxes, ...sbCostRadios],
+    clearBtn: sbClear,
+    onClearFilters() {
+      sbCity.value = "";
+      sbPrice.value = sbPrice.max;
+      sbPriceInput.value = sbPrice.max;
+      sbPriceValue.textContent = Number(sbPrice.max).toLocaleString("en-US");
+      sbTypeBoxes.forEach((b) => { b.checked = false; });
+      sbHasSpace.checked = false;
+      document.querySelector('input[name="sbCost"][value=""]').checked = true;
+      sbSort.value = "default";
+    },
+  });
+
+  sbPrice.addEventListener("input", () => {
+    sbPriceInput.value = sbPrice.value;
+    sbPriceValue.textContent = Number(sbPrice.value).toLocaleString("en-US");
+    page.resetAndRender();
+  });
+  sbPriceInput.addEventListener("input", () => {
+    const val = Number(sbPriceInput.value);
+    if (Number.isNaN(val)) return;
+    sbPrice.value = Math.min(Number(sbPriceInput.max), Math.max(Number(sbPriceInput.min), val));
+    sbPriceValue.textContent = Number(sbPrice.value).toLocaleString("en-US");
+    page.resetAndRender();
+  });
+  sbPriceInput.addEventListener("blur", () => { sbPriceInput.value = sbPrice.value; });
+})();
+</script>
+
+</body>
+</html>

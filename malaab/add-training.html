@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إنشاء تمرين - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "training", hideAddVenue: true });</script>
+
+<div class="form-box" style="max-width:520px;">
+  <h1>أنشئ تمرين</h1>
+  <p class="muted" style="text-align:center;margin-top:-10px;margin-bottom:20px;">
+    نظّم حصة تدريبية وادعُ لاعبين - رح تظهر بصفحة التمارين فوراً.
+  </p>
+
+  <div class="field">
+    <label>عنوان التمرين</label>
+    <input type="text" id="tTitle" placeholder="مثال: تمرين لياقة صباحي">
+  </div>
+  <div class="field">
+    <label>نوع التمرين</label>
+    <select id="tType">
+      <option value="">اختر النوع</option>
+      <option>لياقة عامة</option>
+      <option>مهارات فردية</option>
+      <option>تكتيك</option>
+      <option>حراسة مرمى</option>
+      <option>سرعة ورشاقة</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>اسم المدرب</label>
+    <input type="text" id="tCoach" placeholder="مثال: محمد الخطيب">
+  </div>
+  <div class="field">
+    <label>الملعب / المكان</label>
+    <input type="text" id="tVenue" placeholder="مثال: ملعب النجوم">
+  </div>
+  <div class="field">
+    <label>المحافظة</label>
+    <input type="text" id="tGov" placeholder="مثال: دمشق">
+  </div>
+  <div class="field">
+    <label>المدينة / المنطقة</label>
+    <input type="text" id="tCity" placeholder="مثال: المزة">
+  </div>
+  <div class="field">
+    <label>التاريخ والوقت</label>
+    <input type="text" id="tTime" placeholder="مثال: السبت · 6:00 ص - 7:00 ص">
+  </div>
+  <div class="field">
+    <label>الفترة</label>
+    <div class="role-picker" id="tPeriod">
+      <div class="selected" data-value="صباحاً">صباحاً</div>
+      <div data-value="مساءً">مساءً</div>
+      <div data-value="ليلاً">ليلاً</div>
+    </div>
+  </div>
+  <div class="field">
+    <label>عدد المشاركين المطلوب</label>
+    <input type="number" id="tCount" placeholder="مثال: 20" min="2">
+  </div>
+  <div class="field">
+    <label>رسوم المشاركة للاعب (ل.س) — اتركها 0 للمجاني</label>
+    <input type="number" id="tFee" placeholder="مثال: 8000" min="0" step="500">
+  </div>
+
+  <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إنشاء التمرين</button>
+  <p class="muted" id="formHint" style="font-size:0.8em;text-align:center;margin-top:0.6em;">املأ الحقول المطلوبة وراح يظهر تمرينك بصفحة التمارين فوراً.</p>
+</div>
+
+<script>
+// ===== حفظ التمرين =====
+// التمارين تنعرض فوراً (مو ضمن لوحة المراجعة الحالية) - منحفظها status:"approved".
+(function setupAddTraining() {
+  const $ = (id) => document.getElementById(id);
+  const hint = $("formHint");
+
+  let period = "صباحاً";
+  $("tPeriod").addEventListener("click", (e) => {
+    const opt = e.target.closest("[data-value]");
+    if (!opt) return;
+    $("tPeriod").querySelectorAll("div").forEach((d) => d.classList.remove("selected"));
+    opt.classList.add("selected");
+    period = opt.dataset.value;
+  });
+
+  $("submitBtn").addEventListener("click", async () => {
+    const title = $("tTitle").value.trim();
+    const type = $("tType").value;
+    const coach = $("tCoach").value.trim();
+    const venueName = $("tVenue").value.trim();
+    const governorate = $("tGov").value.trim();
+    const city = $("tCity").value.trim();
+    const time = $("tTime").value.trim();
+    const maxParticipants = Number($("tCount").value);
+    const fee = Number($("tFee").value);
+
+    if (!title || !type || !governorate || !city) {
+      hint.textContent = "لازم تعبّي: العنوان، النوع، المحافظة، والمدينة."; return;
+    }
+    if (!maxParticipants || maxParticipants < 2) {
+      hint.textContent = "عدد المشاركين لازم يكون 2 على الأقل."; return;
+    }
+
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      hint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent("add-training.html"); }, 1200);
+      return;
+    }
+    $("submitBtn").disabled = true;
+    try {
+      await MalaabakAPI.create("trainings", {
+        title, type, governorate, city,
+        venue_name: venueName || "يحدّد لاحقاً",
+        day: null, date_label: "قريباً", time: time || "يحدّد لاحقاً", period,
+        fee: fee || 0, participants: 0, max_participants: maxParticipants,
+        coach: coach || null,
+        image: "🏃",
+      });
+      hint.textContent = "تم إنشاء التمرين ✓ عم نحوّلك لصفحة التمارين...";
+      setTimeout(() => { location.href = "training.html"; }, 900);
+    } catch (err) {
+      console.error(err); hint.textContent = "تعذّر الحفظ: " + (err.message || "حاول مرة أخرى.");
+      $("submitBtn").disabled = false;
+    }
+  });
+})();
+</script>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>اعرض موهبتك - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="terms.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "talents" });</script>
+
+<div class="form-box" style="max-width:560px;">
+  <h1>اعرض موهبتك</h1>
+  <p class="muted" style="text-align:center;margin-top:-10px;margin-bottom:20px;">
+    ارفع فيديوهاتك ووصّل لأندية ومدربين. تنشر بعد موافقة الإدارة.
+  </p>
+
+  <div class="upload-warning">
+    <p class="upload-warning-title">🎵 ممنوع الموسيقى والأغاني</p>
+    <p>
+      لا ترفع فيديو فيه <strong>موسيقى أو أغاني</strong> — خلّي الصوت الأصلي أو بدون صوت.
+      لو حابب، بتقدر تختار خيار <strong>"بدون صوت"</strong> تحت ومنشيل الصوت من الفيديو تلقائياً.
+    </p>
+  </div>
+
+  <div class="field">
+    <label>الاسم الكامل</label>
+    <input type="text" id="tName" placeholder="مثال: كريم الأحمد">
+  </div>
+  <div class="field">
+    <label>الرياضة</label>
+    <select id="tSport">
+      <option value="">اختر الرياضة</option>
+      <option>كرة قدم</option>
+      <option>كرة سلة</option>
+      <option>كرة طائرة</option>
+      <option>تنس</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>المركز</label>
+    <input type="text" id="tPosition" placeholder="مثال: مهاجم">
+  </div>
+  <div class="field">
+    <label>العمر</label>
+    <input type="number" id="tAge" placeholder="مثال: 17" min="8" max="45">
+  </div>
+  <div class="field">
+    <label>المحافظة</label>
+    <input type="text" id="tGov" placeholder="مثال: دمشق">
+  </div>
+  <div class="field">
+    <label>المدينة / المنطقة</label>
+    <input type="text" id="tCity" placeholder="مثال: المزة">
+  </div>
+  <div class="field">
+    <label>القدم المفضلة</label>
+    <div class="role-picker" id="tFoot">
+      <div class="selected" data-value="يمين">يمين</div>
+      <div data-value="يسار">يسار</div>
+      <div data-value="الاثنين">الاثنين</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>فيديو الموهبة</label>
+    <div class="upload-dropzone" id="dropzone">
+      <div class="upload-dropzone-icon">🎬</div>
+      <div class="upload-dropzone-text">اضغط لاختيار فيديو</div>
+      <div class="upload-dropzone-hint">MP4 أو MOV · حتى 100 ميغا · بدون موسيقى</div>
+    </div>
+    <input type="file" accept="video/*" id="videoInput" hidden>
+    <div id="videoPreviewWrap" style="display:none;margin-top:0.7em;">
+      <div class="video-thumb playing" id="videoPreview">
+        <span class="video-logo">ملعبك</span>
+      </div>
+      <p class="muted" style="font-size:0.75em;margin-top:0.4em;">
+        علامة "ملعبك" المائية رح تنطبع على الفيديو تلقائياً بعد الرفع.
+      </p>
+      <label style="display:flex;gap:0.5em;align-items:center;font-size:0.82em;color:#374151;margin-top:0.6em;cursor:pointer;">
+        <input type="checkbox" id="muteVideo">
+        <span>🔇 بدون صوت (احذف الصوت من الفيديو)</span>
+      </label>
+      <button type="button" class="btn btn-outline" id="removeVideo" style="font-size:0.8em;margin-top:0.5em;">شيل الفيديو</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>عنوان الفيديو</label>
+    <input type="text" id="tVideoTitle" placeholder="مثال: أهداف الموسم">
+  </div>
+
+  <div id="termsSlot"></div>
+  <script>document.getElementById("termsSlot").innerHTML = MalaabakTerms.block(); MalaabakTerms.init();</script>
+
+  <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إرسال للمراجعة</button>
+  <p class="muted" id="formHint" style="font-size:0.78em;text-align:center;margin-top:0.6em;">
+    رح يوصلك إشعار بعد مراجعة الإدارة.
+  </p>
+</div>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+(function setupTalentUpload() {
+  const dropzone = document.getElementById("dropzone");
+  const input = document.getElementById("videoInput");
+  const previewWrap = document.getElementById("videoPreviewWrap");
+  const preview = document.getElementById("videoPreview");
+  const removeBtn = document.getElementById("removeVideo");
+  const agree = document.getElementById("agreeTerms");
+  const muteVideo = document.getElementById("muteVideo");
+  const submitBtn = document.getElementById("submitBtn");
+  const hint = document.getElementById("formHint");
+  const logo = preview.querySelector(".video-logo");
+  const footPicker = document.getElementById("tFoot");
+  const EMOJI = { "كرة قدم": "⚽", "كرة سلة": "🏀", "كرة طائرة": "🏐", "تنس": "🎾" };
+
+  let foot = "يمين";
+  footPicker.addEventListener("click", (e) => {
+    const opt = e.target.closest("[data-value]");
+    if (!opt) return;
+    footPicker.querySelectorAll("div").forEach((d) => d.classList.remove("selected"));
+    opt.classList.add("selected");
+    foot = opt.dataset.value;
+  });
+
+  dropzone.addEventListener("click", () => input.click());
+
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (!file) return;
+    // معاينة محلية فقط (URL مؤقت بالمتصفح) - الرفع الفعلي بده باكند
+    const url = URL.createObjectURL(file);
+    preview.innerHTML = `<video src="${url}" controls playsinline${muteVideo.checked ? " muted" : ""}></video>`;
+    preview.appendChild(logo); // اللوغو يضل فوق الفيديو
+    previewWrap.style.display = "";
+    dropzone.style.display = "none";
+  });
+
+  // خيار "بدون صوت" - بالمعاينة منكتم الصوت مباشرة؛ الحذف النهائي للصوت من الملف بده معالجة
+  // بالسيرفر (ffmpeg -an) وقت الرفع - المتصفح ما بيقدر يعدّل ملف الفيديو الأصلي لحاله
+  muteVideo.addEventListener("change", () => {
+    const vid = preview.querySelector("video");
+    if (vid) vid.muted = muteVideo.checked;
+  });
+
+  removeBtn.addEventListener("click", () => {
+    input.value = "";
+    preview.innerHTML = "";
+    preview.appendChild(logo);
+    previewWrap.style.display = "none";
+    dropzone.style.display = "";
+  });
+
+  submitBtn.addEventListener("click", async () => {
+    const name = document.getElementById("tName").value.trim();
+    const sport = document.getElementById("tSport").value;
+    const position = document.getElementById("tPosition").value.trim();
+    const age = Number(document.getElementById("tAge").value);
+    const governorate = document.getElementById("tGov").value.trim();
+    const city = document.getElementById("tCity").value.trim();
+    const videoTitle = document.getElementById("tVideoTitle").value.trim();
+    const videoFile = input.files[0];
+
+    if (!name || !sport || !position || !governorate || !city) {
+      hint.textContent = "لازم تعبّي: الاسم، الرياضة، المركز، المحافظة، والمدينة."; return;
+    }
+    if (!age || age < 8 || age > 45) { hint.textContent = "أدخل عمر صحيح (8 - 45)."; return; }
+    if (!videoFile) { hint.textContent = "لازم ترفع فيديو أول."; return; }
+    if (!agree.checked) { hint.textContent = "لازم توافق على الشروط قبل الإرسال."; return; }
+
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      hint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent("add-talent.html"); }, 1200);
+      return;
+    }
+    submitBtn.disabled = true; submitBtn.textContent = "جاري رفع الفيديو...";
+    try {
+      // ارفع الفيديو الفعلي إلى Supabase Storage
+      const ext = (videoFile.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
+      const videoUrl = await MalaabakAPI.upload(videoFile, `talents/${MalaabakAPI.slugify(name)}-${Date.now()}.${ext}`);
+
+      await MalaabakAPI.create("talents", {
+        name, sport, position, age, governorate, city, foot,
+        videos: [{ title: videoTitle || "فيديو الموهبة", videoUrl, muted: muteVideo.checked, action: "asis" }],
+        image: EMOJI[sport] || "⚽",
+      });
+
+      hint.textContent = "تم الإرسال للمراجعة ✓ موهبتك بتظهر بعد موافقة الإدارة. عم نحوّلك...";
+      setTimeout(() => { location.href = "admin.html"; }, 1200);
+    } catch (err) {
+      console.error(err); hint.textContent = "تعذّر الرفع: " + (err.message || "حاول مرة أخرى.");
+      submitBtn.disabled = false; submitBtn.textContent = "إرسال للمراجعة";
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

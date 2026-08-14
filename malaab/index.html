@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ active: "index" });</script>
+
+<section class="hero">
+  <h1>ابحث احجز والعب ...بكل سهولة</h1>
+  <p>احجز الملاعب... انضم للمباريات... شارك في التمارين المفتوحة</p>
+
+  <div class="search-box">
+    <div class="field search-field">
+      <input type="text" id="freeSearch" placeholder="ابحث عن ملعب أو منطقة">
+    </div>
+
+    <div class="search-filters-row">
+      <div class="field filter-field">
+        <label><span class="icon">📅</span> التاريخ</label>
+        <div class="date-select-group">
+          <select id="filterDay" aria-label="اليوم"></select>
+          <select id="filterMonth" aria-label="الشهر"></select>
+          <select id="filterYear" aria-label="السنة"></select>
+        </div>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">🏅</span> نوع الرياضة</label>
+        <select id="filterSport">
+          <option value="">كل الرياضات</option>
+          <option value="كرة قدم">كرة قدم</option>
+          <option value="كرة صالات">كرة صالات</option>
+          <option value="كرة سلة">كرة سلة</option>
+          <option value="تنس">تنس</option>
+          <option value="تنس طاولة">تنس طاولة</option>
+          <option value="كرة طائرة">كرة طائرة</option>
+          <option value="سباحة">سباحة</option>
+          <option value="جيم">جيم</option>
+          <option value="رياضات قتالية">رياضات قتالية</option>
+        </select>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">🗺️</span> المحافظة</label>
+        <select id="filterGovernorate">
+          <option value="">كل المحافظات</option>
+        </select>
+      </div>
+      <div class="field filter-field">
+        <label><span class="icon">📍</span> المدينة / المنطقة</label>
+        <input type="text" id="filterCity" list="cityOptions" placeholder="اكتب أو اختر منطقة">
+        <datalist id="cityOptions"></datalist>
+      </div>
+      <button type="button" id="searchBtn" class="btn btn-primary"><span class="search-icon"></span> ابحث الآن</button>
+    </div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <a href="venues.html" class="stat-item">
+    <span class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 21h18M5 21V8l5-4 5 4v13M9 21v-5h2v5M13 21v-9h6v9M13 12h2M13 15h2M13 18h2"/>
+      </svg>
+    </span>
+    <div class="stat-text">
+      <div class="num" id="statCities">-</div>
+      <div class="label">مدينة</div>
+    </div>
+  </a>
+  <a href="matches.html" class="stat-item">
+    <span class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 7l3 2.2-1.1 3.6H10.1L9 9.2 12 7zM12 3v4M4.5 8l3.5 1.2M4.9 16l3-2M19.5 8l-3.5 1.2M19.1 16l-3-2M8.5 20l1-3.5M15.5 20l-1-3.5"/>
+      </svg>
+    </span>
+    <div class="stat-text">
+      <div class="num" id="statMatches">-</div>
+      <div class="label">مباراة مفتوحة</div>
+    </div>
+  </a>
+  <a href="talents.html" class="stat-item">
+    <span class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="7" r="2.6"/>
+        <path d="M7 20c0-3 2.2-5 5-5s5 2 5 5"/>
+        <circle cx="4.5" cy="9.5" r="2"/>
+        <path d="M1.5 20c0-2.3 1.4-4 3-4 .9 0 1.7.4 2.3 1"/>
+        <circle cx="19.5" cy="9.5" r="2"/>
+        <path d="M22.5 20c0-2.3-1.4-4-3-4-.9 0-1.7.4-2.3 1"/>
+      </svg>
+    </span>
+    <div class="stat-text">
+      <div class="num" id="statPlayers">-</div>
+      <div class="label">لاعب</div>
+    </div>
+  </a>
+  <a href="venues.html" class="stat-item">
+    <span class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2.5" y="5" width="19" height="14" rx="2"/>
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M2.5 9h2v6h-2zM19.5 9h2v6h-2z"/>
+      </svg>
+    </span>
+    <div class="stat-text">
+      <div class="num" id="statVenues">-</div>
+      <div class="label">ملعب</div>
+    </div>
+  </a>
+</div>
+
+<div class="quad-grid">
+  <div class="quad-card">
+    <div class="quad-card-header">
+      <h3>أفضل الملاعب</h3>
+      <a href="venues.html" class="quad-more">المزيد ←</a>
+    </div>
+    <!-- البطاقات تترندر من SITE_DATA.venues (كانت 4 بطاقات مكتوبة يدوياً، فأي بحث عن ملعب حقيقي
+         تاني كان يخفيهم كلهم ويخلي القسم فاضي بدون تفسير - هاد كان الباغ) -->
+    <div class="quad-items" id="venuesGrid"></div>
+    <div id="noResults" class="search-empty">
+      <div class="search-empty-icon">🔍</div>
+      <p class="search-empty-title">لا توجد نتيجة متطابقة</p>
+      <p class="search-empty-hint" id="noResultsHint"></p>
+      <button type="button" class="btn btn-outline" id="homeClearSearch">مسح البحث</button>
+    </div>
+    <p id="venuesMore" style="display:none;text-align:center;margin-top:10px;">
+      <a href="venues.html" class="quad-more" id="venuesMoreLink">شوف كل النتائج بصفحة الملاعب ←</a>
+    </p>
+  </div>
+
+  <div class="quad-card">
+    <div class="quad-card-header">
+      <h3>مواهب</h3>
+      <a href="talents.html" class="quad-more">المزيد ←</a>
+    </div>
+    <div class="quad-items">
+      <a href="talents.html" class="quad-item">
+        <div class="quad-item-image">🧑</div>
+        <div class="quad-item-title">محمد العلي</div>
+        <div class="quad-item-location">📍 دمشق</div>
+        <div class="quad-item-stat">18 سنة</div>
+      </a>
+      <a href="talents.html" class="quad-item">
+        <div class="quad-item-image">🧑</div>
+        <div class="quad-item-title">يوسف حسن</div>
+        <div class="quad-item-location">📍 حلب</div>
+        <div class="quad-item-stat">20 سنة</div>
+      </a>
+      <a href="talents.html" class="quad-item">
+        <div class="quad-item-image">🧑</div>
+        <div class="quad-item-title">سامر خليل</div>
+        <div class="quad-item-location">📍 اللاذقية</div>
+        <div class="quad-item-stat">17 سنة</div>
+      </a>
+      <a href="talents.html" class="quad-item">
+        <div class="quad-item-image">🧑</div>
+        <div class="quad-item-title">علي مراد</div>
+        <div class="quad-item-location">📍 حمص</div>
+        <div class="quad-item-stat">19 سنة</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="quad-card">
+    <div class="quad-card-header">
+      <h3>تمارين عامة</h3>
+      <a href="training.html" class="quad-more">المزيد ←</a>
+    </div>
+    <div class="quad-items">
+      <a href="training.html" class="quad-item">
+        <div class="quad-item-image">🏃</div>
+        <div class="quad-item-title">تمرين لياقة صباحي</div>
+        <div class="quad-item-location">📍 صالة الفرقان - حلب</div>
+        <div class="quad-item-time">🕐 06:00 ص</div>
+        <div class="quad-item-stat">متبقي 6 أماكن</div>
+      </a>
+      <a href="training.html" class="quad-item">
+        <div class="quad-item-image">🏃</div>
+        <div class="quad-item-title">تدريب حراس متقدم</div>
+        <div class="quad-item-location">📍 ملعب النجوم - دمشق</div>
+        <div class="quad-item-time">🕐 05:00 م</div>
+        <div class="quad-item-stat">متبقي 2 أماكن</div>
+      </a>
+      <a href="training.html" class="quad-item">
+        <div class="quad-item-image">🏃</div>
+        <div class="quad-item-title">تمرين يوغا مسائي</div>
+        <div class="quad-item-location">📍 نادي الساحل - اللاذقية</div>
+        <div class="quad-item-time">🕐 07:30 م</div>
+        <div class="quad-item-stat">متبقي 4 أماكن</div>
+      </a>
+      <a href="training.html" class="quad-item">
+        <div class="quad-item-image">🏃</div>
+        <div class="quad-item-title">تمرين كرة سلة مسائي</div>
+        <div class="quad-item-location">📍 صالة الوعر - حمص</div>
+        <div class="quad-item-time">🕐 08:00 م</div>
+        <div class="quad-item-stat">متبقي 5 أماكن</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="quad-card">
+    <div class="quad-card-header">
+      <h3>مباريات</h3>
+      <a href="matches.html" class="quad-more">المزيد ←</a>
+    </div>
+    <div class="quad-items">
+      <a href="matches.html" class="quad-item">
+        <div class="quad-item-image">⚽</div>
+        <div class="quad-item-title">مباراة ودية مساء الخميس</div>
+        <div class="quad-item-location">📍 ملعب النجوم - دمشق</div>
+        <div class="quad-item-time">🕐 09:00 م</div>
+        <div class="quad-item-stat">متبقي 2 لاعب</div>
+      </a>
+      <a href="matches.html" class="quad-item">
+        <div class="quad-item-image">⚽</div>
+        <div class="quad-item-title">دوري صغير - الجولة 3</div>
+        <div class="quad-item-location">📍 صالة الفرقان - حلب</div>
+        <div class="quad-item-time">🕐 06:00 م</div>
+        <div class="quad-item-stat">مكتملة</div>
+      </a>
+      <a href="matches.html" class="quad-item">
+        <div class="quad-item-image">⚽</div>
+        <div class="quad-item-title">مباراة السبت الصباحية</div>
+        <div class="quad-item-location">📍 ملعب الساحل - اللاذقية</div>
+        <div class="quad-item-time">🕐 09:00 ص</div>
+        <div class="quad-item-stat">متبقي 4 لاعب</div>
+      </a>
+      <a href="matches.html" class="quad-item">
+        <div class="quad-item-image">⚽</div>
+        <div class="quad-item-title">مباراة كرة سلة ودية</div>
+        <div class="quad-item-location">📍 ملعب الوعر - حمص</div>
+        <div class="quad-item-time">🕐 07:00 م</div>
+        <div class="quad-item-stat">متبقي 3 لاعب</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="padding-top:0;">
+  <h2>اختر رياضتك المفضلة</h2>
+  <input type="checkbox" id="sportsToggle" class="sports-toggle-checkbox">
+  <div class="grid sports-grid" style="text-align:center;">
+    <a href="venues.html?sport=كرة قدم" class="card sport-item">⚽<br><span class="muted">كرة قدم</span></a>
+    <a href="venues.html?sport=كرة سلة" class="card sport-item">🏀<br><span class="muted">كرة سلة</span></a>
+    <a href="venues.html?sport=تنس" class="card sport-item">🎾<br><span class="muted">تنس</span></a>
+    <a href="venues.html?sport=تنس طاولة" class="card sport-item">🏓<br><span class="muted">تنس طاولة</span></a>
+    <a href="venues.html?sport=كرة طائرة" class="card sport-item">🏐<br><span class="muted">كرة طائرة</span></a>
+    <a href="venues.html?sport=جري" class="card sport-item">🏃<br><span class="muted">جري</span></a>
+    <a href="venues.html?sport=سباحة" class="card sport-item">🏊<br><span class="muted">سباحة</span></a>
+    <a href="venues.html?sport=جيم" class="card sport-item">🏋️<br><span class="muted">جيم</span></a>
+    <a href="venues.html?sport=رياضات قتالية" class="card sport-item">🥋<br><span class="muted">رياضات قتالية</span></a>
+    <label for="sportsToggle" class="card sports-more-card">
+      <span class="sports-more-dots">•••</span><br><span class="muted">المزيد</span>
+      <div class="sports-dropdown-panel">
+        <a href="venues.html?sport=كرة قدم">⚽ كرة قدم</a>
+        <a href="venues.html?sport=كرة سلة">🏀 كرة سلة</a>
+        <a href="venues.html?sport=تنس">🎾 تنس</a>
+        <a href="venues.html?sport=تنس طاولة">🏓 تنس طاولة</a>
+        <a href="venues.html?sport=كرة طائرة">🏐 كرة طائرة</a>
+        <a href="venues.html?sport=جري">🏃 جري</a>
+        <a href="venues.html?sport=سباحة">🏊 سباحة</a>
+        <a href="venues.html?sport=جيم">🏋️ جيم</a>
+        <a href="venues.html?sport=رياضات قتالية">🥋 رياضات قتالية</a>
+      </div>
+    </label>
+  </div>
+</div>
+
+<div class="section" style="padding-top:0;">
+  <div class="features-strip">
+    <div class="feature-item">
+      <span class="feature-icon">🎧</span>
+      <div class="feature-title">دعم على مدار الساعة</div>
+      <div class="feature-sub">نحن هنا لمساعدتك</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🛡️</span>
+      <div class="feature-title">ملاعب مضمونة</div>
+      <div class="feature-sub">جودة عالية ومضمونة</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🏷️</span>
+      <div class="feature-title">أسعار تنافسية</div>
+      <div class="feature-sub">أفضل الأسعار بمدينتك</div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">⚡</span>
+      <div class="feature-title">حجز سريع وسهل</div>
+      <div class="feature-sub">احجز ملعبك بثوانٍ</div>
+    </div>
+  </div>
+</div>
+
+<p class="note">هذه نسخة عرض ثابتة (HTML/CSS فقط، بدون سيرفر) لعرض تصميم وتدفق المنصة. البيانات هنا وهمية للعرض. النسخة الفعلية الشغّالة بالكامل موجودة بمجلد <code>malaabak/frontend</code>.</p>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+<script>
+// أرقام .stats-bar محسوبة فعلياً من SITE_DATA (data.js) - مو أرقام ثابتة مكتوبة يدوياً
+(function fillStats() {
+  const distinctGovernorates = new Set(SITE_DATA.venues.map((v) => v.governorate));
+  const openMatches = SITE_DATA.matches.filter((m) => m.participants < m.maxParticipants);
+
+  document.getElementById("statCities").textContent = distinctGovernorates.size;
+  document.getElementById("statMatches").textContent = openMatches.length;
+  document.getElementById("statPlayers").textContent = SITE_DATA.playersApprox.toLocaleString("en-US");
+  document.getElementById("statVenues").textContent = SITE_DATA.venues.length;
+})();
+
+// المحافظات/المدن + حقول التاريخ صاروا بـsite-core.js (كانوا 3 نسخ متطابقة بـ3 صفحات)
+SiteCore.fillDateSelects();
+const { govSelect, cityInput, refreshCityOptions } = SiteCore.setupGovCity();
+
+// بطاقة "أفضل الملاعب" بتعرض 4 بالضبط - قاعدة صريحة بـDESIGN-SYSTEM (شكل 2×2 بالجوال لازم يضل
+// متناسق مع باقي البطاقات الأربع). فحتى وقت البحث منعرض 4 كحد أقصى، والباقي عبر رابط "شوف كل النتائج".
+const HOME_VENUES_LIMIT = 4;
+const homeGrid = document.getElementById("venuesGrid");
+
+// نفس بنية البطاقة المكتوبة يدوياً سابقاً بالحرف (نفس الوسم والكلاسات وdata-*) → صفر أثر على الـCSS
+function quadItemHTML(v) {
+  return `
+      <a href="venue-detail.html?id=${v.id}" class="quad-item" data-sport="${v.sport}" data-governorate="${v.governorate}" data-city="${v.city}">
+        <div class="quad-item-image">${v.image}</div>
+        <div class="quad-item-title">${v.name}</div>
+        <div class="quad-item-location">📍 ${v.governorate} - ${v.city}</div>
+        <div class="quad-item-stat">${v.price.toLocaleString("en-US")} ل.س</div>
+      </a>`;
+}
+
+function topVenues(n) {
+  return [...SITE_DATA.venues]
+    .filter((v) => (v.status || "approved") === "approved")
+    .sort((a, b) => b.rating - a.rating).slice(0, n);
+}
+
+function applyFilters() {
+  const term = document.getElementById("freeSearch").value.trim();
+  const sport = document.getElementById("filterSport").value;
+  const gov = govSelect.value;
+  const city = cityInput.value.trim();
+
+  // لو المستخدم كتب منطقة جديدة مش موجودة أصلاً بقائمة محافظته، تنضاف تلقائياً لقائمة الاقتراحات
+  if (gov && city && !SiteCore.citiesFor(gov).includes(city)) {
+    SiteCore.saveCustomCity(gov, city);
+    refreshCityOptions();
+  }
+
+  const active = !!term || !!sport || !!gov || !!city;
+  // الفلترة صارت على البيانات (كل الـ9 ملاعب) مو على الـDOM (4 بطاقات ثابتة) - هون كان الباغ
+  const matched = SITE_DATA.venues.filter((v) => {
+    if (sport && v.sport !== sport) return false;
+    if (gov && v.governorate !== gov) return false;
+    if (city && !(v.city.includes(city) || v.name.includes(city))) return false;
+    return MalaabakSearch.matches(MalaabakSearch.venueHaystack(v), term);
+  });
+
+  const shown = active ? matched.slice(0, HOME_VENUES_LIMIT) : topVenues(HOME_VENUES_LIMIT);
+  homeGrid.innerHTML = shown.map(quadItemHTML).join("");
+
+  const empty = active && matched.length === 0;
+  document.getElementById("noResults").classList.toggle("show", empty);
+  if (empty) {
+    document.getElementById("noResultsHint").textContent = term
+      ? SEARCH_EMPTY_COPY.hintWithTerm(term)
+      : SEARCH_EMPTY_COPY.hintFiltersOnly;
+  }
+
+  // رابط "شوف كل النتائج" بيظهر بس لما يكون في نتائج أكتر من يلي عم نعرضهم بالبطاقة
+  const more = document.getElementById("venuesMore");
+  more.style.display = active && matched.length > shown.length ? "" : "none";
+  const qs = new URLSearchParams();
+  if (term) qs.set("q", term);
+  if (sport) qs.set("sport", sport);
+  if (gov) qs.set("gov", gov);
+  if (city) qs.set("city", city);
+  document.getElementById("venuesMoreLink").href = `venues.html?${qs}`;
+}
+
+document.getElementById("searchBtn").addEventListener("click", applyFilters);
+document.getElementById("freeSearch").addEventListener("keyup", (e) => { if (e.key === "Enter") applyFilters(); });
+document.getElementById("homeClearSearch").addEventListener("click", () => {
+  document.getElementById("freeSearch").value = "";
+  document.getElementById("filterSport").value = "";
+  govSelect.value = "";
+  cityInput.value = "";
+  refreshCityOptions();
+  applyFilters();
+});
+
+applyFilters(); // الرندر الأولي: أفضل 4 ملاعب حسب التقييم
+
+// "اختر رياضتك المفضلة": تضل صف واحد دايماً بعدد بطاقات متناسب فعلياً مع عرض الشاشة الحالي (قياس JS حقيقي
+// مو أعداد ثابتة بنقاط كسر) - وأي بطاقة ما بتضبط بتختفي وتصير قابلة للوصول من قائمة "المزيد" المنسدلة
+// (القائمة نفسها ثابتة وفيها كل الرياضات التسعة دايماً، بغض النظر عن كم بطاقة ظاهرة بالصف).
+(function setupSportsOverflow() {
+  const grid = document.querySelector(".sports-grid");
+  const moreCard = grid.querySelector(".sports-more-card");
+  const items = [...grid.querySelectorAll(".sport-item")];
+  const dropdownLinks = [...moreCard.querySelectorAll(".sports-dropdown-panel a")];
+
+  function recalcSportsOverflow() {
+    // نلغي أي تمدد (flex-grow) مؤقتاً وقت القياس، عشان نقيس العرض الطبيعي الحقيقي لكل بطاقة
+    // (لو تركناها بتتمدد وهي كلها ظاهرة، بتاخد مساحة أقل من حجمها الطبيعي وبيغلط الحساب)
+    items.forEach((item) => { item.style.display = ""; item.style.flexGrow = "0"; });
+    moreCard.style.display = "flex"; // نظهرها مؤقتاً بس لقياس عرضها الحقيقي
+
+    const containerWidth = grid.clientWidth;
+    const gap = parseFloat(getComputedStyle(grid).gap) || 0;
+    const moreCardWidth = moreCard.getBoundingClientRect().width;
+
+    // أولاً: هل كل البطاقات بتضبط سوا بدون أي حاجة لـ"المزيد" إطلاقاً؟
+    let totalAll = 0;
+    items.forEach((item, i) => { totalAll += item.getBoundingClientRect().width + (i > 0 ? gap : 0); });
+    if (totalAll <= containerWidth) {
+      moreCard.style.display = "none";
+      dropdownLinks.forEach((link) => { link.style.display = "none"; });
+      items.forEach((item) => { item.style.flexGrow = "1"; }); // كلهم ظاهرين - يتمددوا ياخدوا العرض كامل
+      return;
+    }
+
+    // غير هيك: نحسب أكبر عدد بطاقات بيضبط ضمن المساحة الباقية بعد حجز مكان "المزيد" (مع هامش أمان بسيط)
+    const budget = containerWidth - moreCardWidth - gap - 1;
+    let usedWidth = 0;
+    let visibleCount = 0;
+    for (let i = 0; i < items.length; i++) {
+      const itemWidth = items[i].getBoundingClientRect().width;
+      const next = usedWidth + itemWidth + (i > 0 ? gap : 0);
+      if (next > budget) break;
+      usedWidth = next;
+      visibleCount++;
+    }
+    for (let i = visibleCount; i < items.length; i++) items[i].style.display = "none";
+    // البطاقات الظاهرة بس بتتمدد (flex-grow) عشان تاخد العرض المتاح كامل بدل ما تضل بحجمها الطبيعي الصغير
+    for (let i = 0; i < visibleCount; i++) items[i].style.flexGrow = "1";
+
+    // القائمة المنسدلة: تعرض بس الرياضات الناقصة (المخفية) - مش تكرار للي أصلاً ظاهر كبطاقة
+    const hiddenHrefs = new Set(items.slice(visibleCount).map((item) => item.getAttribute("href")));
+    dropdownLinks.forEach((link) => {
+      link.style.display = hiddenHrefs.has(link.getAttribute("href")) ? "" : "none";
+    });
+  }
+
+  function debounce(fn, delay) {
+    let t;
+    return () => { clearTimeout(t); t = setTimeout(fn, delay); };
+  }
+
+  recalcSportsOverflow();
+  window.addEventListener("resize", debounce(recalcSportsOverflow, 100));
+})();
+</script>
+
+</body>
+</html>

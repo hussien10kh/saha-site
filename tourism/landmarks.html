@@ -1,0 +1,510 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>معاينة: المعالم | ساحة سياحة</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<meta name="color-scheme" content="light dark">
+<style>
+  .c-wrap{width:93%;max-width:1200px;margin:0 auto;padding:8px 0 48px;}
+
+  .c-cats-wrap{width:85%;margin:0 auto;}
+
+  .c-hero{
+    width:100%;height:35vh;min-height:230px;overflow:hidden;position:relative;
+    background-image:url('images/header/hero-landmarks.png');background-size:cover;background-position:center 40%;
+    display:flex;align-items:flex-end;
+  }
+  .c-hero::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(15,42,61,.05) 35%, rgba(15,42,61,.68) 100%);
+  }
+  /* Column stack, not layered overlap: title on top (hugging the
+     right, its usual spot), search box below it in normal flow —
+     they can never collide because they're never on the same row. */
+  .c-hero-bottom{
+    position:relative;z-index:2;width:100%;
+    display:flex;flex-direction:column;align-items:flex-start;gap:12px;
+    padding:0 24px 22px;
+  }
+  .c-hero-content{display:flex;align-items:center;gap:14px;}
+  .c-hero-content .ic{
+    width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(6px);color:#fff;
+    border:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .c-hero-content .ic svg{width:24px;height:24px;}
+  .c-hero-content h1{font-size:20px;margin:0;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.35);}
+  .c-hero-content p{font-size:12.5px;color:rgba(255,255,255,.9);margin:2px 0 0;}
+
+  /* ---- search box: independent from the homepage's .t-search — its
+     own "c-" prefixed class so tweaking one never touches the other.
+     align-self:center pulls it out of the column's right-aligned
+     default (which the title keeps) so it stretches wide and centered
+     underneath instead of also hugging the right edge. */
+  .c-search-wrap{width:70%;align-self:center;}
+  .c-search{
+    background:#fff;border:1px solid var(--t-border);border-radius:18px;
+    display:flex;align-items:center;gap:10px;padding:0 8px 0 20px;height:52px;
+    box-shadow:0 8px 24px rgba(15,42,61,.14);
+  }
+  .c-search input{flex:1;border:none;outline:none;font-size:14px;font-family:inherit;background:transparent;color:var(--t-text);height:100%;}
+  .c-search-btn{
+    background:var(--t-primary);color:#fff;border:none;border-radius:14px;
+    width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;
+  }
+  .c-search-btn svg{width:18px;height:18px;}
+
+  .c-filters{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .c-select-wrap{position:relative;display:inline-flex;align-items:center;}
+  /* The dropdown arrow sits on the LEFT (this is RTL — the select's
+     own text right-aligns, so the free/icon side is the left one).
+     Needs its own left-side padding on the select to clear it, and a
+     darker color + slightly bigger size than --t-muted's low-contrast
+     gray so it actually reads as a chevron. */
+  .c-select-wrap svg{position:absolute;left:14px;width:12px;height:12px;pointer-events:none;color:var(--t-text);}
+  .c-select{
+    appearance:none;-webkit-appearance:none;border:1px solid var(--t-border);background:var(--t-surface);
+    color:var(--t-text);border-radius:var(--t-radius-pill);padding:8px 14px 8px 34px;
+    font-size:clamp(10.5px, 1.8vw, 12.5px);font-weight:700;
+    font-family:inherit;cursor:pointer;white-space:nowrap;
+  }
+  .c-select:hover{border-color:var(--t-primary);color:var(--t-primary);}
+
+  .c-layout{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;}
+
+  .c-map-card{
+    border:1px solid var(--t-border);border-radius:var(--t-radius-md);overflow:hidden;position:sticky;top:88px;
+  }
+  .c-map{width:100%;height:360px;}
+  .c-map-btn{
+    display:flex;align-items:center;justify-content:center;gap:6px;width:100%;border:none;border-top:1px solid var(--t-border);
+    background:var(--t-surface);color:var(--t-text);font-family:inherit;font-size:12.5px;font-weight:700;
+    padding:11px;cursor:pointer;
+  }
+  .c-map-btn svg{width:14px;height:14px;}
+  .c-map-btn:hover{color:var(--t-primary);}
+
+  .c-list{display:flex;flex-direction:column;gap:12px;}
+  .c-empty{font-size:13px;color:var(--t-muted);text-align:center;padding:30px 0;}
+
+  .c-card{
+    display:flex;gap:14px;background:var(--t-surface);border:1px solid var(--t-border);border-radius:var(--t-radius-md);
+    padding:10px;align-items:stretch;transition:box-shadow .15s;
+  }
+  .c-card:hover{box-shadow:0 8px 20px rgba(15,42,61,.08);}
+
+  .c-card-media{width:120px;flex-shrink:0;border-radius:var(--t-radius-sm);overflow:hidden;position:relative;}
+  .c-card-media img{width:100%;height:100%;object-fit:cover;display:block;}
+
+  .c-card-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+  .c-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .c-card-top h3{font-size:15px;margin:0;}
+  .c-card-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .c-card-actions button{
+    width:28px;height:28px;border:none;background:none;color:var(--t-muted);display:flex;
+    align-items:center;justify-content:center;cursor:pointer;
+  }
+  .c-card-actions button:hover{color:var(--t-accent);}
+  .c-card-actions svg{width:16px;height:16px;}
+
+  .c-card-loc{font-size:12px;color:var(--t-muted);}
+  .c-card-meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--t-muted);flex-wrap:wrap;}
+  .c-card-rating{display:flex;align-items:center;gap:3px;color:var(--t-accent);font-weight:800;}
+  .c-card-rating svg{width:13px;height:13px;}
+  .c-card-rating .rc{color:var(--t-muted);font-weight:600;}
+  .c-card-price{font-weight:800;color:var(--t-primary-dark);}
+  .c-card-tag{
+    background:var(--t-bg);border:1px solid var(--t-border);border-radius:var(--t-radius-pill);
+    padding:3px 10px;font-size:11px;color:var(--t-muted);
+  }
+
+  .c-pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:22px;}
+  .c-page-btn{
+    border:1px solid var(--t-border);background:var(--t-surface);color:var(--t-text);
+    border-radius:var(--t-radius-sm);padding:7px 13px;font-size:12.5px;font-weight:700;
+    font-family:inherit;cursor:pointer;min-width:34px;
+  }
+  .c-page-btn:hover{border-color:var(--t-primary);color:var(--t-primary);}
+  .c-page-btn.active{background:var(--t-primary);border-color:var(--t-primary);color:#fff;}
+  .c-page-btn:disabled{opacity:.4;cursor:default;}
+
+  @media (max-width:820px){
+    .c-hero{height:45vh;min-height:220px;}
+    .c-hero-bottom{padding:0 4vw 16px;gap:2vw;}
+    .c-hero-content{gap:2.5vw;}
+    .c-hero-content .ic{width:9vw;height:9vw;}
+    .c-hero-content .ic svg{width:4.5vw;height:4.5vw;}
+    .c-hero-content h1{font-size:4.6vw;}
+    .c-hero-content p{font-size:3vw;}
+
+    .c-search{height:44px;border-radius:15px;padding:0 6px 0 4vw;}
+    .c-search input{font-size:3.2vw;}
+    .c-search-btn{width:34px;height:34px;border-radius:11px;}
+    .c-search-btn svg{width:4vw;height:4vw;}
+
+    .c-filters{gap:1.5vw;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+      margin-inline:-3.5vw;padding-inline:3.5vw;}
+    .c-filters::-webkit-scrollbar{display:none;}
+    .c-select{font-size:clamp(9.5px, 2.8vw, 11.5px);padding:6px 10px 6px 26px;flex-shrink:0;}
+    .c-select-wrap svg{left:10px;width:10px;height:10px;}
+
+    .c-layout{grid-template-columns:1fr;}
+    .c-map-card{position:static;}
+    .c-map{height:220px;}
+
+    .c-card{padding:8px;gap:10px;}
+    .c-card-media{width:26vw;}
+    .c-card-top h3{font-size:3.6vw;}
+    .c-card-loc{font-size:2.8vw;}
+    .c-card-meta{font-size:2.8vw;gap:2vw;}
+    .c-card-tag{font-size:2.6vw;padding:2px 8px;}
+    .c-card-actions button{width:7vw;height:7vw;}
+    .c-card-actions svg{width:4vw;height:4vw;}
+
+    .c-page-btn{font-size:2.8vw;padding:6px 10px;}
+  }
+
+  /* Below 430px the 3 filter selects no longer fit on one row even
+     shrunk — the 820px tier's overflow-x:auto scroll was the only
+     fallback. Wrap them onto 2 lines instead (with smaller text/
+     padding) so nothing needs a horizontal scroll to reach. */
+  @media (max-width:430px){
+    .c-filters{flex-wrap:wrap;overflow-x:visible;margin-inline:0;padding-inline:0;gap:6px;}
+    .c-select{font-size:9px;padding:5px 8px 5px 22px;}
+    .c-select-wrap svg{left:8px;width:9px;height:9px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="preview-banner">🚧 معاينة داخلية — مثال صفحة فئة (المعالم، بيانات تجريبية) · <a href="index.html">رجوع للتصفح</a></div>
+
+<header class="t-header">
+  <div class="t-container t-header-inner">
+    <div class="t-logo">
+      <b class="t-brand-main">ساحة</b>
+      <div class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-12a7 7 0 1 0-14 0c0 5.6 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+      <div class="t-logo-text"><b>سوريا</b><span>اكتشف كل الجمال</span></div>
+    </div>
+    <nav class="t-nav">
+      <a href="index.html">الرئيسية</a>
+      <a href="regions.html">المناطق</a>
+      <a href="places.html">الأماكن</a>
+      <a href="add-place.html">أضف مكان</a>
+      <a href="profile.html">المفضلة</a>
+    </nav>
+    <div class="t-header-right">
+      <button type="button" class="t-lang" id="langToggle"></button>
+      <a href="profile.html" class="t-avatar" aria-label="حسابي"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg></a>
+    </div>
+  </div>
+</header>
+
+<section class="c-hero">
+  <div class="c-hero-bottom">
+    <div class="c-hero-content">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21h16M5 21V10M9 21V10M15 21V10M19 21V10M3 10l9-6 9 6"/></svg></div>
+      <div>
+        <h1>المعالم</h1>
+        <p>اكتشف أبرز المعالم</p>
+      </div>
+    </div>
+    <div class="c-search-wrap">
+      <div class="c-search">
+        <input placeholder="ابحث عن مكان...">
+        <button class="c-search-btn" aria-label="بحث"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="c-cats-wrap">
+  <div class="t-cats">
+    <div class="t-cats-group">
+      <a class="t-cat all" href="index.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>الكل</a>
+      <a class="t-cat food" href="restaurants.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2v8M5 2v5a2 2 0 0 0 2 2 2 2 0 0 0 2-2V2M7 12v10M17 2c-1.5 0-3 1.5-3 4v4c0 1 .5 2 2 2v10"/></svg></div>مطاعم</a>
+      <a class="t-cat landmark active" href="landmarks.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21h16M5 21V10M9 21V10M15 21V10M19 21V10M3 10l9-6 9 6"/></svg></div>معالم</a>
+      <a class="t-cat garden" href="gardens.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-6"/><path d="M7 16a5 5 0 0 1 0-10 5.5 5.5 0 0 1 10 0 5 5 0 0 1 0 10H7Z"/></svg></div>حدائق</a>
+      <a class="t-cat cafe" href="cafes.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3c0 1-1 1-1 2M12 3c0 1-1 1-1 2"/></svg></div>مقاهي</a>
+      <a class="t-cat shop" href="shops.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></div>متاجر</a>
+    </div>
+  </div>
+</div>
+
+<div class="c-wrap">
+  <div class="c-filters">
+    <span class="c-select-wrap">
+      <select class="c-select" id="cCityFilter">
+        <option value="">المدينة: الكل</option>
+      </select>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </span>
+    <span class="c-select-wrap">
+      <select class="c-select" id="cAreaFilter">
+        <option value="">المنطقة: الكل</option>
+      </select>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </span>
+    <span class="c-select-wrap">
+      <select class="c-select" id="cSort">
+        <option value="rating-desc" selected>الأعلى تقييمًا</option>
+        <option value="">الترتيب: الافتراضي</option>
+        <option value="price-asc">السعر: الأقل أولًا</option>
+        <option value="price-desc">السعر: الأعلى أولًا</option>
+      </select>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </span>
+    <span class="c-select-wrap">
+      <select class="c-select" id="cPriceFilter">
+        <option value="">كل الأسعار</option>
+        <option value="$">$</option>
+        <option value="$$">$$</option>
+      </select>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </span>
+    <span class="c-select-wrap">
+      <select class="c-select" id="cVibeFilter">
+        <option value="">الجو العام: الكل</option>
+      </select>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </span>
+  </div>
+
+  <div class="c-layout">
+    <div class="c-list" id="cList"></div>
+
+    <div class="c-map-card">
+      <div id="cMap" class="c-map"></div>
+      <button class="c-map-btn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20 3 17V4l6 3m0 13 6-3m-6 3V7m6 10 6 3V7l-6-3m0 13V4m0 3-6-3"/></svg>
+        عرض على الخريطة
+      </button>
+    </div>
+  </div>
+
+  <div class="c-pagination" id="cPagination"></div>
+</div>
+
+<div class="t-container t-section" style="padding-top:0;padding-bottom:0;">
+  <div class="t-cta">
+    <a class="t-cta-btn" href="add-place.html">
+      أضف مكان جديد
+      <svg class="t-cta-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+    </a>
+    <div class="t-cta-text">
+      <h3>هل تعرف مكانًا رائعًا؟</h3>
+      <p>شاركنا مكانك المفضل وساعد الآخرين على اكتشافه</p>
+    </div>
+    <img class="t-cta-illustration" src="images/header/mosque-leaves.png" alt="" aria-hidden="true">
+  </div>
+</div>
+
+<div class="saaha-portal"><div class="orbit"><div class="orbit-row"><a class="oside k-ads" href="../index.html"><span class="oic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9.5A1.5 1.5 0 0 1 5.5 8H8l6-3.6a1 1 0 0 1 1.5.86v13.5A1 1 0 0 1 14 19.6L8 16H5.5A1.5 1.5 0 0 1 4 14.5z"/><path d="M17 9.2a4 4 0 0 1 0 5.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><div class="otxt"><div class="onm">اعلانات</div><div class="ods">كل شيء جميل يبدأ من عنا</div></div><span class="ochev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span></a><span class="oconn"><i class="cdot" style="background:#2540d0"></i></span><div class="ocenter"><div class="odisc">ساحة</div></div><span class="oconn"><i class="cdot" style="background:#16803c"></i></span><a class="oside k-sport" href="../malaab/index.html"><span class="ochev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span><div class="otxt"><div class="onm">ملعبك</div><div class="ods">صاحب موهبة أو رياضي</div></div><span class="oic"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="14.2" cy="3.7" r="1.9"/><path d="M12.4 6 8.6 7.7 5 9l.6 1.9 3.9-1.4 1-.6-.7 2.8-3.2 4.3 1.6 1.1 2.7-3.4 1.1 3 1.7-.5-1.2-3.2.9-1.3 1.9 2.4 2.6-.6-2.2-3.2-1.3-2.6 2-1.1z"/><circle cx="18.6" cy="19" r="2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></span></a></div></div></div>
+  <footer class="t-footer">
+  <div class="t-footer-top">
+   <div class="t-cats-wrap-width">
+   <div class="t-container t-section" style="padding-top:0;padding-bottom:0;">
+   <div class="t-footer-top-inner">
+    <div class="t-footer-social">
+      <a href="https://www.instagram.com/saahasyria/" target="_blank" rel="noopener" aria-label="إنستغرام"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg></a>
+      <a href="https://www.facebook.com/saahasyria" target="_blank" rel="noopener" aria-label="فيسبوك"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.6h2.6l.4-3h-3v-1.9c0-.9.2-1.5 1.6-1.5h1.6V4.3C15.9 4.2 14.9 4 13.8 4c-2.4 0-4 1.5-4 4.1v2.3H7.2v3h2.6V21h3.7Z"/></svg></a>
+      <a href="https://x.com/saahasyria" target="_blank" rel="noopener" aria-label="تويتر"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 0 0-7 3.7A11.6 11.6 0 0 1 3.4 4.6a4.1 4.1 0 0 0 1.3 5.5c-.7 0-1.3-.2-1.9-.5v.1c0 2 1.4 3.6 3.3 4a4.2 4.2 0 0 1-1.9.1 4.1 4.1 0 0 0 3.8 2.9A8.3 8.3 0 0 1 2 18.4a11.6 11.6 0 0 0 6.3 1.9c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.2Z"/></svg></a>
+      <a href="https://www.youtube.com/@saahasyria" target="_blank" rel="noopener" aria-label="يوتيوب"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.6 7.2a2.7 2.7 0 0 0-1.9-1.9C18 4.8 12 4.8 12 4.8s-6 0-7.7.5a2.7 2.7 0 0 0-1.9 1.9A28 28 0 0 0 2 12a28 28 0 0 0 .4 4.8 2.7 2.7 0 0 0 1.9 1.9c1.7.5 7.7.5 7.7.5s6 0 7.7-.5a2.7 2.7 0 0 0 1.9-1.9A28 28 0 0 0 22 12a28 28 0 0 0-.4-4.8ZM10 15V9l5.2 3-5.2 3Z"/></svg></a>
+    </div>
+    <div class="t-footer-links">
+      <a href="index.html">من نحن</a>
+      <a href="../contact.html">اتصل بنا</a>
+      <a href="../faq.html">الأسئلة الشائعة</a>
+      <a href="../privacy.html">سياسة الخصوصية</a>
+      <a href="../terms.html">الشروط والأحكام</a>
+    </div>
+   </div>
+   </div>
+   </div>
+  </div>
+    <div class="saaha-copy-wrap"><div class="saaha-copy"><span class="saaha-copy-name">ساحة — 2026</span><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
+</footer>
+
+<script src="places-data.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+  (function(){
+    var btn = document.getElementById('langToggle');
+    if(!btn) return;
+    var lang = (navigator.language || 'ar').toLowerCase().indexOf('en') === 0 ? 'en' : 'ar';
+    function apply(){
+      document.documentElement.setAttribute('lang', lang);
+      document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      btn.textContent = lang === 'ar' ? 'عربي' : 'English';
+    }
+    apply();
+    btn.addEventListener('click', function(){
+      lang = lang === 'ar' ? 'en' : 'ar';
+      apply();
+    });
+  })();
+</script>
+
+<script>
+  (function(){
+    var PLACES = [
+      {id:'umayyad-mosque',       name:'الجامع الأموي',   loc:'العالكي، دمشق', image:'header/hero-umayyad.png',  price:'$',  tag:'معلم ديني',    lat:33.5117, lng:36.3064},
+      {id:'aleppo-citadel',       name:'قلعة حلب',        loc:'حلب',            image:'places/place-aleppo-citadel.jpg', price:'$$', tag:'قلعة تاريخية', lat:36.1998, lng:37.1613},
+      {id:'krak-des-chevaliers',  name:'قلعة الحصن',      loc:'حمص',            image:'places/place-krak.jpg',           price:'$$', tag:'قلعة تاريخية', lat:34.757,  lng:36.293},
+      {id:'apamea',               name:'أفاميا',          loc:'حماة',            image:'places/place-apamea.jpg',         price:'$',  tag:'آثار رومانية', lat:35.415,  lng:36.397},
+      {id:'latakia-corniche',     name:'كورنيش اللاذقية', loc:'اللاذقية',       image:'places/place-latakia.jpg',        price:'$',  tag:'إطلالة بحرية',  lat:35.5211, lng:35.7822}
+    ];
+
+    PLACES.forEach(function(p){
+      var parts = p.loc.split('،');
+      p.area = parts[0].trim();
+      p.city = (parts[1] || parts[0]).trim();
+    });
+
+    var PAGE_SIZE = 4;
+    var currentPage = 1;
+    var sortBy = 'rating-desc';
+    var priceFilter = '';
+    var vibeFilter = '';
+    var cityFilter = '';
+    var areaFilter = '';
+
+    var heartIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg>';
+    var shareIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
+
+    var list = document.getElementById('cList');
+    var pagination = document.getElementById('cPagination');
+    var sortSelect = document.getElementById('cSort');
+    var priceSelect = document.getElementById('cPriceFilter');
+    var vibeSelect = document.getElementById('cVibeFilter');
+    var citySelect = document.getElementById('cCityFilter');
+    var areaSelect = document.getElementById('cAreaFilter');
+
+    var vibes = [];
+    PLACES.forEach(function(p){ if (vibes.indexOf(p.tag) === -1) vibes.push(p.tag); });
+    vibeSelect.innerHTML = '<option value="">الجو العام: الكل</option>' +
+      vibes.map(function(v){ return '<option value="' + v + '">' + v + '</option>'; }).join('');
+
+    var cities = [];
+    PLACES.forEach(function(p){ if (cities.indexOf(p.city) === -1) cities.push(p.city); });
+    citySelect.innerHTML = '<option value="">المدينة: الكل</option>' +
+      cities.map(function(c){ return '<option value="' + c + '">' + c + '</option>'; }).join('');
+
+    function refreshAreaOptions(){
+      var scoped = cityFilter ? PLACES.filter(function(p){ return p.city === cityFilter; }) : PLACES;
+      var areas = [];
+      scoped.forEach(function(p){ if (areas.indexOf(p.area) === -1) areas.push(p.area); });
+      areaSelect.innerHTML = '<option value="">المنطقة: الكل</option>' +
+        areas.map(function(a){ return '<option value="' + a + '">' + a + '</option>'; }).join('');
+      if (areas.indexOf(areaFilter) === -1) areaFilter = '';
+      areaSelect.value = areaFilter;
+    }
+    refreshAreaOptions();
+
+    function priceWeight(p){ return p === '$' ? 1 : 2; }
+
+    function getFiltered(){
+      return PLACES.filter(function(p){
+        if (priceFilter && p.price !== priceFilter) return false;
+        if (vibeFilter && p.tag !== vibeFilter) return false;
+        if (cityFilter && p.city !== cityFilter) return false;
+        if (areaFilter && p.area !== areaFilter) return false;
+        return true;
+      }).sort(function(a, b){
+        if (sortBy === 'price-asc') return priceWeight(a.price) - priceWeight(b.price);
+        if (sortBy === 'price-desc') return priceWeight(b.price) - priceWeight(a.price);
+        if (sortBy === 'rating-desc') {
+          var ra = placesAverageRating(a.id), rb = placesAverageRating(b.id);
+          return (rb === null ? -1 : rb) - (ra === null ? -1 : ra);
+        }
+        return 0;
+      });
+    }
+
+    function cardHtml(p){
+      return '<a class="c-card" href="place.html?id=' + p.id + '">' +
+        '<div class="c-card-media"><img src="images/' + p.image + '" alt="' + p.name + '" loading="lazy"></div>' +
+        '<div class="c-card-body">' +
+          '<div class="c-card-top"><h3>' + p.name + '</h3>' +
+            '<div class="c-card-actions">' +
+              '<button type="button" class="fav-btn" data-id="' + p.id + '" aria-label="مفضلة">' + heartIcon + '</button>' +
+              '<button type="button" aria-label="مشاركة">' + shareIcon + '</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="c-card-loc">' + p.loc + '</div>' +
+          '<div class="c-card-meta"><span class="c-card-price">' + p.price + '</span>' +
+            '<span class="c-card-tag">' + p.tag + '</span></div>' +
+        '</div>' +
+      '</a>';
+    }
+
+    function renderList(items){
+      if (!items.length) { list.innerHTML = '<div class="c-empty">ما في نتائج مطابقة للفلترة الحالية</div>'; return; }
+      var start = (currentPage - 1) * PAGE_SIZE;
+      var page = items.slice(start, start + PAGE_SIZE);
+      list.innerHTML = page.map(cardHtml).join('');
+      favoritesWireButtons(list);
+    }
+
+    function renderPagination(total){
+      var pageCount = Math.ceil(total / PAGE_SIZE);
+      if (pageCount <= 1) { pagination.innerHTML = ''; return; }
+      var html = '<button class="c-page-btn" id="cPrev"' + (currentPage===1?' disabled':'') + '>السابق</button>';
+      for (var p = 1; p <= pageCount; p++) {
+        html += '<button class="c-page-btn' + (p===currentPage?' active':'') + '" data-page="' + p + '">' + p + '</button>';
+      }
+      html += '<button class="c-page-btn" id="cNext"' + (currentPage===pageCount?' disabled':'') + '>التالي</button>';
+      pagination.innerHTML = html;
+      var prev = document.getElementById('cPrev');
+      var next = document.getElementById('cNext');
+      if (prev) prev.addEventListener('click', function(){ goToPage(currentPage - 1); });
+      if (next) next.addEventListener('click', function(){ goToPage(currentPage + 1); });
+      pagination.querySelectorAll('[data-page]').forEach(function(b){
+        b.addEventListener('click', function(){ goToPage(+b.dataset.page); });
+      });
+    }
+
+    function refresh(){
+      var items = getFiltered();
+      renderList(items);
+      renderPagination(items.length);
+    }
+
+    function goToPage(p){
+      currentPage = p;
+      refresh();
+      window.scrollTo({top: list.getBoundingClientRect().top + window.scrollY - 90, behavior:'smooth'});
+    }
+
+    sortSelect.addEventListener('change', function(){ sortBy = sortSelect.value; currentPage = 1; refresh(); });
+    priceSelect.addEventListener('change', function(){ priceFilter = priceSelect.value; currentPage = 1; refresh(); });
+    vibeSelect.addEventListener('change', function(){ vibeFilter = vibeSelect.value; currentPage = 1; refresh(); });
+    citySelect.addEventListener('change', function(){
+      cityFilter = citySelect.value;
+      areaFilter = '';
+      refreshAreaOptions();
+      currentPage = 1;
+      refresh();
+    });
+    areaSelect.addEventListener('change', function(){ areaFilter = areaSelect.value; currentPage = 1; refresh(); });
+
+    refresh();
+
+    var center = [34.5, 37.2];
+    var map = L.map('cMap', {scrollWheelZoom:false}).setView(center, 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap', maxZoom: 18
+    }).addTo(map);
+    PLACES.forEach(function(p){
+      L.marker([p.lat, p.lng]).addTo(map).bindPopup('<b>' + p.name + '</b>');
+    });
+  })();
+</script>
+</body>
+</html>

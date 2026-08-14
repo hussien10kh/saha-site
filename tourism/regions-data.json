@@ -1,0 +1,145 @@
+{
+  "دمشق": {
+    "areas": [
+      {"key":"alalki","name":"العالكي","count":198,"lat":33.511,"lng":36.307,"image":"place-hamidiyah.jpg"},
+      {"key":"mazzeh","name":"المزة","count":156,"lat":33.505,"lng":36.254,"image":"area-mazzeh.jpg"},
+      {"key":"qods","name":"القدس","count":154,"lat":33.484,"lng":36.298,"image":"area-night.jpg"},
+      {"key":"shaalan","name":"الشعلان","count":143,"lat":33.517,"lng":36.295,"image":"area-shaalan.jpg"},
+      {"key":"salhiyeh","name":"الصالحية","count":112,"lat":33.523,"lng":36.298,"image":"area-mazzeh.jpg"},
+      {"key":"muhajireen","name":"المهاجرين","count":98,"lat":33.528,"lng":36.290,"image":"area-shaalan.jpg"}
+    ]
+  },
+  "ريف دمشق": {
+    "areas": [
+      {"key":"douma","name":"دوما","count":187,"lat":33.573,"lng":36.402,"image":"area-douma.jpg"},
+      {"key":"daraya","name":"داريا","count":143,"lat":33.458,"lng":36.235,"image":"area-daraya.jpg","note":"صورة حقيقية للبلدة (ضباب فوق داريا) من ويكيميديا كومنز"},
+      {"key":"zabadani","name":"الزبداني","count":121,"lat":33.725,"lng":36.108,"image":"area-zabadani.jpg","note":"صورة تاريخية (بطاقة بريدية ملونة) لعدم توفر صورة حديثة موثقة على كومنز"},
+      {"key":"bloudan","name":"بلودان","count":98,"lat":33.745,"lng":36.136,"image":"area-bloudan.jpg"},
+      {"key":"saidnaya","name":"صيدنايا","count":156,"lat":33.699,"lng":36.363,"image":"area-saidnaya.jpg"},
+      {"key":"maaloula","name":"معلولا","count":178,"lat":33.849,"lng":36.545,"image":"area-maaloula.jpg"},
+      {"key":"yabroud","name":"يبرود","count":89,"lat":33.967,"lng":36.657,"image":"area-yabroud.jpg"}
+    ]
+  },
+  "حلب": {
+    "areas": [
+      {"key":"aziziyeh","name":"العزيزية","count":142,"lat":36.1988,"lng":37.1590,"image":"area-aleppo-aziziyeh.jpg","note":"صورة تاريخية من 1914 لمبنى في الحي؛ لم نجد صورة حديثة موثقة للحي بعينه"},
+      {"key":"jamiliyeh","name":"الجميلية","count":118,"lat":36.1965,"lng":37.1520,"image":"area-aleppo-jamiliyeh.jpg","note":"استبدال بصورة شارع عام من حلب لعدم توفر صورة مخصصة للحي"},
+      {"key":"jdeideh","name":"الجديدة","count":210,"lat":36.2036,"lng":37.1567,"image":"area-aleppo-jdeideh.jpg"},
+      {"key":"sabbahrat","name":"السبع بحرات","count":165,"lat":36.1998,"lng":37.1602,"image":"area-aleppo-sabbahrat.jpg","note":"استبدال بصورة شارع عام من حلب القديمة"},
+      {"key":"salaheddine","name":"صلاح الدين","count":132,"lat":36.1793,"lng":37.1354,"image":"area-aleppo-salaheddine.jpg","note":"الصورة لملعب حلب الدولي الواقع فعليًا ضمن حي صلاح الدين"},
+      {"key":"ansari","name":"الأنصاري","count":95,"lat":36.1780,"lng":37.1650,"image":"area-aleppo-ansari.jpg","note":"استبدال بصورة شارع عام من حلب لعدم توفر صورة مخصصة للحي"},
+      {"key":"furqan","name":"الفرقان","count":88,"lat":36.2100,"lng":37.1450,"image":"area-aleppo-furqan.jpg","note":"استبدال بصورة سوق من حلب القديمة لعدم توفر صورة مخصصة للحي"}
+    ]
+  },
+  "حمص": {
+    "areas": [
+      {"key":"hamidiyah-homs","name":"الحميدية","count":176,"lat":34.7305,"lng":36.7160,"image":"area-homs-hamidiyah.jpg","note":"استبدال بصورة برج الساعة/ساحة الشهداء القريبة من الحي"},
+      {"key":"babhoud","name":"باب هود","count":102,"lat":34.7350,"lng":36.7100,"image":"area-homs-babhoud.jpg","note":"استبدال بصورة شارع عام من حمص قبل الحرب"},
+      {"key":"waer","name":"الوعر","count":134,"lat":34.7450,"lng":36.6650,"image":"area-homs-waer.jpg"},
+      {"key":"babaamr","name":"بابا عمرو","count":87,"lat":34.7080,"lng":36.6850,"image":"area-homs-babaamr.jpg"},
+      {"key":"khalidiyeh","name":"الخالدية","count":121,"lat":34.7280,"lng":36.7020,"image":"area-homs-khalidiyeh.jpg"},
+      {"key":"babdreeb","name":"باب دريب","count":96,"lat":34.7360,"lng":36.7180,"image":"area-homs-babdreeb.jpg"},
+      {"key":"akrama","name":"عكرمة","count":79,"lat":34.7150,"lng":36.7250,"image":"area-homs-akrama.jpg","note":"استبدال بصورة أسواق حمص القديمة"}
+    ]
+  },
+  "حماة": {
+    "areas": [
+      {"key":"hader","name":"الحاضر","count":145,"lat":35.1280,"lng":36.7550,"image":"area-hama-hader.jpg"},
+      {"key":"babqibli","name":"باب قبلي","count":110,"lat":35.1300,"lng":36.7480,"image":"area-hama-babqibli.jpg"},
+      {"key":"alaliyat","name":"العليليات","count":88,"lat":35.1400,"lng":36.7600,"image":"area-hama-alaliyat.jpg","note":"استبدال بصورة شارع عام من حماة"},
+      {"key":"jarajima","name":"الجراجمة","count":76,"lat":35.1250,"lng":36.7650,"image":"area-hama-jarajima.jpg","note":"استبدال بصورة أفق مدينة حماة"},
+      {"key":"souq-hama","name":"السوق","count":132,"lat":35.1330,"lng":36.7520,"image":"area-hama-souq.jpg","note":"استبدال بصورة من قلعة حماة المطلة على السوق"},
+      {"key":"oldtown-hama","name":"المدينة القديمة (النواعير)","count":198,"lat":35.1322,"lng":36.7540,"image":"area-hama-oldtown.jpg"}
+    ]
+  },
+  "اللاذقية": {
+    "areas": [
+      {"key":"ziraa","name":"الزراعة","count":132,"lat":35.5250,"lng":35.7850,"image":"area-lat-ziraa.jpg","note":"استبدال بصورة عامة من اللاذقية"},
+      {"key":"sulaibeh","name":"الصليبة","count":98,"lat":35.5200,"lng":35.7800,"image":"area-lat-sulaibeh.jpg","note":"استبدال بصورة حي حديث في اللاذقية"},
+      {"key":"sheikhdaher","name":"الشيخ ضاهر","count":145,"lat":35.5280,"lng":35.7830,"image":"area-lat-sheikhdaher.jpg"},
+      {"key":"ramljanoubi","name":"الرمل الجنوبي","count":176,"lat":35.5100,"lng":35.7750,"image":"area-lat-ramljanoubi.jpg"},
+      {"key":"ramlshamali","name":"الرمل الشمالي","count":121,"lat":35.5400,"lng":35.7900,"image":"area-lat-ramlshamali.jpg","note":"استبدال بصورة ساحلية عامة قرب اللاذقية"},
+      {"key":"ashrafieh-lattakia","name":"الأشرفية","count":88,"lat":35.5350,"lng":35.8000,"image":"area-lat-ashrafieh.jpg","note":"استبدال بصورة جامعة اللاذقية"},
+      {"key":"tishreen","name":"تشرين","count":102,"lat":35.5450,"lng":35.8100,"image":"area-lat-tishreen.jpg","note":"استبدال بصورة تاريخية من جامعة تشرين"}
+    ]
+  },
+  "طرطوس": {
+    "areas": [
+      {"key":"corniche-tartus","name":"الكورنيش","count":165,"lat":34.8850,"lng":35.8800,"image":"area-tartus-corniche.jpg"},
+      {"key":"hamidiyah-tartus","name":"الحميدية","count":112,"lat":34.8900,"lng":35.8850,"image":"area-tartus-hamidiyah.jpg","note":"استبدال بصورة شارع عام من طرطوس"},
+      {"key":"ziraa-tartus","name":"الزراعة","count":87,"lat":34.8950,"lng":35.8900,"image":"area-tartus-ziraa.jpg","note":"استبدال بصورة شارع عام من طرطوس"},
+      {"key":"arwad","name":"أرواد","count":143,"lat":34.8517,"lng":35.8567,"image":"area-tartus-arwad.jpg"},
+      {"key":"sinaa-tartus","name":"الصناعة","count":76,"lat":34.9000,"lng":35.8950,"image":"area-tartus-sinaa.jpg","note":"استبدال بصورة شارع عام من طرطوس"},
+      {"key":"sheikhsaad-tartus","name":"الشيخ سعد","count":94,"lat":34.8800,"lng":35.8750,"image":"area-tartus-sheikhsaad.jpg","note":"استبدال بصورة فيلات طرطوس"}
+    ]
+  },
+  "إدلب": {
+    "areas": [
+      {"key":"idlib-city","name":"مدينة إدلب","count":121,"lat":35.9306,"lng":36.6339,"image":"area-idlib-city.jpg","note":"استبدال بصورة تاريخية لسوق إدلب"},
+      {"key":"maarat-numan","name":"معرة النعمان","count":98,"lat":35.6440,"lng":36.6789,"image":"area-idlib-maarat.jpg"},
+      {"key":"ariha","name":"أريحا","count":76,"lat":35.8128,"lng":36.6072,"image":"area-idlib-ariha.jpg","note":"صورة تاريخية من أرشيف متحف الثقافات العالمية"},
+      {"key":"saraqib","name":"سراقب","count":65,"lat":35.8656,"lng":36.7981,"image":"area-idlib-saraqib.jpg","note":"صورة تاريخية من أرشيف متحف الثقافات العالمية"},
+      {"key":"jisr-shughur","name":"جسر الشغور","count":89,"lat":35.8144,"lng":36.3197,"image":"area-idlib-jisr.jpg"},
+      {"key":"binnish","name":"بنش","count":58,"lat":35.9639,"lng":36.7128,"image":"area-idlib-binnish.jpg","note":"لا توجد صورة مخصصة؛ أعيد استخدام صورة سوق إدلب"}
+    ]
+  },
+  "درعا": {
+    "areas": [
+      {"key":"daraa-balad","name":"درعا البلد","count":143,"lat":32.6189,"lng":36.1021,"image":"area-daraa-balad.jpg","note":"صورة تاريخية لقطار سكة حديد الحجاز قرب درعا"},
+      {"key":"daraa-mahatta","name":"درعا المحطة","count":98,"lat":32.6250,"lng":36.1080,"image":"area-daraa-mahatta.jpg","note":"صورة تاريخية لسكة حديد الحجاز قرب محطة درعا"},
+      {"key":"tafas","name":"طفس","count":65,"lat":32.7333,"lng":36.0667,"image":"area-daraa-tafas.jpg","note":"صورة تاريخية من أرشيف متحف الثقافات العالمية"},
+      {"key":"sanamayn","name":"الصنمين","count":87,"lat":33.0667,"lng":36.1833,"image":"area-daraa-sanamayn.jpg"},
+      {"key":"bosra","name":"بصرى الشام","count":176,"lat":32.5169,"lng":36.4806,"image":"area-daraa-bosra.jpg"},
+      {"key":"nawa","name":"نوى","count":72,"lat":32.8886,"lng":36.0439,"image":"area-daraa-nawa.jpg","note":"صورة تاريخية لقرية في محافظة درعا"}
+    ]
+  },
+  "السويداء": {
+    "areas": [
+      {"key":"suwayda-city","name":"مدينة السويداء","count":165,"lat":32.7000,"lng":36.5667,"image":"area-suwayda-city.jpg"},
+      {"key":"shahba","name":"شهبا","count":121,"lat":32.8531,"lng":36.6297,"image":"area-suwayda-shahba.jpg"},
+      {"key":"salkhad","name":"صلخد","count":98,"lat":32.4919,"lng":36.7047,"image":"area-suwayda-salkhad.jpg"},
+      {"key":"qariya","name":"القريا","count":65,"lat":32.7500,"lng":36.6500,"image":"area-suwayda-qariya.jpg","note":"استبدال بصورة ساحة السويداء"},
+      {"key":"urman","name":"عرمان","count":58,"lat":32.6500,"lng":36.5500,"image":"area-suwayda-urman.jpg","note":"استبدال بصورة ملعب السويداء البلدي"},
+      {"key":"kafr","name":"الكفر","count":72,"lat":32.7200,"lng":36.5800,"image":"area-suwayda-kafr.jpg","note":"استبدال بصورة قوس ديونيسياس الأثري في السويداء"}
+    ]
+  },
+  "القنيطرة": {
+    "areas": [
+      {"key":"quneitra-old","name":"مدينة القنيطرة القديمة","count":45,"lat":33.1263,"lng":35.8244,"image":"area-qun-old.jpg","note":"المدينة مدمرة ومهجورة منذ 1974؛ صورة من نقطة مشاهدة في الجولان"},
+      {"key":"khan-arnabah","name":"خان أرنبة","count":38,"lat":33.1500,"lng":35.8600,"image":"area-qun-khanarnabah.jpg","note":"استبدال بصورة مبنى المقر الحكومي السوري السابق في القنيطرة"},
+      {"key":"jabata-khashab","name":"جباتا الخشب","count":34,"lat":33.0900,"lng":35.8100,"image":"area-qun-jabata.jpg","note":"استبدال بصورة مشابهة من منطقة القنيطرة"},
+      {"key":"mashara","name":"مسحرة","count":30,"lat":33.2000,"lng":35.8300,"image":"area-qun-mashara.jpg","note":"استبدال بصورة معبر القنيطرة الحدودي"},
+      {"key":"wasit","name":"واسط","count":28,"lat":33.1700,"lng":35.9000,"image":"area-qun-wasit.jpg","note":"استبدال بصورة إطلالة على مدينة القنيطرة المدمرة"}
+    ]
+  },
+  "دير الزور": {
+    "areas": [
+      {"key":"dez-city","name":"مدينة دير الزور","count":154,"lat":35.3359,"lng":40.1408,"image":"area-dez-city.jpg"},
+      {"key":"mayadin","name":"الميادين","count":87,"lat":35.0136,"lng":40.4506,"image":"area-dez-mayadin.jpg","note":"استبدال بصورة مجمعة لمعالم دير الزور"},
+      {"key":"bukamal","name":"البوكمال","count":76,"lat":34.4506,"lng":40.9169,"image":"area-dez-bukamal.jpg"},
+      {"key":"joura","name":"الجورة","count":65,"lat":35.3350,"lng":40.1450,"image":"area-dez-joura.jpg","note":"استبدال بصورة تاريخية لجسر دير الزور القديم"},
+      {"key":"qusour","name":"القصور","count":58,"lat":35.3400,"lng":40.1500,"image":"area-dez-qusour.jpg","note":"استبدال بصورة الجسر المعلق في دير الزور"},
+      {"key":"rashdiya","name":"الرشدية","count":54,"lat":35.3400,"lng":40.1350,"image":"area-dez-rashdiya.jpg","note":"استبدال بصورة أخرى للجسر المعلق في دير الزور"}
+    ]
+  },
+  "الرقة": {
+    "areas": [
+      {"key":"raqqa-city","name":"مدينة الرقة","count":143,"lat":35.9528,"lng":39.0100,"image":"area-raqqa-city.jpg"},
+      {"key":"rashid-raqqa","name":"الرشيد","count":76,"lat":35.9500,"lng":39.0200,"image":"area-raqqa-rashid.jpg","note":"استبدال بصورة نهر الفرات قرب الرقة"},
+      {"key":"tabqa","name":"الطبقة","count":98,"lat":35.8256,"lng":38.5442,"image":"area-raqqa-tabqa.jpg"},
+      {"key":"talabyad","name":"تل أبيض","count":65,"lat":36.6864,"lng":38.9592,"image":"area-raqqa-talabyad.jpg","note":"لا توجد صورة مخصصة؛ استبدال بصورة بحيرة الفرات"},
+      {"key":"mansoura","name":"المنصورة","count":58,"lat":35.9500,"lng":39.0000,"image":"area-raqqa-mansoura.jpg","note":"استبدال بصورة نهر الفرات في الرقة"},
+      {"key":"thakana","name":"الثكنة","count":52,"lat":35.9550,"lng":39.0100,"image":"area-raqqa-thakana.jpg","note":"استبدال بصورة أثرية من الرقة"}
+    ]
+  },
+  "الحسكة": {
+    "areas": [
+      {"key":"has-city","name":"مدينة الحسكة","count":132,"lat":36.4881,"lng":40.7461,"image":"area-has-city.jpg"},
+      {"key":"qamishli","name":"القامشلي","count":165,"lat":37.0522,"lng":41.2119,"image":"area-has-qamishli.jpg"},
+      {"key":"rasalain","name":"رأس العين","count":87,"lat":36.8497,"lng":40.0697,"image":"area-has-rasalain.jpg"},
+      {"key":"malikiyah","name":"المالكية","count":65,"lat":37.1717,"lng":42.1400,"image":"area-has-malikiyah.jpg"},
+      {"key":"amuda","name":"عامودا","count":54,"lat":37.1067,"lng":40.9308,"image":"area-has-amuda.jpg","note":"لا توجد صورة مخصصة؛ استبدال بصورة شارع من مدينة الحسكة"},
+      {"key":"taltamr","name":"تل تمر","count":48,"lat":36.6700,"lng":40.3500,"image":"area-has-taltamr.jpg","note":"لا توجد صورة مخصصة؛ استبدال بصورة حي من مدينة الحسكة"}
+    ]
+  }
+}

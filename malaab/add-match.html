@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إنشاء مباراة - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader({ hideAddVenue: true });</script>
+
+<div class="form-box" style="max-width:520px;">
+  <h1>أنشئ مباراتك</h1>
+  <p class="muted" style="text-align:center;margin-top:-10px;margin-bottom:20px;">
+    ادعُ لاعبين للانضمام لمباراتك - رح تظهر بصفحة المباريات فوراً.
+  </p>
+
+  <div class="field">
+    <label>عنوان المباراة</label>
+    <input type="text" id="mTitle" placeholder="مثال: مباراة ودية مساء الخميس">
+  </div>
+  <div class="field">
+    <label>نوع الرياضة</label>
+    <select id="mSport">
+      <option value="">اختر الرياضة</option>
+      <option>كرة قدم</option>
+      <option>كرة صالات</option>
+      <option>كرة سلة</option>
+      <option>تنس</option>
+      <option>كرة طائرة</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>الملعب</label>
+    <input type="text" id="mVenue" placeholder="مثال: ملعب النجوم">
+  </div>
+  <div class="field">
+    <label>المحافظة</label>
+    <input type="text" id="mGov" placeholder="مثال: دمشق">
+  </div>
+  <div class="field">
+    <label>المدينة / المنطقة</label>
+    <input type="text" id="mCity" placeholder="مثال: المزة">
+  </div>
+  <div class="field">
+    <label>اليوم والوقت</label>
+    <input type="text" id="mTime" placeholder="مثال: الخميس · 8:00 م - 10:00 م">
+  </div>
+  <div class="field">
+    <label>المستوى</label>
+    <div class="role-picker" id="mLevel">
+      <div data-value="مبتدئ">مبتدئ</div>
+      <div class="selected" data-value="متوسط">متوسط</div>
+      <div data-value="محترف">محترف</div>
+    </div>
+  </div>
+  <div class="field">
+    <label>عدد اللاعبين المطلوب</label>
+    <input type="number" id="mPlayers" placeholder="مثال: 10" min="2">
+  </div>
+  <div class="field">
+    <label>رسوم المشاركة للاعب (ل.س)</label>
+    <input type="number" id="mFee" placeholder="مثال: 5000" min="0" step="500">
+  </div>
+
+  <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إنشاء المباراة</button>
+  <p class="muted" id="formHint" style="font-size:0.8em;text-align:center;margin-top:0.6em;">املأ الحقول المطلوبة وراح تظهر مباراتك بصفحة المباريات فوراً.</p>
+</div>
+
+<script>
+// ===== حفظ المباراة =====
+// المباريات تنعرض فوراً (ما في بوابة موافقة) - منحفظها بـstore ونوجّه لصفحة المباريات.
+(function setupAddMatch() {
+  const $ = (id) => document.getElementById(id);
+  const hint = $("formHint");
+  const EMOJI = { "كرة قدم": "⚽", "كرة صالات": "🥅", "كرة سلة": "🏀", "تنس": "🎾", "كرة طائرة": "🏐" };
+
+  // اختيار المستوى من الـrole-picker
+  let level = "متوسط";
+  $("mLevel").addEventListener("click", (e) => {
+    const opt = e.target.closest("[data-value]");
+    if (!opt) return;
+    $("mLevel").querySelectorAll("div").forEach((d) => d.classList.remove("selected"));
+    opt.classList.add("selected");
+    level = opt.dataset.value;
+  });
+
+  $("submitBtn").addEventListener("click", async () => {
+    const title = $("mTitle").value.trim();
+    const sport = $("mSport").value;
+    const venueName = $("mVenue").value.trim();
+    const governorate = $("mGov").value.trim();
+    const city = $("mCity").value.trim();
+    const time = $("mTime").value.trim();
+    const maxParticipants = Number($("mPlayers").value);
+    const fee = Number($("mFee").value);
+
+    if (!title || !sport || !venueName || !governorate || !city) {
+      hint.textContent = "لازم تعبّي: العنوان، الرياضة، الملعب، المحافظة، والمدينة."; return;
+    }
+    if (!maxParticipants || maxParticipants < 2) {
+      hint.textContent = "عدد اللاعبين لازم يكون 2 على الأقل."; return;
+    }
+
+    // ---------- Supabase (تسجيل الدخول مطلوب لأن RLS يشترط creator_id = auth.uid) ----------
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      hint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent("add-match.html"); }, 1200);
+      return;
+    }
+    $("submitBtn").disabled = true;
+    try {
+      await MalaabakAPI.create("matches", {
+        title, sport, governorate, city,
+        venue_name: venueName,
+        day: "قريباً", time: time || "يحدّد لاحقاً",
+        level, age_group: null, fee: fee || 0,
+        participants: 1, max_participants: maxParticipants,
+        image: EMOJI[sport] || "⚽",
+      });
+      hint.textContent = "تم إنشاء المباراة ✓ عم نحوّلك لصفحة المباريات...";
+      setTimeout(() => { location.href = "matches.html"; }, 900);
+    } catch (err) {
+      console.error(err); hint.textContent = "تعذّر الحفظ: " + (err.message || "حاول مرة أخرى.");
+      $("submitBtn").disabled = false;
+    }
+  });
+})();
+</script>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+</body>
+</html>

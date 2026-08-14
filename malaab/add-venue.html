@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>أضف ملعب - ملعبك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="terms.js"></script>
+<!-- Supabase client + طبقة API لملعبك (تحلّ محل store.js عند النشر تحت ساحة) -->
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/media-processor.js"></script>
+<script src="malaabak-api.js"></script>
+</head>
+<body>
+
+<div id="siteHeader"></div>
+<script>SiteCore.mountHeader();</script>
+
+<div class="form-box" style="max-width:520px;">
+  <h1>أضف ملعبك</h1>
+  <p class="muted" style="text-align:center;margin-top:-10px;margin-bottom:20px;">
+    ملعبك رح يظهر للعامة بعد موافقة الإدارة عليه.
+  </p>
+
+  <div class="field">
+    <label>اسم الملعب</label>
+    <input type="text" id="vName" placeholder="مثال: ملعب النجوم">
+  </div>
+  <div class="field">
+    <label>نوع الرياضة</label>
+    <select id="vSport">
+      <option value="">اختر الرياضة</option>
+      <option>كرة قدم</option>
+      <option>كرة صالات</option>
+      <option>كرة سلة</option>
+      <option>تنس</option>
+      <option>كرة طائرة</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>المحافظة</label>
+    <input type="text" id="vGov" placeholder="مثال: دمشق">
+  </div>
+  <div class="field">
+    <label>المدينة / المنطقة</label>
+    <input type="text" id="vCity" placeholder="مثال: المزة">
+  </div>
+  <div class="field">
+    <label>العنوان</label>
+    <input type="text" id="vAddress" placeholder="مثال: المزة - أوتوستراد المطار">
+  </div>
+  <div class="field">
+    <label>سعر الساعة (ل.س)</label>
+    <input type="number" id="vPrice" placeholder="مثال: 15000" min="0" step="500">
+  </div>
+  <div class="field">
+    <label>صورة الملعب</label>
+    <div class="venue-image-uploader">
+      <div class="venue-image-preview" id="venueImagePreview">
+        <span class="venue-image-placeholder">اضغط لاختيار صورة</span>
+        <span class="media-watermark" id="venueWatermark" style="display:none;">ملعبك</span>
+      </div>
+      <input type="file" accept="image/*" id="venueImageInput" hidden>
+    </div>
+    <p class="muted" style="font-size:12px;margin-top:6px;text-align:center;">بعد اختيار الصورة، اسحبها داخل المربع لاختيار الجانب الأفضل منها. علامة "ملعبك" المائية رح تنطبع تلقائياً.</p>
+  </div>
+  <div class="field">
+    <label>طريقة تأكيد الحجز</label>
+    <div class="role-picker" id="vPay">
+      <div data-value="مبلغ ثابت">مبلغ ثابت</div>
+      <div class="selected" data-value="نسبة مئوية">نسبة مئوية</div>
+      <div data-value="بدون دفع مسبق">بدون دفع مسبق</div>
+    </div>
+    <p class="muted" style="font-size:12px;margin-top:6px;">أنت تحدد سياسة الدفع الخاصة بملعبك.</p>
+  </div>
+
+  <div id="termsSlot"></div>
+  <script>document.getElementById("termsSlot").innerHTML = MalaabakTerms.block(); MalaabakTerms.init();</script>
+
+  <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إرسال للمراجعة</button>
+  <p class="muted" id="formHint" style="font-size:0.8em;text-align:center;margin-top:0.6em;">ملعبك رح يوصل للوحة التحكم للمراجعة، وبعد الموافقة بيظهر بصفحة الملاعب.</p>
+</div>
+
+<script>
+(function () {
+  const preview = document.getElementById("venueImagePreview");
+  const input = document.getElementById("venueImageInput");
+  const placeholder = preview.querySelector(".venue-image-placeholder");
+  let posX = 50, posY = 50;
+  let dragging = false;
+  let startX, startY, startPosX, startPosY;
+
+  preview.addEventListener("click", () => {
+    if (!preview.classList.contains("has-image")) input.click();
+  });
+
+  const watermark = document.getElementById("venueWatermark");
+  input.addEventListener("change", () => {
+    const file = input.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    preview.style.backgroundImage = `url('${url}')`;
+    posX = 50; posY = 50;
+    preview.style.backgroundPosition = `${posX}% ${posY}%`;
+    preview.classList.add("has-image");
+    placeholder.style.display = "none";
+    watermark.style.display = ""; // علامة "ملعبك" المائية بتظهر فوق الصورة
+  });
+
+  function startDrag(clientX, clientY) {
+    if (!preview.classList.contains("has-image")) return;
+    dragging = true;
+    startX = clientX; startY = clientY;
+    startPosX = posX; startPosY = posY;
+    preview.classList.add("dragging");
+  }
+  function moveDrag(clientX, clientY) {
+    if (!dragging) return;
+    const rect = preview.getBoundingClientRect();
+    const dx = ((clientX - startX) / rect.width) * 100;
+    const dy = ((clientY - startY) / rect.height) * 100;
+    posX = Math.min(100, Math.max(0, startPosX - dx));
+    posY = Math.min(100, Math.max(0, startPosY - dy));
+    preview.style.backgroundPosition = `${posX}% ${posY}%`;
+  }
+  function endDrag() {
+    dragging = false;
+    preview.classList.remove("dragging");
+  }
+
+  preview.addEventListener("mousedown", (e) => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener("mousemove", (e) => moveDrag(e.clientX, e.clientY));
+  window.addEventListener("mouseup", endDrag);
+
+  preview.addEventListener("touchstart", (e) => { startDrag(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+  window.addEventListener("touchmove", (e) => { if (dragging) moveDrag(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+  window.addEventListener("touchend", endDrag);
+})();
+
+// ===== حفظ الملعب على Supabase =====
+// الملعب يُحفظ status:"pending" (افتراضي بـSQL). يظهر بلوحة التحكم للمراجعة، ومخفي عن صفحة الملاعب
+// (RLS يفلتر approved) لحد الموافقة. رفع الصورة الفعلي إلى دلو sahat-media تحت مسار المستخدم.
+(function setupAddVenue() {
+  const $ = (id) => document.getElementById(id);
+  const hint = $("formHint");
+  const submitBtn = $("submitBtn");
+
+  // خريطة قيم واجهة → قيم SQL enum (fixed/percent/none)
+  const PAY_MAP = { "مبلغ ثابت": "fixed", "نسبة مئوية": "percent", "بدون دفع مسبق": "none" };
+  let payMode = "percent";
+  $("vPay").addEventListener("click", (e) => {
+    const opt = e.target.closest("[data-value]");
+    if (!opt) return;
+    $("vPay").querySelectorAll("div").forEach((d) => d.classList.remove("selected"));
+    opt.classList.add("selected");
+    payMode = PAY_MAP[opt.dataset.value] || "none";
+  });
+
+  submitBtn.addEventListener("click", async () => {
+    const name = $("vName").value.trim();
+    const sport = $("vSport").value;
+    const governorate = $("vGov").value.trim();
+    const city = $("vCity").value.trim();
+    const address = $("vAddress").value.trim();
+    const price = Number($("vPrice").value);
+    const imageFile = $("venueImageInput").files[0];
+
+    // ---------- تحقق ----------
+    if (!name || !sport || !governorate || !city) {
+      hint.textContent = "لازم تعبّي: الاسم، الرياضة، المحافظة، والمدينة."; return;
+    }
+    if (!price || price <= 0) { hint.textContent = "أدخل سعر ساعة صحيح."; return; }
+    if (!imageFile) { hint.textContent = "لازم ترفع صورة الملعب."; return; }
+    if (!$("agreeTerms").checked) { hint.textContent = "لازم توافق على شروط النشر قبل الإرسال."; return; }
+
+    // ---------- تسجيل الدخول مطلوب (RLS) ----------
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      hint.textContent = "لازم تسجّل دخول أول. عم نحوّلك...";
+      setTimeout(() => { location.href = "login.html?redirect=" + encodeURIComponent("add-venue.html"); }, 1200);
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "جاري الرفع...";
+    hint.textContent = "";
+
+    try {
+      // 1) اضغط الصورة (WebP، حد 1280px) + طبع علامة "ملعبك"، ثم ارفعها
+      const slug = MalaabakAPI.slugify(name);
+      const imageUrl = await MalaabakAPI.uploadImage(imageFile, `venues/${slug}-${Date.now()}`, "ملعبك");
+
+      // 2) أنشئ سجل الملعب (status pending تلقائياً من SQL default)
+      await MalaabakAPI.create("venues", {
+        name, sport, governorate, city,
+        address: address || `${governorate} - ${city}`,
+        price,
+        pay_mode: payMode,
+        images: [imageUrl],
+        watermark_included: true,
+        phone: null,
+      });
+
+      hint.textContent = "تم الإرسال للمراجعة ✓ ملعبك بيظهر بعد موافقة الإدارة. عم نحوّلك...";
+      setTimeout(() => { location.href = "admin.html"; }, 1200);
+    } catch (err) {
+      console.error(err);
+      hint.textContent = "تعذّر الإرسال: " + (err.message || "حدث خطأ. حاول مرة أخرى.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "إرسال للمراجعة";
+    }
+  });
+})();
+</script>
+
+<div id="siteFooter"></div>
+<script>SiteCore.mountFooter();</script>
+
+</body>
+</html>
