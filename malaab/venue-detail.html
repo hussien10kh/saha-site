@@ -220,7 +220,7 @@
           <h3>الموقع</h3>
           <div class="detail-map">🗺️</div>
           <p class="muted" style="font-size:0.78em;">${v.address}</p>
-          <a href="#" class="btn btn-outline" style="display:block;text-align:center;">الاتجاهات</a>
+          <a href="${v.lat && v.lng ? `https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.name + ' ' + v.governorate)}`}" target="_blank" rel="noopener" class="btn btn-outline" style="display:block;text-align:center;">الاتجاهات</a>
         </div>
       </div>
     </div>

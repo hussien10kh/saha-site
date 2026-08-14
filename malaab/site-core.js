@@ -96,10 +96,10 @@ const SiteCore = {
         <p>منصة رياضية سورية لحجز الملاعب، الانضمام للمباريات والتمارين، والتواصل مع أفضل المدربين.</p>
       </div>
       <div class="footer-social">
-        <a href="#" aria-label="فيسبوك"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.5h2.5l.5-3H13.5V8.5c0-.9.25-1.5 1.53-1.5H16.5V4.36C16.19 4.32 15.13 4.22 13.9 4.22c-2.55 0-4.3 1.56-4.3 4.42V10.5H7v3h2.6V21h3.9z"/></svg></a>
-        <a href="#" aria-label="انستغرام"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="12" cy="12" r="3.8"/><circle cx="17" cy="7" r="0.9" fill="currentColor" stroke="none"/></svg></a>
-        <a href="#" aria-label="اكس"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 3H21l-6.4 7.3L22.1 21h-6.6l-5.2-6.6L4.3 21H2.2l6.8-7.8L1.9 3h6.8l4.7 6.1L18.9 3zM17.7 19h1.8L7.9 4.9H6l11.7 14.1z"/></svg></a>
-        <a href="#" aria-label="يوتيوب"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 8.2s-.2-1.5-.8-2.2c-.8-.8-1.6-.8-2-.9C16.4 5 12 5 12 5s-4.4 0-7.2.1c-.4.1-1.2.1-2 .9C2.2 6.7 2 8.2 2 8.2S1.8 10 1.8 11.7v1.1C1.8 14.5 2 16.3 2 16.3s.2 1.5.8 2.2c.8.8 1.8.8 2.3.9 1.7.2 7 .1 7 .1s4.4 0 7.2-.1c.4 0 1.2-.1 2-.9.6-.7.8-2.2.8-2.2s.2-1.8.2-3.5v-1.1C22.2 10 22 8.2 22 8.2zM9.9 14.6V9.4l5 2.6-5 2.6z"/></svg></a>
+        <a href="https://www.facebook.com/saahasyria" target="_blank" rel="noopener" aria-label="فيسبوك"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.5h2.5l.5-3H13.5V8.5c0-.9.25-1.5 1.53-1.5H16.5V4.36C16.19 4.32 15.13 4.22 13.9 4.22c-2.55 0-4.3 1.56-4.3 4.42V10.5H7v3h2.6V21h3.9z"/></svg></a>
+        <a href="https://www.instagram.com/saahasyria/" target="_blank" rel="noopener" aria-label="انستغرام"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="12" cy="12" r="3.8"/><circle cx="17" cy="7" r="0.9" fill="currentColor" stroke="none"/></svg></a>
+        <a href="https://x.com/saahasyria" target="_blank" rel="noopener" aria-label="اكس"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 3H21l-6.4 7.3L22.1 21h-6.6l-5.2-6.6L4.3 21H2.2l6.8-7.8L1.9 3h6.8l4.7 6.1L18.9 3zM17.7 19h1.8L7.9 4.9H6l11.7 14.1z"/></svg></a>
+        <a href="https://www.youtube.com/@saahasyria" target="_blank" rel="noopener" aria-label="يوتيوب"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 8.2s-.2-1.5-.8-2.2c-.8-.8-1.6-.8-2-.9C16.4 5 12 5 12 5s-4.4 0-7.2.1c-.4.1-1.2.1-2 .9C2.2 6.7 2 8.2 2 8.2S1.8 10 1.8 11.7v1.1C1.8 14.5 2 16.3 2 16.3s.2 1.5.8 2.2c.8.8 1.8.8 2.3.9 1.7.2 7 .1 7 .1s4.4 0 7.2-.1c.4 0 1.2-.1 2-.9.6-.7.8-2.2.8-2.2s.2-1.8.2-3.5v-1.1C22.2 10 22 8.2 22 8.2zM9.9 14.6V9.4l5 2.6-5 2.6z"/></svg></a>
       </div>
     </div>
     <div class="footer-links-group">
