@@ -219,7 +219,7 @@
   document.getElementById('logoutBtn').addEventListener('click', async ()=>{
     try{ await logout(); }
     catch(e){ console.error('logout failed:', e); }
-    location.href = 'index.html';
+    location.href = 'ads.html';
   });
 
   document.getElementById('avatarBtn').addEventListener('click', ()=> document.getElementById('avatarInput').click());

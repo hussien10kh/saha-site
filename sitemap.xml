@@ -4,7 +4,7 @@
      generated server-side (e.g. a scheduled function querying the ads table). -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://saaha.net/index.html</loc>
+    <loc>https://saaha.net/ads.html</loc>
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
   </url>

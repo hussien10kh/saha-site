@@ -80,7 +80,7 @@ function renderSidebar(){
       ${s.items.map(renderItem).join('')}
     `).join('')}
     <div class="admin-nav-spacer"></div>
-    <a class="admin-nav-item" href="index.html" target="_blank">${ICONS.home}<span>عرض الموقع</span></a>
+    <a class="admin-nav-item" href="ads.html" target="_blank">${ICONS.home}<span>عرض الموقع</span></a>
     <button class="admin-nav-item" id="adminLogoutBtn">${ADMIN_ICONS.logout}<span>تسجيل خروج</span></button>
   `;
   mount.querySelectorAll('.admin-nav-item[data-tab]').forEach(btn=>{

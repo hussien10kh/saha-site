@@ -150,7 +150,7 @@
   function isValidSyrianPhone(v){ return /^0?9\d{8}$/.test(normalizePhone(v)); }
 
   function goToRedirect(){
-    const redirect = new URLSearchParams(location.search).get('redirect') || 'index.html';
+    const redirect = new URLSearchParams(location.search).get('redirect') || 'ads.html';
     setTimeout(()=> location.href = redirect, 600);
   }
 

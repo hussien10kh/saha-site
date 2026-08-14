@@ -78,7 +78,7 @@ try { SESSION_ALREADY_ACTIVE = sessionStorage.getItem(SESSION_SEEN_KEY) === '1';
 try { sessionStorage.setItem(SESSION_SEEN_KEY, '1'); } catch(e){}
 
 function trackLastPage(){
-  const page = location.pathname.split('/').pop() || 'index.html';
+  const page = location.pathname.split('/').pop() || 'ads.html';
   if (LAST_PAGE_EXCLUDED.includes(page)) return;
   try {
     localStorage.setItem(LAST_PAGE_KEY, JSON.stringify({ url: location.pathname + location.search, ts: Date.now() }));
@@ -892,7 +892,7 @@ async function renderHeader(activeCategory){
   <header class="site-header">
     <div class="container">
       <div class="header-top">
-        <a class="logo" href="index.html">ساحة</a>
+        <a class="logo" href="ads.html">ساحة</a>
         <div class="header-actions">
           <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="تبديل الوضع الليلي"></button>
           <a class="btn btn-outline cta-add" href="${addAdHref()}">أضف إعلانك</a>
@@ -909,13 +909,13 @@ async function renderHeader(activeCategory){
           <div class="hamburger-wrap">
             <button class="hamburger" id="hamburgerBtn" aria-label="القائمة">${ICONS.menu}</button>
             <div class="hamburger-dropdown" id="hamburgerDropdown">
-              <a data-cat="" href="index.html">${ICONS.home}<span>الرئيسية</span></a>
-              <a data-cat="realestate" href="index.html?cat=realestate">${ICONS.building}<span>عقار</span></a>
-              <a data-cat="cars" href="index.html?cat=cars">${ICONS.car}<span>سيارات</span></a>
-              <a data-cat="mobiles" href="index.html?cat=mobiles">${ICONS.device}<span>موبايلات</span></a>
-              <a data-cat="furniture" href="index.html?cat=furniture">${ICONS.sofa}<span>أثاث</span></a>
-              <a data-cat="electronics" href="index.html?cat=electronics">${ICONS.tv}<span>إلكترونيات</span></a>
-              <a data-cat="misc" href="index.html?cat=misc">${ICONS.grid}<span>غير مصنف</span></a>
+              <a data-cat="" href="ads.html">${ICONS.home}<span>الرئيسية</span></a>
+              <a data-cat="realestate" href="ads.html?cat=realestate">${ICONS.building}<span>عقار</span></a>
+              <a data-cat="cars" href="ads.html?cat=cars">${ICONS.car}<span>سيارات</span></a>
+              <a data-cat="mobiles" href="ads.html?cat=mobiles">${ICONS.device}<span>موبايلات</span></a>
+              <a data-cat="furniture" href="ads.html?cat=furniture">${ICONS.sofa}<span>أثاث</span></a>
+              <a data-cat="electronics" href="ads.html?cat=electronics">${ICONS.tv}<span>إلكترونيات</span></a>
+              <a data-cat="misc" href="ads.html?cat=misc">${ICONS.grid}<span>غير مصنف</span></a>
             </div>
           </div>
         </div>
@@ -929,13 +929,13 @@ async function renderHeader(activeCategory){
         <button type="submit" class="search-submit">${ICONS.search}<span>بحث</span></button>
       </form>
       <nav class="tabs" id="tabsNav">
-        <a class="tab" data-cat="" href="index.html">${ICONS.home}<span>الرئيسية</span></a>
-        <a class="tab" data-cat="realestate" href="index.html?cat=realestate">${ICONS.building}<span>عقار</span></a>
-        <a class="tab" data-cat="cars" href="index.html?cat=cars">${ICONS.car}<span>سيارات</span></a>
-        <a class="tab" data-cat="mobiles" href="index.html?cat=mobiles">${ICONS.device}<span>موبايلات</span></a>
-        <a class="tab" data-cat="furniture" href="index.html?cat=furniture">${ICONS.sofa}<span>أثاث</span></a>
-        <a class="tab" data-cat="electronics" href="index.html?cat=electronics">${ICONS.tv}<span>إلكترونيات</span></a>
-        <a class="tab" data-cat="misc" href="index.html?cat=misc">${ICONS.grid}<span>غير مصنف</span></a>
+        <a class="tab" data-cat="" href="ads.html">${ICONS.home}<span>الرئيسية</span></a>
+        <a class="tab" data-cat="realestate" href="ads.html?cat=realestate">${ICONS.building}<span>عقار</span></a>
+        <a class="tab" data-cat="cars" href="ads.html?cat=cars">${ICONS.car}<span>سيارات</span></a>
+        <a class="tab" data-cat="mobiles" href="ads.html?cat=mobiles">${ICONS.device}<span>موبايلات</span></a>
+        <a class="tab" data-cat="furniture" href="ads.html?cat=furniture">${ICONS.sofa}<span>أثاث</span></a>
+        <a class="tab" data-cat="electronics" href="ads.html?cat=electronics">${ICONS.tv}<span>إلكترونيات</span></a>
+        <a class="tab" data-cat="misc" href="ads.html?cat=misc">${ICONS.grid}<span>غير مصنف</span></a>
       </nav>
     </div>
   </header>`;
@@ -981,7 +981,7 @@ async function renderHeader(activeCategory){
   let selectedCity = new URLSearchParams(location.search).get('city') || '';
   if(cityBtn && cityDropdown){
     const cityHref = c => {
-      const url = new URL('index.html', location.href);
+      const url = new URL('ads.html', location.href);
       if(activeCategory) url.searchParams.set('cat', activeCategory);
       if(c) url.searchParams.set('city', c);
       return url.pathname + url.search;
@@ -1014,7 +1014,7 @@ async function renderHeader(activeCategory){
     searchForm.addEventListener('submit', e=>{
       e.preventDefault();
       const q = document.getElementById('searchInput').value.trim();
-      const url = new URL('index.html', location.href);
+      const url = new URL('ads.html', location.href);
       if(q) url.searchParams.set('q', q);
       if(activeCategory) url.searchParams.set('cat', activeCategory);
       if(selectedCity) url.searchParams.set('city', selectedCity);
@@ -1054,12 +1054,12 @@ async function renderFooter(){
         <div class="footer-col footer-categories-col">
           <h4>التصنيفات</h4>
           <ul>
-            <li><a href="index.html?cat=realestate">عقار</a></li>
-            <li><a href="index.html?cat=cars">سيارات</a></li>
-            <li><a href="index.html?cat=mobiles">موبايلات</a></li>
-            <li><a href="index.html?cat=furniture">أثاث</a></li>
-            <li><a href="index.html?cat=electronics">إلكترونيات</a></li>
-            <li><a href="index.html?cat=misc">غير مصنف</a></li>
+            <li><a href="ads.html?cat=realestate">عقار</a></li>
+            <li><a href="ads.html?cat=cars">سيارات</a></li>
+            <li><a href="ads.html?cat=mobiles">موبايلات</a></li>
+            <li><a href="ads.html?cat=furniture">أثاث</a></li>
+            <li><a href="ads.html?cat=electronics">إلكترونيات</a></li>
+            <li><a href="ads.html?cat=misc">غير مصنف</a></li>
           </ul>
         </div>
         <div class="footer-app-promo">
@@ -1132,7 +1132,7 @@ async function renderMobileNav(active){
   mount.innerHTML = `
   <nav class="mobile-nav mnav-hidden">
     <div class="mnav-side mnav-right">
-      <a href="index.html" class="mnav-tab ${active==='home'?'active':''}">${ICONS.home}<span>الرئيسية</span></a>
+      <a href="ads.html" class="mnav-tab ${active==='home'?'active':''}">${ICONS.home}<span>الرئيسية</span></a>
       <span class="mnav-vdiv"></span>
       <button type="button" class="mnav-tab" id="mnavSearchBtn">${ICONS.search}<span>بحث</span></button>
     </div>
@@ -1199,7 +1199,7 @@ async function renderMobileNav(active){
   document.getElementById('mnavSearchForm').addEventListener('submit', e=>{
     e.preventDefault();
     const q = document.getElementById('mnavSearchInput').value.trim();
-    location.href = 'index.html' + (q ? '?q=' + encodeURIComponent(q) : '');
+    location.href = 'ads.html' + (q ? '?q=' + encodeURIComponent(q) : '');
   });
 
   /* The nav stays hidden while the category tabs are visible at the top of

@@ -100,9 +100,10 @@ runBtn.addEventListener('click', async () => {
 
       badge.textContent = 'جاري الرفع...';
       try {
-        // 1) اجلب الصورة من مسارها المحلي
-        const imgResp = await fetch(p.image);
-        if (!imgResp.ok) throw new Error('فشل جلب الصورة: ' + p.image);
+        // 1) اجلب الصورة من مسارها المحلي (المسارات بـplaces-data.js نسبية لمجلد images/)
+        const imgPath = p.image.startsWith('images/') || p.image.startsWith('http') ? p.image : 'images/' + p.image;
+        const imgResp = await fetch(imgPath);
+        if (!imgResp.ok) throw new Error('فشل جلب الصورة: ' + imgPath);
         const imgBlob = await imgResp.blob();
 
         // 2) اضغطها + طبع علامة "ساحة"
