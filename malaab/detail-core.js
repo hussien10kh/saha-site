@@ -134,13 +134,18 @@ const DetailCore = {
   },
 
   // ---------- الموقع ----------
-  mapPanelHTML(address) {
+  // address: النص المعروض. lat/lng: اختياريان — لو موجودان يستخدم Directions API بالإحداثيات،
+  // وإلا فallback لبحث Google Maps بالنص.
+  mapPanelHTML(address, lat, lng) {
+    const href = (lat && lng)
+      ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
     return `
       <div class="detail-panel">
         <h3>الموقع</h3>
         <div class="detail-map">🗺️</div>
         <p class="muted" style="font-size:0.78em;">${address}</p>
-        <a href="#" class="btn btn-outline" style="display:block;text-align:center;">الاتجاهات</a>
+        <a href="${href}" target="_blank" rel="noopener" class="btn btn-outline" style="display:block;text-align:center;">الاتجاهات</a>
       </div>`;
   },
 

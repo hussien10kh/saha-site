@@ -499,7 +499,7 @@
       attribution: '&copy; OpenStreetMap', maxZoom: 18
     }).addTo(map);
     PLACES.forEach(function(p){
-      L.marker([p.lat, p.lng]).addTo(map).bindPopup('<b>' + p.name + '</b>');
+      L.marker([p.lat, p.lng]).addTo(map).bindPopup('<b>' + p.name + '</b><br><a href="https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng + '" target="_blank" rel="noopener" style="color:#0d9488;font-weight:700;text-decoration:underline;">🧭 افتح الاتجاهات</a>');
     });
   })();
 </script>

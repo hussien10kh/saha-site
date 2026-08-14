@@ -215,7 +215,11 @@
     '<div class="p-content">' +
       '<div>' +
         '<div class="p-section"><p class="p-desc">' + place.desc + '</p></div>' +
-        '<div class="p-section"><h4>الموقع على الخريطة</h4><div id="pMap" class="p-map"></div></div>' +
+        '<div class="p-section">' +
+          '<h4>الموقع على الخريطة</h4>' +
+          '<div id="pMap" class="p-map"></div>' +
+          '<a id="pDirections" href="https://www.google.com/maps/dir/?api=1&destination=' + place.lat + ',' + place.lng + '" target="_blank" rel="noopener" class="p-btn p-btn-primary" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;">🧭 افتح الاتجاهات بخرائط Google</a>' +
+        '</div>' +
         '<div class="p-section">' +
           '<h4>التقييمات والتعليقات</h4>' +
           '<div class="p-rating-head" id="pRatingHead"></div>' +
@@ -250,7 +254,11 @@
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution:'&copy; OpenStreetMap'
   }).addTo(map);
-  L.marker([place.lat, place.lng]).addTo(map).bindPopup('<b>' + place.name + '</b>');
+  L.marker([place.lat, place.lng]).addTo(map).bindPopup(
+    '<b>' + place.name + '</b><br>' +
+    '<a href="https://www.google.com/maps/dir/?api=1&destination=' + place.lat + ',' + place.lng +
+    '" target="_blank" rel="noopener" style="color:#0d9488;font-weight:700;text-decoration:underline;">🧭 افتح الاتجاهات</a>'
+  );
 
   var chosenStars = 0;
   var starButtons = document.querySelectorAll('#pStarsInput button');

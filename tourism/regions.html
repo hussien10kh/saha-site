@@ -422,7 +422,11 @@
       markers = {};
       areas.forEach(function(a){
         var marker = L.marker([a.lat, a.lng]).addTo(map);
-        marker.bindPopup('<b>' + a.name + '</b>');
+        marker.bindPopup(
+          '<b>' + a.name + '</b><br>' +
+          '<a href="https://www.google.com/maps/dir/?api=1&destination=' + a.lat + ',' + a.lng +
+          '" target="_blank" rel="noopener" style="color:#0d9488;font-weight:700;text-decoration:underline;">🧭 افتح الاتجاهات</a>'
+        );
         marker.on('click', function(){ setActiveArea(a.key); });
         markers[a.key] = marker;
       });
