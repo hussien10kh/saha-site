@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>تفاصيل المدرب - ملعبك</title>
+<meta name="description" content="ملف المدرب: التخصص، الخبرة، سعر الحصة، والتقييمات على ملعبك.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -82,6 +83,7 @@
 
     <div class="detail-body">
       <div class="detail-col-main">
+        ${MalaabakAPI.videoPanelHTML(c.video_url, "فيديو تعريفي")}
         <div class="detail-panel" id="booking">
           <h3>احجز حصة تدريب</h3>
           <div class="slot-grid">${DetailCore.slotsHTML(c.id)}</div>

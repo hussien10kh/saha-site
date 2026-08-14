@@ -545,6 +545,11 @@ async function renderTourismPending(mount){
           <div style="font-weight:800;">${escapeHTML(r.name)}</div>
           <div style="font-size:.85em;color:var(--muted);">${escapeHTML(r.category)} · ${escapeHTML(r.region)} - ${escapeHTML(r.city)}</div>
           ${r.description ? `<div style="font-size:.82em;color:var(--muted);margin-top:4px;">${escapeHTML(r.description).slice(0,140)}</div>` : ''}
+          <div style="margin-top:8px;padding:8px;border:1px dashed var(--border);border-radius:8px;">
+            <label style="display:block;font-size:.78em;color:var(--muted);margin-bottom:4px;">رابط يوتيوب (اختياري):</label>
+            <input type="url" class="tourism-yt" data-id="${r.id}" value="${escapeHTML(r.video_url||'')}"
+              placeholder="https://youtube.com/watch?v=..." style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.85em;">
+          </div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0;">
           <button class="btn btn-primary tourism-approve" data-id="${r.id}" style="font-size:.85em;padding:8px 14px;">موافقة</button>
@@ -560,8 +565,16 @@ async function renderTourismPending(mount){
     const status = approve ? 'approved' : 'rejected';
     const btn = approve || reject;
     btn.disabled = true; btn.textContent = '...';
-    const { error } = await sb.from('tourism_places')
-      .update({ status, reviewed_by: adminUser.id, reviewed_at: new Date().toISOString() }).eq('id', id);
+    // لو الأدمن كتب رابط يوتيوب، خزّنه ضمن نفس التحديث
+    const inp = document.querySelector(`.tourism-yt[data-id="${id}"]`);
+    const ytRaw = inp ? inp.value.trim() : '';
+    if(approve && ytRaw && !MalaabakAPI.isYouTubeUrl(ytRaw)){
+      alert('رابط اليوتيوب مو صحيح. صحّحه أو فرّغه قبل الموافقة.');
+      btn.disabled=false; btn.textContent = 'موافقة'; return;
+    }
+    const patch = { status, reviewed_by: adminUser.id, reviewed_at: new Date().toISOString() };
+    if(approve) patch.video_url = ytRaw || null;
+    const { error } = await sb.from('tourism_places').update(patch).eq('id', id);
     if(error){ alert('تعذّر الحفظ: '+error.message); btn.disabled=false; btn.textContent = approve?'موافقة':'رفض'; return; }
     document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
     if(!mount.querySelector('.admin-card')) mount.innerHTML = `<div class="admin-empty">✅ ما في أماكن معلّقة.</div>`;
@@ -592,17 +605,38 @@ async function renderMalaabPending(mount, type){
       ? `<img src="${escapeHTML(image)}" style="width:70px;height:70px;object-fit:cover;border-radius:10px;">`
       : `<div style="width:70px;height:70px;background:var(--border);border-radius:10px;display:grid;place-items:center;font-size:1.8em;">${escapeHTML(image||'📄')}</div>`;
     let videoRows = '';
+    // للأنواع المفردة (ملعب/مدرب/أكاديمية): حقل رابط يوتيوب واحد اختياري
+    if(type==='venues' || type==='coaches' || type==='academies'){
+      const cur = x.video_url || '';
+      videoRows = `
+        <div style="margin-top:10px;padding:10px;border:1px dashed var(--border);border-radius:8px;">
+          <label style="display:block;font-size:.82em;color:var(--muted);margin-bottom:4px;">رابط يوتيوب (اختياري):</label>
+          <input type="url" class="mlb-single-yt" data-id="${x.id}" value="${escapeHTML(cur)}"
+            placeholder="https://youtube.com/watch?v=..." style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.9em;">
+          ${cur ? `<p style="font-size:.75em;color:var(--success,#1a9c5e);margin:6px 0 0;">✓ فيديو محفوظ حالياً</p>` : ''}
+        </div>`;
+    }
     if(type==='talents' && x.videos && x.videos.length){
-      videoRows = '<div style="margin-top:8px;font-size:.82em;">' + x.videos.map((v,i)=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
-          <span style="flex:1;">🎬 ${escapeHTML(v.title||`فيديو ${i+1}`)}</span>
-          ${v.videoUrl?`<a href="${escapeHTML(v.videoUrl)}" target="_blank" style="color:var(--primary);">فتح ↗</a>`:''}
-          <select class="mlb-vaction" data-id="${x.id}" data-idx="${i}" style="border:1px solid var(--border);border-radius:6px;padding:2px 6px;">
-            <option value="asis"${(v.action||'asis')==='asis'?' selected':''}>نشر كما هو</option>
-            <option value="muted"${v.action==='muted'?' selected':''}>حذف الصوت</option>
-            <option value="deleted"${v.action==='deleted'?' selected':''}>حذف الفيديو</option>
-          </select>
-        </div>`).join('') + '</div>';
+      videoRows = '<div style="margin-top:10px;font-size:.85em;display:flex;flex-direction:column;gap:10px;">' +
+        x.videos.map((v,i)=>{
+          const isYt = MalaabakAPI.isYouTubeUrl(v.videoUrl);
+          const currentYtUrl = isYt ? v.videoUrl : '';
+          const supabaseFileUrl = !isYt && v.videoUrl ? v.videoUrl : '';
+          return `
+            <div class="mlb-video" data-id="${x.id}" data-idx="${i}" style="padding:10px;border:1px dashed var(--border);border-radius:8px;">
+              <div style="font-weight:700;margin-bottom:6px;">🎬 ${escapeHTML(v.title || `فيديو ${i+1}`)}</div>
+              ${supabaseFileUrl ? `
+                <div style="margin-bottom:8px;font-size:.85em;">
+                  <a href="${escapeHTML(supabaseFileUrl)}" target="_blank" download style="color:var(--primary);font-weight:700;">⬇ حمّل الملف الأصلي</a>
+                  <span style="color:var(--muted);margin-inline-start:8px;">← ارفعه على يوتيوب @saahasyria (unlisted)</span>
+                </div>` : ''}
+              ${isYt ? `<div style="margin-bottom:8px;color:var(--success,#1a9c5e);font-weight:700;">✓ يوتيوب: ${escapeHTML(v.videoUrl)}</div>` : ''}
+              <label style="display:block;font-size:.82em;color:var(--muted);margin-bottom:4px;">${isYt ? 'تحديث رابط يوتيوب' : 'الصق رابط يوتيوب بعد الرفع'}:</label>
+              <input type="url" class="mlb-yt-url" data-id="${x.id}" data-idx="${i}" value="${escapeHTML(currentYtUrl)}"
+                placeholder="https://youtube.com/watch?v=..." style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.9em;">
+              <p style="font-size:.75em;color:var(--muted);margin:6px 0 0;">الموافقة بلا رابط يوتيوب رح تنشر الملف من Supabase مباشرة (حجم أكبر، أبطأ).</p>
+            </div>`;
+        }).join('') + '</div>';
     }
     return `
       <div class="admin-card" data-id="${x.id}" style="display:flex;gap:14px;align-items:flex-start;padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface);">
@@ -628,6 +662,47 @@ async function renderMalaabPending(mount, type){
     const btn = approve || reject;
     btn.disabled = true; btn.textContent = '...';
     try {
+      // للمواهب فقط: قبل الموافقة، اجمع روابط يوتيوب اللي كتبها الأدمن، حدّث videos،
+      // واحذف ملف Supabase الأصلي للفيديوهات اللي صار إلها رابط يوتيوب (توفير مساحة).
+      // للأنواع المفردة: لو الأدمن كتب/عدّل رابط يوتيوب قبل الموافقة، خزّنه
+      if(approve && (type==='venues' || type==='coaches' || type==='academies')){
+        const card = document.querySelector(`.admin-card[data-id="${id}"]`);
+        const inp = card?.querySelector('.mlb-single-yt');
+        if(inp){
+          const raw = inp.value.trim();
+          const item = cache.get(id);
+          const prev = item?.video_url || '';
+          if(raw !== prev){
+            if(raw && !MalaabakAPI.isYouTubeUrl(raw)){
+              alert('رابط اليوتيوب مو صحيح. صحّحه أو فرّغه قبل الموافقة.');
+              btn.disabled=false; btn.textContent = 'موافقة'; return;
+            }
+            await MalaabakAPI.update(type, id, { video_url: raw || null });
+          }
+        }
+      }
+      if(type === 'talents' && approve){
+        const item = cache.get(id);
+        if(item && item.videos && item.videos.length){
+          const card = document.querySelector(`.admin-card[data-id="${id}"]`);
+          const inputs = card?.querySelectorAll('.mlb-yt-url') || [];
+          const filesToDelete = [];
+          const newVideos = item.videos.map((v, i) => {
+            const inp = inputs[i]; if(!inp) return v;
+            const raw = inp.value.trim();
+            if(raw && MalaabakAPI.isYouTubeUrl(raw)){
+              // خزّن رابط يوتيوب الكامل + علامة على المصدر
+              // (لو كان قبل ملف Supabase، نضيفه لقائمة الحذف لاحقاً)
+              if(v.videoUrl && !MalaabakAPI.isYouTubeUrl(v.videoUrl)) filesToDelete.push(v.videoUrl);
+              return { ...v, videoUrl: raw, source: 'youtube' };
+            }
+            return v;  // بلا رابط يوتيوب: يبقى Supabase URL
+          });
+          await MalaabakAPI.update('talents', id, { videos: newVideos });
+          // حذف الملفات القديمة من Supabase (best-effort — لو فشل، ما نوقف)
+          for(const url of filesToDelete){ MalaabakAPI.deleteFile(url); }
+        }
+      }
       await MalaabakAPI.setStatus(type, id, status);
       document.querySelector(`.admin-card[data-id="${id}"]`)?.remove();
       cache.delete(id);
@@ -637,16 +712,6 @@ async function renderMalaabPending(mount, type){
       btn.disabled=false; btn.textContent = approve?'موافقة':'رفض';
     }
   }, { once:true });
-
-  mount.addEventListener('change', async (e)=>{
-    const sel = e.target.closest('.mlb-vaction');
-    if(!sel) return;
-    const id = sel.dataset.id; const idx = Number(sel.dataset.idx); const val = sel.value;
-    const item = cache.get(id); if(!item) return;
-    item.videos[idx] = { ...item.videos[idx], action: val };
-    try { await MalaabakAPI.update(type, id, { videos: item.videos }); }
-    catch(err){ alert('تعذّر حفظ قرار الفيديو: '+err.message); }
-  });
 }
 
 /* =========================================================

@@ -115,6 +115,35 @@ const MalaabakAPI = (() => {
     return upload(blob, `${baseName}.webp`, 'image/webp');
   }
 
+  // -------- أدوات يوتيوب: استخراج ID + بناء رابط embed --------
+  // يقبل: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/shorts/ID, youtube.com/embed/ID
+  function parseYouTubeId(url) {
+    if (!url) return null;
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/,
+      /^([A-Za-z0-9_-]{11})$/,  // ID مباشر
+    ];
+    for (const p of patterns) { const m = String(url).match(p); if (m) return m[1]; }
+    return null;
+  }
+  function youtubeEmbedUrl(idOrUrl) {
+    const id = parseYouTubeId(idOrUrl);
+    return id ? `https://www.youtube.com/embed/${id}` : null;
+  }
+  function isYouTubeUrl(url) { return !!parseYouTubeId(url); }
+
+  // -------- حذف ملف من Storage (للتنظيف بعد نقل الفيديو ليوتيوب) --------
+  async function deleteFile(publicUrl) {
+    try {
+      // publicUrl مثال: .../storage/v1/object/public/sahat-media/<uid>/malaabak/talents/xxx.mp4
+      const idx = publicUrl.indexOf(`/${MEDIA_BUCKET}/`);
+      if (idx < 0) return false;
+      const key = publicUrl.slice(idx + MEDIA_BUCKET.length + 2);
+      const { error } = await sb.storage.from(MEDIA_BUCKET).remove([key]);
+      return !error;
+    } catch (_) { return false; }
+  }
+
   // slug عربي/إنجليزي آمن لاسم ملف (شبيه بـساحة)
   function slugify(txt) {
     const base = (txt || 'file').toString().normalize('NFKD')
@@ -152,8 +181,24 @@ const MalaabakAPI = (() => {
     return data || [];
   }
 
+  // بانل يوتيوب جاهز: يعرض iframe embed داخل detail-panel، أو يرجع "" لو مافي رابط.
+  function videoPanelHTML(urlOrId, title = "فيديو") {
+    const embed = youtubeEmbedUrl(urlOrId);
+    if (!embed) return "";
+    return `
+      <div class="detail-panel">
+        <h3>${title}</h3>
+        <div style="position:relative;padding-bottom:56.25%;height:0;border-radius:12px;overflow:hidden;background:#000;">
+          <iframe src="${embed}?rel=0" style="position:absolute;inset:0;width:100%;height:100%;border:0;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen loading="lazy"></iframe>
+        </div>
+      </div>`;
+  }
+
   return {
     create, list, getById, update, remove, setStatus, pending, mine,
     upload, uploadImage, slugify, book, cancelBooking, addReview, reviews,
+    parseYouTubeId, youtubeEmbedUrl, isYouTubeUrl, deleteFile, videoPanelHTML,
   };
 })();

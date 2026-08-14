@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>سجّل كمدرب - ملعبك</title>
+<title>سجّل كمدرب | ملعبك</title>
+<meta name="description" content="انضم لدليل المدربين على ملعبك ووصل خبرتك لآلاف اللاعبين بسوريا.">
+<meta name="keywords" content="تسجيل مدرب, مدرب رياضي سوريا, ملعبك">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -77,6 +79,11 @@
       <input type="file" accept="image/*" id="coachImageInput" hidden>
     </div>
     <p class="muted" style="font-size:12px;margin-top:6px;text-align:center;">علامة "ملعبك" المائية رح تنطبع تلقائياً على الصورة عند النشر.</p>
+  </div>
+
+  <div class="field">
+    <label>رابط يوتيوب (اختياري)</label>
+    <input type="url" id="cVideo" placeholder="https://youtu.be/... (فيديو تعريفي عنك أو حصة تدريب)">
   </div>
 
   <div id="termsSlot"></div>
@@ -154,10 +161,19 @@
         const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
         imageUrl = await MalaabakAPI.uploadImage(imageFile, `coaches/${MalaabakAPI.slugify(name)}-${Date.now()}`, "ملعبك");
       }
+      const ytRaw = $("cVideo").value.trim();
+      let videoUrl = null;
+      if (ytRaw) {
+        if (!MalaabakAPI.isYouTubeUrl(ytRaw)) {
+          hint.textContent = "رابط اليوتيوب مو صحيح."; $("submitBtn").disabled = false; $("submitBtn").textContent = "إرسال للمراجعة"; return;
+        }
+        videoUrl = ytRaw;
+      }
       await MalaabakAPI.create("coaches", {
         name, specialty, governorate, city,
         experience, price_per_session: pricePerSession, gender,
         image: imageUrl || null,
+        video_url: videoUrl,
       });
       hint.textContent = "تم الإرسال للمراجعة ✓ ملفك بيظهر بعد موافقة الإدارة. عم نحوّلك...";
       setTimeout(() => { location.href = "admin.html"; }, 1200);

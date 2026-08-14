@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>معاينة: أضف مكانًا سياحيًا | ساحة سياحة</title>
-<meta name="robots" content="noindex, nofollow">
+<title>أضف مكان | ساحة سياحة</title>
+<meta name="description" content="شارك أماكنك المفضلة بسوريا مع مجتمع ساحة سياحة.">
+<meta name="keywords" content="إضافة مكان سياحي, ساحة سياحة">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -30,7 +31,6 @@
 </head>
 <body>
 
-<div class="preview-banner">🚧 معاينة داخلية — نموذج إضافة مكان (الأزرار هون لغرض العرض بس، ما بترسل شي) · <a href="index.html">رجوع للتصفح</a></div>
 
 <header class="t-header">
   <div class="t-container t-header-inner">
@@ -86,6 +86,11 @@
     <div class="f-field">
       <label>صور (اختياري)</label>
       <div class="f-upload">📷 اسحب صور المكان هون أو دوس للاختيار</div>
+    </div>
+
+    <div class="f-field">
+      <label>رابط يوتيوب (اختياري)</label>
+      <input id="fVideo" placeholder="https://youtu.be/... (فيديو تعريفي عن المكان)">
     </div>
 
     <button class="f-submit" id="fSubmit">إضافة المكان للمراجعة</button>
@@ -146,6 +151,7 @@
       category: document.getElementById('fType').value,
       loc: loc,
       desc: document.getElementById('fDesc').value.trim(),
+      videoUrl: document.getElementById('fVideo').value.trim() || null,
       status: 'قيد المراجعة'
     });
     alert('تمام! صار مكانك "قيد المراجعة" — بتلاقيه بملفك الشخصي.');

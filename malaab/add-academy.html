@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>سجّل أكاديميتك - ملعبك</title>
+<title>سجّل أكاديميتك | ملعبك</title>
+<meta name="description" content="اعرض أكاديميتك الرياضية على منصة ملعبك ووصّل لأهالي بيدوّروا على تدريب محترف لولادهم.">
+<meta name="keywords" content="تسجيل أكاديمية, أكاديمية رياضية سوريا, ملعبك">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -75,6 +77,11 @@
     <p class="muted" style="font-size:12px;margin-top:6px;text-align:center;">علامة "ملعبك" المائية رح تنطبع تلقائياً على الصورة عند النشر.</p>
   </div>
 
+  <div class="field">
+    <label>رابط يوتيوب (اختياري)</label>
+    <input type="url" id="aVideo" placeholder="https://youtu.be/... (فيديو تعريفي عن الأكاديمية)">
+  </div>
+
   <div id="termsSlot"></div>
   <script>document.getElementById("termsSlot").innerHTML = MalaabakTerms.block(); MalaabakTerms.init();</script>
 
@@ -144,10 +151,19 @@
         const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
         imageUrl = await MalaabakAPI.uploadImage(imageFile, `academies/${MalaabakAPI.slugify(name)}-${Date.now()}`, "ملعبك");
       }
+      const ytRaw = $("aVideo").value.trim();
+      let videoUrl = null;
+      if (ytRaw) {
+        if (!MalaabakAPI.isYouTubeUrl(ytRaw)) {
+          hint.textContent = "رابط اليوتيوب مو صحيح."; $("submitBtn").disabled = false; $("submitBtn").textContent = "إرسال للمراجعة"; return;
+        }
+        videoUrl = ytRaw;
+      }
       await MalaabakAPI.create("academies", {
         name, sports, governorate, city,
         age_groups: ageGroups, monthly_fee: monthlyFee, players: 0,
         image: imageUrl || null,
+        video_url: videoUrl,
       });
       hint.textContent = "تم الإرسال للمراجعة ✓ أكاديميتك بتظهر بعد موافقة الإدارة. عم نحوّلك...";
       setTimeout(() => { location.href = "admin.html"; }, 1200);

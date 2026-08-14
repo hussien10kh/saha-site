@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>معاينة: تفاصيل مكان | ساحة سياحة</title>
-<meta name="robots" content="noindex, nofollow">
+<title>تفاصيل المكان | ساحة سياحة</title>
+<meta name="description" content="تفاصيل المكان السياحي: الوصف، الموقع على الخريطة والاتجاهات، وتقييمات الزوار.">
+<meta name="keywords" content="مكان سياحي سوريا, ساحة سياحة">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -89,7 +90,6 @@
 </head>
 <body>
 
-<div class="preview-banner">🚧 معاينة داخلية — صفحة تفاصيل مكان (بيانات تجريبية) · <a href="index.html">رجوع للتصفح</a> · <a href="add-place.html">نموذج الإضافة</a></div>
 
 <header class="t-header">
   <div class="t-container t-header-inner">
@@ -164,7 +164,10 @@
     return;
   }
 
-  document.title = 'معاينة: ' + place.name + ' | ساحة سياحة';
+  document.title = place.name + ' | ساحة سياحة';
+  // meta description ديناميكي حسب المكان
+  var mdesc = document.querySelector('meta[name="description"]');
+  if(mdesc) mdesc.setAttribute('content', place.name + ' — ' + (place.desc || 'مكان سياحي في ' + place.city + ', سوريا.') + ' استعرض الوصف، الخريطة، والاتجاهات على ساحة سياحة.');
   var meta = CATEGORY_META[place.category] || {icon:'📍', label:''};
 
   function initials(name){
@@ -216,6 +219,15 @@
     '<div class="p-content">' +
       '<div>' +
         '<div class="p-section"><p class="p-desc">' + place.desc + '</p></div>' +
+        (function(){
+          var vid = place.videoUrl || place.video_url;
+          var m = vid && String(vid).match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/);
+          if (!m) return '';
+          return '<div class="p-section"><h4>فيديو</h4>'
+            + '<div style="position:relative;padding-bottom:56.25%;height:0;border-radius:12px;overflow:hidden;background:#000;">'
+            + '<iframe src="https://www.youtube.com/embed/' + m[1] + '?rel=0" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe>'
+            + '</div></div>';
+        })() +
         '<div class="p-section">' +
           '<h4>الموقع على الخريطة</h4>' +
           '<div id="pMap" class="p-map"></div>' +

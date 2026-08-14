@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>معاينة: المناطق | ساحة سياحة</title>
-<meta name="robots" content="noindex, nofollow">
+<title>المناطق | ساحة سياحة — اكتشف كل محافظة</title>
+<meta name="description" content="استكشف الأماكن السياحية حسب المحافظة والمنطقة: دمشق، ريف دمشق، حلب، حمص، حماة، اللاذقية، طرطوس، والمزيد.">
+<meta name="keywords" content="مناطق سياحية سوريا, محافظات سوريا, دليل مناطق, ساحة سياحة">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -132,7 +133,6 @@
 </head>
 <body>
 
-<div class="preview-banner">🚧 معاينة داخلية — مثال صفحة المناطق (خريطة وبيانات تجريبية) · <a href="index.html">رجوع للتصفح</a></div>
 
 <header class="t-header">
   <div class="t-container t-header-inner">
@@ -433,13 +433,23 @@
       });
     }
 
+    // نحسب عدد الأماكن الفعلية بالمحافظة/المنطقة من PLACES_DATA الحقيقي (بدل الأرقام الوهمية بـregions-data.json).
+    function realCountFor(gov, areaName) {
+      if (typeof PLACES_DATA === 'undefined') return 0;
+      return PLACES_DATA.filter(function(p){
+        if (areaName) return (p.city && p.city.indexOf(gov) >= 0) && (p.area && p.area.indexOf(areaName) >= 0);
+        return p.city && p.city.indexOf(gov) >= 0;
+      }).length;
+    }
+    function fmtCount(n) { return n > 0 ? '<span class="cnt">' + n + '</span>' : ''; }
+
     function renderSidebar(govName, areas){
-      var totalPlaces = areas.reduce(function(s,a){ return s + a.count; }, 0);
+      var totalPlaces = realCountFor(govName, null);
       var html = '<div class="r-gov-label active" data-area="all">' + govName +
-        '<span class="cnt">' + totalPlaces + ' مكان</span></div>';
+        (totalPlaces > 0 ? '<span class="cnt">' + totalPlaces + ' مكان</span>' : '') + '</div>';
       areas.forEach(function(a){
         html += '<button class="r-area-btn" data-area="' + a.key + '">' + a.name +
-          ' <span class="cnt">' + a.count + '</span></button>';
+          ' ' + fmtCount(realCountFor(govName, a.name)) + '</button>';
       });
       sidebar.innerHTML = html;
 
@@ -464,17 +474,19 @@
       return best;
     }
 
-    function renderGrid(areas){
+    function renderGrid(areas, govName){
       var start = (currentPage - 1) * PAGE_SIZE;
       var pageAreas = areas.slice(start, start + PAGE_SIZE);
       grid.innerHTML = pageAreas.map(function(a){
         var near = nearestPlace(a);
         var href = near ? ('place.html?id=' + near.id) : 'index.html';
+        var realCount = realCountFor(govName || '', a.name);
         return '<a class="r-area-card" data-area="' + a.key + '" href="' + href + '">' +
           '<div class="r-area-media"><img src="images/places/' + a.image + '" alt="' + a.name + '" loading="lazy">' +
           '<span class="r-area-fav">' + favIcon + '</span></div>' +
-          '<div class="r-area-body"><h3>' + a.name + '</h3><div class="r-area-count">' + a.count + ' مكان</div></div>' +
-          '</a>';
+          '<div class="r-area-body"><h3>' + a.name + '</h3>' +
+          (realCount > 0 ? '<div class="r-area-count">' + realCount + ' مكان</div>' : '') +
+          '</div></a>';
       }).join('');
     }
 
@@ -500,7 +512,7 @@
     function goToPage(p){
       currentPage = p;
       var areas = currentAreaFilteredAreas();
-      renderGrid(areas);
+      renderGrid(areas, currentGov);
       renderPagination(areas.length);
       window.scrollTo({top: grid.getBoundingClientRect().top + window.scrollY - 90, behavior:'smooth'});
     }
@@ -517,7 +529,7 @@
         el.classList.toggle('active', el.dataset.area === key);
       });
       var areas = currentAreaFilteredAreas();
-      renderGrid(areas);
+      renderGrid(areas, currentGov);
       renderPagination(areas.length);
       if (key !== 'all' && markers[key]) {
         map.flyTo(markers[key].getLatLng(), 14, {duration:0.6});
@@ -534,7 +546,7 @@
       currentPage = 1;
       var areas = DATA[name].areas;
       renderSidebar(name, areas);
-      renderGrid(areas);
+      renderGrid(areas, currentGov);
       renderPagination(areas.length);
       var center = govCenter(areas);
       if (!map) { initMap(center[0], center[1]); }

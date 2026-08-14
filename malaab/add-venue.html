@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>أضف ملعب - ملعبك</title>
+<title>أضف ملعبك | ملعبك</title>
+<meta name="description" content="اعرض ملعبك للحجز على منصة ملعبك. سجّل ملعبك بسهولة وابدأ استقبال الحجوزات.">
+<meta name="keywords" content="إضافة ملعب, تسجيل ملعب سوريا, ملعبك">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -79,6 +81,12 @@
       <div data-value="بدون دفع مسبق">بدون دفع مسبق</div>
     </div>
     <p class="muted" style="font-size:12px;margin-top:6px;">أنت تحدد سياسة الدفع الخاصة بملعبك.</p>
+  </div>
+
+  <div class="field">
+    <label>رابط يوتيوب للفيديو (اختياري)</label>
+    <input type="url" id="vVideo" placeholder="https://youtu.be/... (فيديو تعريفي عن الملعب)">
+    <p class="muted" style="font-size:12px;margin-top:6px;">ارفع الفيديو على يوتيوب أول، بعدين الصق الرابط هون.</p>
   </div>
 
   <div id="termsSlot"></div>
@@ -198,6 +206,16 @@
       const imageUrl = await MalaabakAPI.uploadImage(imageFile, `venues/${slug}-${Date.now()}`, "ملعبك");
 
       // 2) أنشئ سجل الملعب (status pending تلقائياً من SQL default)
+      // رابط يوتيوب اختياري (نتحقق قبل الإرسال)
+      const ytRaw = $("vVideo").value.trim();
+      let videoUrl = null;
+      if (ytRaw) {
+        if (!MalaabakAPI.isYouTubeUrl(ytRaw)) {
+          hint.textContent = "رابط اليوتيوب مو صحيح."; submitBtn.disabled = false; submitBtn.textContent = "إرسال للمراجعة"; return;
+        }
+        videoUrl = ytRaw;
+      }
+
       await MalaabakAPI.create("venues", {
         name, sport, governorate, city,
         address: address || `${governorate} - ${city}`,
@@ -206,6 +224,7 @@
         images: [imageUrl],
         watermark_included: true,
         phone: null,
+        video_url: videoUrl,
       });
 
       hint.textContent = "تم الإرسال للمراجعة ✓ ملعبك بيظهر بعد موافقة الإدارة. عم نحوّلك...";

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>تفاصيل الموهبة - ملعبك</title>
+<meta name="description" content="ملف الموهبة: الرياضة، المركز، الفيديوهات المعتمدة على ملعبك.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -109,16 +110,23 @@
 
   DetailCore.wireShare(root.querySelector("#shareBtn"), t.name);
 
-  // تشغيل الفيديو عند الطلب فقط - واللوغو يضل ظاهر أثناء التشغيل
+  // تشغيل الفيديو عند الطلب فقط. يوتيوب → iframe، ملف Supabase → <video>.
   root.querySelector(".detail-col-main").addEventListener("click", (e) => {
     const thumb = e.target.closest(".video-thumb");
     if (!thumb || thumb.classList.contains("playing")) return;
     const src = thumb.dataset.src;
     const logo = thumb.querySelector(".video-logo");
     thumb.classList.add("playing");
-    thumb.innerHTML = src
-      ? `<video src="${src}" controls autoplay playsinline></video>`
-      : `<p style="color:#fff;font-size:0.75em;text-align:center;padding:1em;">الفيديو رح يظهر هون بعد الرفع والموافقة</p>`;
+    if (!src) {
+      thumb.innerHTML = `<p style="color:#fff;font-size:0.75em;text-align:center;padding:1em;">الفيديو رح يظهر هون بعد الرفع والموافقة</p>`;
+    } else if (MalaabakAPI.isYouTubeUrl(src)) {
+      // يوتيوب: ما نضيف اللوغو (يوتيوب بيعرض شعاره الخاص + معالجته الجودة)
+      const embed = MalaabakAPI.youtubeEmbedUrl(src) + '?autoplay=1&rel=0';
+      thumb.innerHTML = `<iframe src="${embed}" style="width:100%;height:100%;border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      return; // بلا logo لأنه يوتيوب برند خاص
+    } else {
+      thumb.innerHTML = `<video src="${src}" controls autoplay playsinline></video>`;
+    }
     if (logo) thumb.appendChild(logo);
   });
 })();
