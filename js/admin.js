@@ -216,6 +216,8 @@ function renderSidebar(){
       renderTopbar();
       renderTab();
       document.getElementById('adminSidebar').classList.remove('open');
+      // ارجع لأعلى الصفحة عند تبديل تبويب — كنا نبقى مكاننا من التبويب السابق
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
   document.getElementById('adminLogoutBtn').addEventListener('click', async ()=>{
@@ -761,7 +763,10 @@ async function renderMalaabPending(mount, type){
       const cur = x.video_url || '';
       videoRows = `
         <div style="margin-top:10px;padding:10px;border:1px dashed var(--border);border-radius:8px;">
-          <label style="display:block;font-size:.82em;color:var(--muted);margin-bottom:4px;">رابط يوتيوب (اختياري):</label>
+          <label style="display:block;font-size:.82em;color:var(--muted);margin-bottom:4px;">
+            رابط يوتيوب (اختياري):
+            <span style="font-weight:400;font-size:.9em;">— لو صاحب ${NAMES[type].slice(0,-1)} ما لصق رابط، تقدر تلصق واحد قبل الموافقة</span>
+          </label>
           <input type="url" class="mlb-single-yt" data-id="${x.id}" value="${escapeHTML(cur)}"
             placeholder="https://youtube.com/watch?v=..." style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.9em;">
           ${cur ? `<p style="font-size:.75em;color:var(--success,#1a9c5e);margin:6px 0 0;">✓ فيديو محفوظ حالياً</p>` : ''}
