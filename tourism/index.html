@@ -83,7 +83,7 @@
   <script>
     // البطاقات تجيء ديناميكياً من PLACES_DATA (المعالم الأثرية فقط بعد التنظيف).
     // ننتظر DOMContentLoaded عشان places-data.js يكون تحمّل (بيتحمّل بذيل الصفحة).
-    document.addEventListener('DOMContentLoaded', function renderHomeFeatured(){
+    document.addEventListener('DOMContentLoaded', async function renderHomeFeatured(){
       var favIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg>';
       function cardHTML(p){
         var img = (p.image || '').indexOf('http') === 0 ? p.image : 'images/' + (p.image || '');
@@ -95,7 +95,7 @@
                  '<div class="t-card-body"><h3>' + p.name + '</h3><div class="t-card-city">' + p.city + '</div></div>' +
                '</a>';
       }
-      var all = (typeof PLACES_DATA !== 'undefined') ? PLACES_DATA : [];
+      var all = (typeof tourismGetPlaces === 'function') ? await tourismGetPlaces() : ((typeof PLACES_DATA !== 'undefined') ? PLACES_DATA : []);
       var s1 = document.getElementById('tFeatured1');
       var s2 = document.getElementById('tFeatured2');
       if(!all.length){
@@ -153,6 +153,8 @@
     <div class="saaha-copy-wrap"><div class="saaha-copy"><a class="saaha-copy-name" href="../index.html" style="text-decoration:none;color:inherit;">ساحة — 2026</a><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
 </footer>
 
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
 <script src="places-data.js"></script>
 <script src="helpers.js"></script>
 <script>

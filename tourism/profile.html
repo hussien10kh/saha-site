@@ -168,6 +168,8 @@
     <div class="saaha-copy-wrap"><div class="saaha-copy"><a class="saaha-copy-name" href="../index.html" style="text-decoration:none;color:inherit;">ساحة — 2026</a><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
 </footer>
 
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
 <script src="places-data.js"></script>
 <script src="helpers.js"></script>
 <script>
@@ -297,8 +299,8 @@
       }).join('') + '</div>';
     }
 
-    function renderAddedSection(user){
-      var mine = addedPlacesGetByUser(user.email);
+    async function renderAddedSection(user){
+      var mine = await addedPlacesGetByUser(user.email);
       if (!mine.length) {
         return '<div class="pr-empty">لسا ما ضفت أي مكان — <a href="add-place.html">ضيف أول مكان إلك</a> وبيبين هون وقت المراجعة.</div>';
       }
@@ -369,8 +371,12 @@
       });
 
       var active = TABS.filter(function(t){ return t.key === activeTab; })[0] || TABS[0];
-      document.getElementById('prTabBody').innerHTML = active.render(user);
-      favoritesWireButtons(document.getElementById('prTabBody'));
+      Promise.resolve(active.render(user)).then(function(html){
+        var body = document.getElementById('prTabBody');
+        if (!body) return;
+        body.innerHTML = html;
+        favoritesWireButtons(body);
+      });
     }
 
     function render(){

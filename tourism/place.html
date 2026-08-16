@@ -140,11 +140,13 @@
     <div class="saaha-copy-wrap"><div class="saaha-copy"><a class="saaha-copy-name" href="../index.html" style="text-decoration:none;color:inherit;">ساحة — 2026</a><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
 </footer>
 
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
 <script src="places-data.js"></script>
 <script src="helpers.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
-(function(){
+(async function(){
   var CATEGORY_META = {
     landmark:{icon:'🏛', label:'معالم'},
     cafe:{icon:'☕', label:'مقاهي'},
@@ -155,7 +157,7 @@
 
   var params = new URLSearchParams(location.search);
   var id = params.get('id');
-  var place = id ? placesGetById(id) : null;
+  var place = id ? await tourismGetPlaceById(id) : null;
   var root = document.getElementById('pRoot');
   var currentUser = authGetUser();
 
@@ -201,13 +203,13 @@
   var nearby = placesNearby(place, 4);
   var nearbyHtml = nearby.map(function(n){
     return '<a class="p-nearby-item" href="place.html?id=' + n.place.id + '" style="color:inherit;text-decoration:none;">' +
-      '<img class="p-nearby-thumb" src="images/' + n.place.image + '" alt="' + n.place.name + '" loading="lazy">' +
+      '<img class="p-nearby-thumb" src="' + (String(n.place.image).indexOf('http') === 0 ? n.place.image : 'images/' + n.place.image) + '" alt="' + n.place.name + '" loading="lazy">' +
       '<div><div class="p-nearby-name">' + n.place.name + '</div><div class="p-nearby-km">' + n.place.city + ' — ' + n.km.toFixed(0) + ' كم</div></div>' +
     '</a>';
   }).join('');
 
   root.innerHTML =
-    '<div class="p-hero" style="background-image:url(\'images/' + place.image + '\');">' +
+    '<div class="p-hero" style="background-image:url(\'' + (String(place.image).indexOf('http') === 0 ? place.image : 'images/' + place.image) + '\');">' +
       '<button type="button" class="p-hero-fav fav-btn" data-id="' + place.id + '" aria-label="مفضلة">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.4 8 2 4.5 5.6 4c2-.3 3.8.7 4.9 2.4C11.6 4.7 13.4 3.7 15.4 4c3.6.5 5.2 4 3.6 7.7C16.5 16.3 12 21 12 21Z"/></svg>' +
       '</button>' +
@@ -263,15 +265,17 @@
   favoritesWireButtons(root);
   renderReviews();
 
-  var map = L.map('pMap', {scrollWheelZoom:false}).setView([place.lat, place.lng], 14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution:'&copy; OpenStreetMap'
-  }).addTo(map);
-  L.marker([place.lat, place.lng]).addTo(map).bindPopup(
-    '<b>' + place.name + '</b><br>' +
-    '<a href="https://www.google.com/maps/dir/?api=1&destination=' + place.lat + ',' + place.lng +
-    '" target="_blank" rel="noopener" style="color:#0d9488;font-weight:700;text-decoration:underline;">🧭 افتح الاتجاهات</a>'
-  );
+  if (place.lat && place.lng && typeof L !== 'undefined') {
+    var map = L.map('pMap', {scrollWheelZoom:false}).setView([place.lat, place.lng], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution:'&copy; OpenStreetMap'
+    }).addTo(map);
+    L.marker([place.lat, place.lng]).addTo(map).bindPopup(
+      '<b>' + place.name + '</b><br>' +
+      '<a href="https://www.google.com/maps/dir/?api=1&destination=' + place.lat + ',' + place.lng +
+      '" target="_blank" rel="noopener" style="color:#0d9488;font-weight:700;text-decoration:underline;">🧭 افتح الاتجاهات</a>'
+    );
+  }
 
   var chosenStars = 0;
   var starButtons = document.querySelectorAll('#pStarsInput button');

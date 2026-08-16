@@ -219,11 +219,13 @@
     <div class="saaha-copy-wrap"><div class="saaha-copy"><a class="saaha-copy-name" href="../index.html" style="text-decoration:none;color:inherit;">ساحة — 2026</a><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
 </footer>
 
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
 <script src="places-data.js"></script>
 <script src="helpers.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
-  (function(){
+  (async function(){
     var btn = document.getElementById('langToggle');
     if(!btn) return;
     var lang = (navigator.language || 'ar').toLowerCase().indexOf('en') === 0 ? 'en' : 'ar';
@@ -400,6 +402,7 @@
     var pagination = document.getElementById('rPagination');
 
     var DATA = null;
+    var PLACES = typeof tourismGetPlaces === 'function' ? await tourismGetPlaces() : tourismStaticPlaces();
     var currentGov = null;
     var currentAreaKey = 'all';
     var currentPage = 1;
@@ -433,12 +436,12 @@
       });
     }
 
-    // نحسب عدد الأماكن الفعلية بالمحافظة/المنطقة من PLACES_DATA الحقيقي (بدل الأرقام الوهمية بـregions-data.json).
+    // نحسب عدد الأماكن الفعلية بالمحافظة/المنطقة من مصدر السياحة الموحد.
     function realCountFor(gov, areaName) {
-      if (typeof PLACES_DATA === 'undefined') return 0;
-      return PLACES_DATA.filter(function(p){
-        if (areaName) return (p.city && p.city.indexOf(gov) >= 0) && (p.area && p.area.indexOf(areaName) >= 0);
-        return p.city && p.city.indexOf(gov) >= 0;
+      return PLACES.filter(function(p){
+        var inGov = (p.city && p.city.indexOf(gov) >= 0) || (p.area && p.area.indexOf(gov) >= 0);
+        if (areaName) return inGov && (p.area && p.area.indexOf(areaName) >= 0);
+        return inGov;
       }).length;
     }
     function fmtCount(n) { return n > 0 ? '<span class="cnt">' + n + '</span>' : ''; }
@@ -467,7 +470,7 @@
        area actually takes you somewhere relevant. */
     function nearestPlace(area){
       var best = null, bestKm = Infinity;
-      PLACES_DATA.forEach(function(p){
+      PLACES.forEach(function(p){
         var km = placesDistanceKm(area, p);
         if (km < bestKm) { bestKm = km; best = p; }
       });

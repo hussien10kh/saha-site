@@ -11,6 +11,84 @@ function placesGetById(id) {
   return PLACES_DATA.find(function (p) { return p.id === id; }) || null;
 }
 
+function tourismLocalImage(src) {
+  if (!src) return 'header/hero-umayyad.png';
+  return String(src).indexOf('http') === 0 ? src : src.replace(/^images\//, '');
+}
+
+function tourismNormalizeCategory(category) {
+  if (category === 'restaurant') return 'food';
+  return category || 'landmark';
+}
+
+function tourismRowToPlace(row) {
+  var images = Array.isArray(row.images) ? row.images : [];
+  var image = images[0] || row.image || 'header/hero-umayyad.png';
+  return {
+    id: row.id,
+    name: row.name || 'مكان سياحي',
+    category: tourismNormalizeCategory(row.category),
+    city: row.city || row.region || 'سوريا',
+    area: row.address || row.city || row.region || 'سوريا',
+    lat: Number(row.lat || row.latitude) || 34.8,
+    lng: Number(row.lng || row.longitude) || 37.0,
+    image: tourismLocalImage(image),
+    desc: row.description || row.desc || '',
+    videoUrl: row.video_url || row.videoUrl || '',
+    status: row.status || 'approved',
+    addedBy: row.added_by || null,
+    createdAt: row.created_at || null
+  };
+}
+
+function tourismStaticPlaces() {
+  return (typeof PLACES_DATA !== 'undefined' ? PLACES_DATA : []).map(function (p) {
+    return Object.assign({}, p, {
+      category: tourismNormalizeCategory(p.category),
+      image: tourismLocalImage(p.image)
+    });
+  });
+}
+
+async function tourismGetPlaces() {
+  var local = tourismStaticPlaces();
+  if (typeof sb === 'undefined') return local;
+  try {
+    var res = await sb.from('tourism_places')
+      .select('*')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false });
+    if (res.error) throw res.error;
+    var remote = (res.data || []).map(tourismRowToPlace);
+    var byId = {};
+    local.forEach(function (p) { byId[p.id] = p; });
+    remote.forEach(function (p) { byId[p.id] = p; });
+    return Object.keys(byId).map(function (id) { return byId[id]; });
+  } catch (e) {
+    console.error('tourismGetPlaces failed:', e);
+    return local;
+  }
+}
+
+async function tourismGetPlaceById(id) {
+  if (!id) return null;
+  var local = placesGetById(id);
+  if (typeof sb !== 'undefined') {
+    try {
+      var res = await sb.from('tourism_places')
+        .select('*')
+        .eq('id', id)
+        .eq('status', 'approved')
+        .maybeSingle();
+      if (res.error) throw res.error;
+      if (res.data) return tourismRowToPlace(res.data);
+    } catch (e) {
+      console.error('tourismGetPlaceById failed:', e);
+    }
+  }
+  return local ? tourismRowToPlace(local) : null;
+}
+
 function placesDistanceKm(a, b) {
   if (!a || !b || a.lat == null || b.lat == null) return Infinity;
   var R = 6371;
@@ -101,7 +179,7 @@ function authLogin(_email, _password) {
   window.location.href = '../login.html?redirect=' + encodeURIComponent(window.location.pathname);
 }
 function authSignup(_email, _password) {
-  window.location.href = '../register.html?redirect=' + encodeURIComponent(window.location.pathname);
+  window.location.href = '../login.html?redirect=' + encodeURIComponent(window.location.pathname);
 }
 function authLogout() {
   window.location.href = '../login.html';
@@ -141,4 +219,28 @@ function favoritesWireButtons(root) {
       btn.classList.toggle('is-fav', on);
     });
   });
+}
+
+async function addedPlacesGetByUser(email) {
+  if (typeof sb === 'undefined') return [];
+  try {
+    var userRes = await sb.auth.getUser();
+    var user = userRes && userRes.data && userRes.data.user;
+    if (!user && !email) return [];
+    var q = sb.from('tourism_places')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (user) q = q.eq('added_by', user.id);
+    var res = await q;
+    if (res.error) throw res.error;
+    return (res.data || []).map(function (row) {
+      var p = tourismRowToPlace(row);
+      p.loc = [p.area, p.city].filter(Boolean).join('، ');
+      p.status = row.status === 'approved' ? 'موافق عليه' : row.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة';
+      return p;
+    });
+  } catch (e) {
+    console.error('addedPlacesGetByUser failed:', e);
+    return [];
+  }
 }

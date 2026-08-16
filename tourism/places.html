@@ -310,6 +310,8 @@
     <div class="saaha-copy-wrap"><div class="saaha-copy"><a class="saaha-copy-name" href="../index.html" style="text-decoration:none;color:inherit;">ساحة — 2026</a><span class="saaha-copy-slogan">كل شي جميل بيبدا من ساحة</span></div></div>
 </footer>
 
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
 <script src="places-data.js"></script>
 <script src="helpers.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -332,9 +334,9 @@
 </script>
 
 <script>
-  (function(){
+  (async function(){
     var CATEGORY_LABEL = {food:'مطاعم', cafe:'مقاهي', landmark:'معالم', garden:'حدائق', shop:'متاجر'};
-    var PLACES = PLACES_DATA;
+    var PLACES = await tourismGetPlaces();
 
     var PAGE_SIZE = 6;
     var currentPage = 1;
@@ -387,7 +389,7 @@
 
     function cardHtml(p){
       return '<a class="c-card" href="place.html?id=' + p.id + '">' +
-        '<div class="c-card-media"><img src="images/' + p.image + '" alt="' + p.name + '" loading="lazy"></div>' +
+        '<div class="c-card-media"><img src="' + (String(p.image).indexOf('http') === 0 ? p.image : 'images/' + p.image) + '" alt="' + p.name + '" loading="lazy"></div>' +
         '<div class="c-card-body">' +
           '<div class="c-card-top"><h3>' + p.name + '</h3>' +
             '<div class="c-card-actions">' +
@@ -458,6 +460,7 @@
       attribution: '&copy; OpenStreetMap', maxZoom: 18
     }).addTo(map);
     PLACES.forEach(function(p){
+      if (!p.lat || !p.lng) return;
       L.marker([p.lat, p.lng]).addTo(map).bindPopup('<b>' + p.name + '</b><br><a href="https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lng + '" target="_blank" rel="noopener" style="color:#0d9488;font-weight:700;text-decoration:underline;">🧭 افتح الاتجاهات</a>');
     });
   })();
