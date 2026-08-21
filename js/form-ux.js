@@ -247,10 +247,53 @@ const FormUX = (() => {
     return true;
   }
 
+  // ---------- Promote .role-picker divs to accessible radio groups ----------
+  // كانت <div>s فيها click handlers — مو keyboard-reachable ولا مرئية لقارئ الشاشة.
+  // Auto-init: أي .role-picker بالصفحة يصير role=radiogroup مع children radio + tabindex + arrow key nav.
+  function initRolePickers(scope) {
+    (scope || document).querySelectorAll('.role-picker').forEach((rp) => {
+      if (rp.dataset.a11yInit) return;
+      rp.dataset.a11yInit = '1';
+      rp.setAttribute('role', 'radiogroup');
+      const opts = rp.querySelectorAll('[data-value]');
+      opts.forEach((o, i) => {
+        o.setAttribute('role', 'radio');
+        o.setAttribute('tabindex', o.classList.contains('selected') ? '0' : '-1');
+        o.setAttribute('aria-checked', o.classList.contains('selected') ? 'true' : 'false');
+        // اختصار لوحة المفاتيح: أسهم يمين/يسار للتنقل، مسافة/إدخال للاختيار
+        o.addEventListener('keydown', (e) => {
+          const list = Array.from(rp.querySelectorAll('[data-value]'));
+          const idx = list.indexOf(o);
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault(); (list[(idx+1)%list.length]).focus(); (list[(idx+1)%list.length]).click();
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault(); (list[(idx-1+list.length)%list.length]).focus(); (list[(idx-1+list.length)%list.length]).click();
+          } else if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault(); o.click();
+          }
+        });
+      });
+      // بعد أي click داخل الـpicker، حدّث aria-checked و tabindex
+      rp.addEventListener('click', () => {
+        rp.querySelectorAll('[data-value]').forEach((o) => {
+          const sel = o.classList.contains('selected');
+          o.setAttribute('aria-checked', sel ? 'true' : 'false');
+          o.setAttribute('tabindex', sel ? '0' : '-1');
+        });
+      });
+    });
+  }
+  // شغّلها بعد ما يتحمّل الـDOM
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => initRolePickers());
+    else initRolePickers();
+  }
+
   return {
     toast, clearFieldErrors, markFieldError, setSubmitLoading, friendlyError,
     requireAuth, saveDraft, loadDraft, clearDraft, currentUser,
     isValidYouTubeUrl, checkFileSize, attachLiveValidator,
     SYRIA_GOVERNORATES, governorateOptionsHTML, isMeaningfulText,
+    initRolePickers,
   };
 })();

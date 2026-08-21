@@ -138,6 +138,7 @@
 
 <script src="places-data.js"></script>
 <script src="helpers.js"></script>
+<script src="header-auth.js"></script>
 <script>
   document.querySelectorAll('.f-role-chip').forEach(chip=>{
     chip.addEventListener('click', ()=>{
@@ -199,8 +200,8 @@
         // 2) رفع الصورة (اختياري) — إلى sahat-media تحت مسار المستخدم/tourism
         const images = [];
         if (imageFile) {
-          const slug = (name.toLowerCase().replace(/[^a-z0-9ء-ي]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,40)) || 'place';
-          const key = `${user.id}/tourism/${slug}-${Date.now()}.webp`;
+          const safeId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+          const key = `${user.id}/tourism/place-${safeId}.webp`;
           let blob = imageFile;
           if (window.MediaProcessor) {
             try { blob = await MediaProcessor.processImage(imageFile, { label: 'ساحة', output: 'blob' }); } catch(e) {}

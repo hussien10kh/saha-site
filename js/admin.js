@@ -251,7 +251,7 @@ function renderTopbar(){
     'users-admins':'الحسابات — المشرفون',
   };
   document.getElementById('adminTopbar').innerHTML = `
-    <button class="admin-icon-btn" id="sidebarToggle" style="display:none;">${ADMIN_ICONS.menu}</button>
+    <button class="admin-icon-btn" id="sidebarToggle" style="display:none;" aria-label="فتح قائمة التنقل">${ADMIN_ICONS.menu}</button>
     <div class="admin-title">${titles[currentTab]}</div>
     <div class="admin-user-chip"><span class="dot"></span>${escapeHTML((adminUser && adminUser.email) || '')}</div>
   `;
@@ -354,9 +354,9 @@ function adsTableHTML(ads, showActions){
           ${showActions ? `
           <td>
             <div class="row-actions">
-              <a class="admin-icon-btn" href="listing.html?id=${ad.id}" target="_blank" title="عرض">${ADMIN_ICONS.eye}</a>
-              <button class="admin-icon-btn edit-ad-btn" title="تعديل">${ADMIN_ICONS.edit}</button>
-              <button class="admin-icon-btn danger delete-ad-btn" title="حذف">${ADMIN_ICONS.trash}</button>
+              <a class="admin-icon-btn" href="listing.html?id=${ad.id}" target="_blank" title="عرض" aria-label="عرض الإعلان">${ADMIN_ICONS.eye}</a>
+              <button class="admin-icon-btn edit-ad-btn" title="تعديل" aria-label="تعديل الإعلان">${ADMIN_ICONS.edit}</button>
+              <button class="admin-icon-btn danger delete-ad-btn" title="حذف" aria-label="حذف الإعلان">${ADMIN_ICONS.trash}</button>
             </div>
           </td>` : ''}
         </tr>
@@ -610,7 +610,7 @@ async function renderCommentsTable(){
           <td>${escapeHTML(c.name)}</td>
           <td class="cell-title" style="max-width:320px;">${escapeHTML(c.text)}</td>
           <td>${escapeHTML(c.time)}</td>
-          <td><button class="admin-icon-btn danger delete-comment-btn" title="حذف">${ADMIN_ICONS.trash}</button></td>
+          <td><button class="admin-icon-btn danger delete-comment-btn" title="حذف" aria-label="حذف التعليق">${ADMIN_ICONS.trash}</button></td>
         </tr>
       `).join('')}
     </tbody>
