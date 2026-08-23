@@ -211,11 +211,111 @@ const FormUX = (() => {
   }
 
   // ---------- File size check (MB) ----------
+  function fileSizeMB(file) { return file ? file.size / (1024 * 1024) : 0; }
   function checkFileSize(file, maxMB = 5) {
     if (!file) return true;
-    const mb = file.size / (1024 * 1024);
+    const mb = fileSizeMB(file);
     if (mb > maxMB) { toast(`الملف كبير (${mb.toFixed(1)}MB). الحد الأقصى ${maxMB}MB.`, 'error'); return false; }
     return true;
+  }
+  // بيرجع نص وصفي بالعربي مع مستوى الخطورة {ok|warn|block}
+  function fileSizeInfo(file, softMB = 20, hardMB = 50) {
+    const mb = fileSizeMB(file);
+    const mbStr = mb < 1 ? `${(mb*1024).toFixed(0)} كيلو` : `${mb.toFixed(1)} ميغا`;
+    if (mb > hardMB) return { level: 'block', mb, text: `${mbStr} — كبير جداً (فوق ${hardMB}MB)` };
+    if (mb > softMB) return { level: 'warn',  mb, text: `${mbStr} — كبير، ممكن يستغرق دقائق أو يفشل` };
+    return { level: 'ok', mb, text: mbStr };
+  }
+
+  // ---------- ضغط الفيديو (بست جهد) ----------
+  // browser video re-encoding عبر MediaRecorder: بيسجّل الفيديو الأصلي بـbitrate أقل.
+  // ملاحظات:
+  //   1) بياخذ وقت real-time (فيديو دقيقة = دقيقة ضغط تقريباً)
+  //   2) بعض المتصفحات ما بتدعم captureStream على video element (Safari قديم)
+  //   3) الجودة رح تتأثر شوي — بس البتريت المستهدف كافي لعرض ملعبك
+  //   4) لو الملف صغير أصلاً، بيرجع الأصلي
+  // opts: { targetMbps = 2, softMB = 15, onProgress(percent, note) }
+  async function compressVideo(file, opts = {}) {
+    const targetMbps = opts.targetMbps || 2;
+    const softMB = opts.softMB || 15;
+    const onProgress = opts.onProgress || (() => {});
+    if (!file || !file.type.startsWith('video/')) return file;
+    if (fileSizeMB(file) <= softMB) return file; // صغير — ما نضغط
+
+    // فحص الدعم
+    const hasSupport = typeof MediaRecorder !== 'undefined'
+      && typeof HTMLVideoElement !== 'undefined'
+      && typeof HTMLVideoElement.prototype.captureStream === 'function';
+    if (!hasSupport) {
+      onProgress(100, 'المتصفح ما بيدعم الضغط — رح يترفع الأصلي');
+      return file;
+    }
+
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.src = url; video.muted = true; video.playsInline = true;
+    await new Promise((res, rej) => {
+      video.onloadedmetadata = res;
+      video.onerror = () => rej(new Error('تعذّر قراءة الفيديو'));
+    });
+
+    const durationSec = video.duration || 0;
+    if (!isFinite(durationSec) || durationSec === 0) {
+      URL.revokeObjectURL(url);
+      return file; // مو قادرين نحسب المدة — استعمل الأصلي
+    }
+
+    // اختر أفضل mimeType متاح
+    const candidates = [
+      'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus',
+      'video/webm;codecs=h264,opus', 'video/webm',
+    ];
+    let mimeType = '';
+    for (const c of candidates) if (MediaRecorder.isTypeSupported(c)) { mimeType = c; break; }
+    if (!mimeType) {
+      URL.revokeObjectURL(url);
+      onProgress(100, 'المتصفح ما بيدعم الضغط — رح يترفع الأصلي');
+      return file;
+    }
+
+    let stream;
+    try { stream = video.captureStream(30); }
+    catch (e) { URL.revokeObjectURL(url); return file; }
+
+    return new Promise((resolve) => {
+      const chunks = [];
+      const bitsPerSec = targetMbps * 1000 * 1000;
+      let recorder;
+      try {
+        recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: bitsPerSec });
+      } catch (e) { URL.revokeObjectURL(url); return resolve(file); }
+
+      recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      recorder.onstop = () => {
+        URL.revokeObjectURL(url);
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        // لو النتيجة أكبر أو نفس الأصل، ارجع الأصلي (الضغط ما نفع)
+        if (blob.size >= file.size * 0.95) { onProgress(100, 'الضغط ما وفّر مساحة — رح يترفع الأصلي'); return resolve(file); }
+        // اعطي الـblob اسم واضح
+        blob.name = (file.name.replace(/\.[^.]+$/, '') || 'video') + '.webm';
+        onProgress(100, `تم الضغط: ${(blob.size/(1024*1024)).toFixed(1)}MB (كان ${(file.size/(1024*1024)).toFixed(1)}MB)`);
+        resolve(blob);
+      };
+
+      // تحديث تقدّم كل 200ms على أساس currentTime/duration
+      const progressTimer = setInterval(() => {
+        const pct = Math.min(99, Math.round((video.currentTime / durationSec) * 100));
+        onProgress(pct, `جاري ضغط الفيديو... ${pct}%`);
+      }, 200);
+      video.onended = () => {
+        clearInterval(progressTimer);
+        recorder.stop();
+      };
+      video.onerror = () => { clearInterval(progressTimer); URL.revokeObjectURL(url); resolve(file); };
+
+      recorder.start(1000);
+      video.play().catch(() => { clearInterval(progressTimer); recorder.stop(); URL.revokeObjectURL(url); resolve(file); });
+    });
   }
 
   // ---------- محافظات سوريا (14) ----------
@@ -293,6 +393,7 @@ const FormUX = (() => {
     toast, clearFieldErrors, markFieldError, setSubmitLoading, friendlyError,
     requireAuth, saveDraft, loadDraft, clearDraft, currentUser,
     isValidYouTubeUrl, checkFileSize, attachLiveValidator,
+    fileSizeMB, fileSizeInfo, compressVideo,
     SYRIA_GOVERNORATES, governorateOptionsHTML, isMeaningfulText,
     initRolePickers,
   };

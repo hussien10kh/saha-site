@@ -105,6 +105,8 @@
       <p class="muted" style="font-size:0.75em;margin-top:0.4em;">
         بعد الموافقة سيظهر الفيديو كما رفعته، مع بطاقة عرض تحمل هوية ملعبك.
       </p>
+      <!-- بلوك حجم الملف مع تنبيه ملوّن حسب الخطورة -->
+      <div id="vSizeInfo" style="display:none;margin-top:8px;padding:8px 12px;border-radius:8px;font-size:.85em;font-weight:700;"></div>
       <label style="display:flex;gap:0.5em;align-items:center;font-size:0.82em;color:#374151;margin-top:0.6em;cursor:pointer;">
         <input type="checkbox" id="muteVideo">
         <span>🔇 تشغيل المعاينة بدون صوت</span>
@@ -186,13 +188,27 @@
   input.addEventListener("change", () => {
     const file = input.files[0];
     if (!file) return;
-    // 50MB — نفس حد Supabase الافتراضي؛ فوقه بينكسر الرفع (رح يعلّق للأبد)
-    if (!FormUX.checkFileSize(file, 50)) { input.value = ''; return; }
+    // معاينة + تنبيه حجم قبل ما يعمل submit
     const url = URL.createObjectURL(file);
     preview.innerHTML = `<video src="${url}" controls playsinline${muteVideo.checked ? " muted" : ""}></video>`;
     preview.appendChild(logo);
     previewWrap.style.display = "";
     dropzone.style.display = "none";
+
+    // تنبيه بحجم الملف (soft = 15, hard = 50)
+    const sizeBox = document.getElementById('vSizeInfo');
+    const info = FormUX.fileSizeInfo(file, 15, 50);
+    sizeBox.style.display = '';
+    if (info.level === 'block') {
+      sizeBox.style.cssText += 'background:#fdecec;color:#d93025;border:1px solid #f6c9c6;';
+      sizeBox.innerHTML = `🚫 الفيديو ${info.text}. لازم تستخدم رابط يوتيوب فوق.`;
+    } else if (info.level === 'warn') {
+      sizeBox.style.cssText += 'background:#fef3c7;color:#78350f;border:1px solid #fbbf24;';
+      sizeBox.innerHTML = `⚠️ الفيديو ${info.text}. رح نضغطه تلقائياً لتسريع الرفع (قد يستغرق دقيقة أو دقيقتين).`;
+    } else {
+      sizeBox.style.cssText += 'background:#dcfce7;color:#166534;border:1px solid #86efac;';
+      sizeBox.innerHTML = `✓ حجم الفيديو ${info.text} — مناسب للرفع.`;
+    }
   });
 
   muteVideo.addEventListener("change", () => {
@@ -242,7 +258,8 @@
       xhr.upload.addEventListener('progress', (e) => {
         if (!e.lengthComputable) return;
         const pct = Math.round((e.loaded / e.total) * 100);
-        uploadBarEl.style.width = pct + '%';
+        // الشريط: النصف الأول للضغط، النصف التاني للرفع
+        uploadBarEl.style.width = (50 + pct / 2) + '%';
         uploadStatusEl.textContent = `جاري الرفع... ${pct}%`;
       });
       xhr.addEventListener('load', () => {
@@ -286,10 +303,13 @@
     // لازم إمّا رابط يوتيوب أو ملف
     if (!ytUrl && !videoFile) return FormUX.markFieldError(ytEl, 'الصق رابط يوتيوب أو ارفع ملف فيديو');
     if (ytUrl && !FormUX.isValidYouTubeUrl(ytUrl)) return FormUX.markFieldError(ytEl, 'رابط اليوتيوب مو صحيح');
-    if (videoFile && !FormUX.checkFileSize(videoFile, 50)) return;
+    // فوق 50MB نرفض — الأصل بيعلّق (حد Supabase)
+    if (videoFile && FormUX.fileSizeMB(videoFile) > 50) {
+      return FormUX.markFieldError(input, 'الفيديو أكبر من 50MB. استخدم رابط يوتيوب فوق.');
+    }
     if (!agree.checked) return FormUX.markFieldError(agree, 'لازم توافق على الشروط قبل الإرسال');
 
-    FormUX.setSubmitLoading(submitBtn, true, ytUrl ? 'جاري الإرسال...' : 'جاري رفع الفيديو...');
+    FormUX.setSubmitLoading(submitBtn, true, ytUrl ? 'جاري الإرسال...' : 'جاري تجهيز الفيديو...');
     try {
       let videoUrl, source;
       if (ytUrl) {
@@ -297,12 +317,25 @@
         videoUrl = ytUrl;
         source = 'youtube';
       } else {
-        // رفع مباشر مع progress
+        // ضغط أول (لو الملف >15MB وبتصير الحاجة)
         uploadProgressEl.style.display = '';
         uploadBarEl.style.width = '0';
+        uploadStatusEl.textContent = 'جاري تجهيز الفيديو...';
+        const compressed = await FormUX.compressVideo(videoFile, {
+          targetMbps: 2,
+          softMB: 15,
+          onProgress: (pct, note) => {
+            uploadBarEl.style.width = Math.min(pct/2, 50) + '%'; // نصف الشريط للضغط
+            uploadStatusEl.textContent = note;
+          },
+        });
+        // رفع مباشر مع progress
         uploadStatusEl.textContent = 'جاري رفع الفيديو... 0%';
-        const ext = (videoFile.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
-        videoUrl = await uploadVideoWithProgress(videoFile, `talents/${MalaabakAPI.slugify(name)}-${Date.now()}.${ext}`);
+        const outFile = compressed || videoFile;
+        const ext = outFile === videoFile
+          ? ((videoFile.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4")
+          : 'webm';
+        videoUrl = await uploadVideoWithProgress(outFile, `talents/${MalaabakAPI.slugify(name)}-${Date.now()}.${ext}`);
         source = 'upload';
         uploadProgressEl.style.display = 'none';
       }
