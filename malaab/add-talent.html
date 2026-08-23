@@ -81,10 +81,21 @@
 
   <div class="field">
     <label>فيديو الموهبة <span class="req">*</span></label>
+
+    <!-- الخيار المفضّل: رابط يوتيوب (فوري، بدون رفع، بدون حد للحجم) -->
+    <div style="padding:12px;border:1.5px solid var(--primary,#0f5c2a);border-radius:10px;margin-bottom:10px;background:rgba(15,92,42,.04);">
+      <div style="font-weight:800;font-size:.9em;margin-bottom:6px;color:var(--primary,#0f5c2a);">✨ الأسرع والأفضل: الصق رابط يوتيوب</div>
+      <input type="url" id="tYtUrl" placeholder="https://youtu.be/... أو https://youtube.com/watch?v=..." style="width:100%;">
+      <p class="muted" style="font-size:.75em;margin-top:6px;">ارفع فيديو موهبتك على يوتيوب (أو YouTube Shorts) وألصق الرابط هون — بلا انتظار.</p>
+    </div>
+
+    <!-- أو الرفع المباشر (بطيء، محدود بـ50 ميغا) -->
+    <div style="text-align:center;color:var(--muted);font-size:.85em;margin:8px 0;">— أو —</div>
+
     <div class="upload-dropzone" id="dropzone">
       <div class="upload-dropzone-icon">🎬</div>
-      <div class="upload-dropzone-text">اضغط لاختيار فيديو</div>
-      <div class="upload-dropzone-hint">MP4 أو MOV · حتى 100 ميغا · بدون موسيقى</div>
+      <div class="upload-dropzone-text">ارفع الفيديو مباشرة</div>
+      <div class="upload-dropzone-hint">MP4 أو MOV · حتى 50 ميغا · قد يستغرق دقائق · بدون موسيقى</div>
     </div>
     <input type="file" accept="video/*" id="videoInput" hidden>
     <div id="videoPreviewWrap" style="display:none;margin-top:0.7em;">
@@ -100,11 +111,33 @@
       </label>
       <button type="button" class="btn btn-outline" id="removeVideo" style="font-size:0.8em;margin-top:0.5em;">شيل الفيديو</button>
     </div>
+
+    <!-- شريط تقدّم أثناء الرفع -->
+    <div id="uploadProgress" style="display:none;margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:.85em;font-weight:700;margin-bottom:6px;">
+        <span id="uploadStatus">جاري رفع الفيديو...</span>
+        <button type="button" id="cancelUpload" style="background:none;border:0;color:#d93025;font-weight:700;cursor:pointer;font-family:inherit;font-size:.9em;">إلغاء</button>
+      </div>
+      <div style="height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
+        <div id="uploadBar" style="height:100%;background:var(--primary,#0f5c2a);width:0;transition:width .3s;"></div>
+      </div>
+      <p class="muted" style="font-size:.72em;margin-top:6px;">لو الرفع بطيء أو معلّق، الأفضل تلغي وتستخدم رابط يوتيوب فوق.</p>
+    </div>
   </div>
 
   <div class="field">
     <label>عنوان الفيديو</label>
     <input type="text" id="tVideoTitle" placeholder="مثال: أهداف الموسم">
+  </div>
+
+  <div class="field">
+    <label>نبذة عن الموهبة (اختياري)</label>
+    <textarea id="tDesc" placeholder="إنجازاتك الرياضية، أنديتك السابقة، هدفك..." maxlength="800" rows="3" style="resize:vertical;"></textarea>
+  </div>
+
+  <div class="field">
+    <label>رقم الجوال للتواصل (اختياري)</label>
+    <input type="tel" id="tPhone" placeholder="09xxxxxxxx" inputmode="tel" maxlength="20">
   </div>
 
   <div id="termsSlot"></div>
@@ -153,7 +186,8 @@
   input.addEventListener("change", () => {
     const file = input.files[0];
     if (!file) return;
-    if (!FormUX.checkFileSize(file, 100)) { input.value = ''; return; }
+    // 50MB — نفس حد Supabase الافتراضي؛ فوقه بينكسر الرفع (رح يعلّق للأبد)
+    if (!FormUX.checkFileSize(file, 50)) { input.value = ''; return; }
     const url = URL.createObjectURL(file);
     preview.innerHTML = `<video src="${url}" controls playsinline${muteVideo.checked ? " muted" : ""}></video>`;
     preview.appendChild(logo);
@@ -174,12 +208,64 @@
     dropzone.style.display = "";
   });
 
+  // متغير لتتبّع/إلغاء الرفع
+  let uploadAbort = null;
+  const uploadProgressEl = document.getElementById('uploadProgress');
+  const uploadBarEl = document.getElementById('uploadBar');
+  const uploadStatusEl = document.getElementById('uploadStatus');
+  document.getElementById('cancelUpload').addEventListener('click', () => {
+    if (uploadAbort) uploadAbort.abort();
+    uploadProgressEl.style.display = 'none';
+    FormUX.setSubmitLoading(submitBtn, false);
+    FormUX.toast('تم إلغاء الرفع. جرّب رابط يوتيوب بدلاً منه.', 'error');
+  });
+
+  // رفع فيديو لـSupabase Storage مع progress + abort عبر XMLHttpRequest
+  // (SDK الافتراضي ما بيدعم progress ولا abort مباشرة)
+  async function uploadVideoWithProgress(file, path) {
+    const uid = (await sb.auth.getUser()).data.user.id;
+    const key = `${uid}/malaabak/${path}`;
+    const bucket = 'sahat-media';
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error('لازم تسجّل دخول من جديد');
+
+    const url = `${sb.supabaseUrl}/storage/v1/object/${bucket}/${key}`;
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      uploadAbort = { abort: () => xhr.abort() };
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+      xhr.setRequestHeader('x-upsert', 'true');
+      xhr.setRequestHeader('Cache-Control', '3600');
+      if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (!e.lengthComputable) return;
+        const pct = Math.round((e.loaded / e.total) * 100);
+        uploadBarEl.style.width = pct + '%';
+        uploadStatusEl.textContent = `جاري الرفع... ${pct}%`;
+      });
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const { data } = sb.storage.from(bucket).getPublicUrl(key);
+          resolve(data.publicUrl);
+        } else reject(new Error(`فشل الرفع (${xhr.status}): ${xhr.responseText || 'حاول مجدداً أو استخدم يوتيوب'}`));
+      });
+      xhr.addEventListener('error', () => reject(new Error('انقطع الاتصال أثناء الرفع')));
+      xhr.addEventListener('abort', () => reject(new Error('ألغي الرفع')));
+      xhr.addEventListener('timeout', () => reject(new Error('انتهت مهلة الرفع')));
+      xhr.timeout = 5 * 60 * 1000; // 5 دقائق كحد أقصى
+      xhr.send(file);
+    });
+  }
+
   submitBtn.addEventListener("click", async () => {
     if (submitBtn.dataset.authGate === '1') return;
     FormUX.clearFieldErrors();
     const nameEl = document.getElementById("tName"), sportEl = document.getElementById("tSport"),
           posEl = document.getElementById("tPosition"), ageEl = document.getElementById("tAge"),
-          govEl = document.getElementById("tGov"), cityEl = document.getElementById("tCity");
+          govEl = document.getElementById("tGov"), cityEl = document.getElementById("tCity"),
+          ytEl = document.getElementById("tYtUrl");
     const name = nameEl.value.trim();
     const sport = sportEl.value;
     const position = posEl.value.trim();
@@ -188,6 +274,7 @@
     const city = cityEl.value.trim();
     const videoTitle = document.getElementById("tVideoTitle").value.trim();
     const videoFile = input.files[0];
+    const ytUrl = ytEl.value.trim();
 
     if (!FormUX.isMeaningfulText(name)) return FormUX.markFieldError(nameEl, 'الرجاء كتابة اسمك الكامل');
     if (!sport) return FormUX.markFieldError(sportEl, 'اختر الرياضة');
@@ -195,27 +282,48 @@
     if (!age || age < 8 || age > 45) return FormUX.markFieldError(ageEl, 'أدخل عمر صحيح (8-45)');
     if (!governorate) return FormUX.markFieldError(govEl, 'اختر المحافظة');
     if (!FormUX.isMeaningfulText(city)) return FormUX.markFieldError(cityEl, 'أدخل اسم مدينة صحيح');
-    if (!videoFile) return FormUX.markFieldError(input, 'لازم ترفع فيديو أول');
-    if (!FormUX.checkFileSize(videoFile, 100)) return;
+
+    // لازم إمّا رابط يوتيوب أو ملف
+    if (!ytUrl && !videoFile) return FormUX.markFieldError(ytEl, 'الصق رابط يوتيوب أو ارفع ملف فيديو');
+    if (ytUrl && !FormUX.isValidYouTubeUrl(ytUrl)) return FormUX.markFieldError(ytEl, 'رابط اليوتيوب مو صحيح');
+    if (videoFile && !FormUX.checkFileSize(videoFile, 50)) return;
     if (!agree.checked) return FormUX.markFieldError(agree, 'لازم توافق على الشروط قبل الإرسال');
 
-    FormUX.setSubmitLoading(submitBtn, true, 'جاري رفع الفيديو...');
+    FormUX.setSubmitLoading(submitBtn, true, ytUrl ? 'جاري الإرسال...' : 'جاري رفع الفيديو...');
     try {
-      const ext = (videoFile.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
-      const videoUrl = await MalaabakAPI.upload(videoFile, `talents/${MalaabakAPI.slugify(name)}-${Date.now()}.${ext}`);
+      let videoUrl, source;
+      if (ytUrl) {
+        // رابط يوتيوب — بلا رفع
+        videoUrl = ytUrl;
+        source = 'youtube';
+      } else {
+        // رفع مباشر مع progress
+        uploadProgressEl.style.display = '';
+        uploadBarEl.style.width = '0';
+        uploadStatusEl.textContent = 'جاري رفع الفيديو... 0%';
+        const ext = (videoFile.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
+        videoUrl = await uploadVideoWithProgress(videoFile, `talents/${MalaabakAPI.slugify(name)}-${Date.now()}.${ext}`);
+        source = 'upload';
+        uploadProgressEl.style.display = 'none';
+      }
 
       await MalaabakAPI.create("talents", {
         name, sport, position, age, governorate, city, foot,
-        videos: [{ title: videoTitle || "فيديو الموهبة", videoUrl, muted: muteVideo.checked, action: "asis" }],
+        videos: [{ title: videoTitle || "فيديو الموهبة", videoUrl, muted: muteVideo.checked, action: "asis", source }],
         image: EMOJI[sport] || "⚽",
+        phone: (document.getElementById("tPhone").value.trim()) || null,
+        description: (document.getElementById("tDesc").value.trim()) || null,
       });
       FormUX.clearDraft();
       FormUX.toast('تم الإرسال للمراجعة ✓ موهبتك بتظهر بعد موافقة الإدارة.', 'success', 3000);
       setTimeout(() => { location.href = "talents.html"; }, 1400);
     } catch (err) {
       console.error(err);
+      uploadProgressEl.style.display = 'none';
       FormUX.toast(FormUX.friendlyError(err), 'error');
       FormUX.setSubmitLoading(submitBtn, false);
+    } finally {
+      uploadAbort = null;
     }
   });
 })();

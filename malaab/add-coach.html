@@ -85,6 +85,16 @@
   </div>
 
   <div class="field">
+    <label>نبذة عنك (اختياري)</label>
+    <textarea id="cDesc" placeholder="خبرتك، إنجازاتك، أسلوب تدريبك..." maxlength="800" rows="3" style="resize:vertical;"></textarea>
+  </div>
+
+  <div class="field">
+    <label>رقم الجوال للتواصل (اختياري)</label>
+    <input type="tel" id="cPhone" placeholder="09xxxxxxxx" inputmode="tel" maxlength="20">
+  </div>
+
+  <div class="field">
     <label>رابط يوتيوب (اختياري)</label>
     <input type="url" id="cVideo" placeholder="https://youtu.be/... (فيديو تعريفي عنك أو حصة تدريب)">
   </div>
@@ -171,6 +181,8 @@
         name, specialty, governorate, city,
         experience, price_per_session: pricePerSession, gender,
         image: imageUrl || null,
+        phone: ($("cPhone").value.trim()) || null,
+        description: ($("cDesc").value.trim()) || null,
         video_url: ytRaw || null,
       });
       FormUX.clearDraft();

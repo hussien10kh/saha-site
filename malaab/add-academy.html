@@ -81,6 +81,16 @@
   </div>
 
   <div class="field">
+    <label>نبذة عن الأكاديمية (اختياري)</label>
+    <textarea id="aDesc" placeholder="برامج التدريب، المدربين، الإنجازات..." maxlength="800" rows="3" style="resize:vertical;"></textarea>
+  </div>
+
+  <div class="field">
+    <label>رقم الجوال للتواصل (اختياري)</label>
+    <input type="tel" id="aPhone" placeholder="09xxxxxxxx" inputmode="tel" maxlength="20">
+  </div>
+
+  <div class="field">
     <label>رابط يوتيوب (اختياري)</label>
     <input type="url" id="aVideo" placeholder="https://youtu.be/... (فيديو تعريفي عن الأكاديمية)">
   </div>
@@ -160,6 +170,8 @@
         name, sports, governorate, city,
         age_groups: ageGroups, monthly_fee: monthlyFee, players: 0,
         image: imageUrl || null,
+        phone: ($("aPhone").value.trim()) || null,
+        description: ($("aDesc").value.trim()) || null,
         video_url: ytRaw || null,
       });
       FormUX.clearDraft();

@@ -87,6 +87,16 @@
   </div>
 
   <div class="field">
+    <label>وصف الملعب (اختياري)</label>
+    <textarea id="vDesc" placeholder="مواصفات الملعب، الخدمات المميّزة، ملاحظات للاعبين..." maxlength="800" rows="3" style="resize:vertical;"></textarea>
+  </div>
+
+  <div class="field">
+    <label>رقم الجوال للتواصل (اختياري)</label>
+    <input type="tel" id="vPhone" placeholder="09xxxxxxxx" inputmode="tel" maxlength="20">
+  </div>
+
+  <div class="field">
     <label>رابط يوتيوب للفيديو (اختياري)</label>
     <input type="url" id="vVideo" placeholder="https://youtu.be/... (فيديو تعريفي عن الملعب)">
     <p class="muted" style="font-size:12px;margin-top:6px;">ارفع الفيديو على يوتيوب أول، بعدين الصق الرابط هون.</p>
@@ -213,7 +223,9 @@
         name, sport, governorate, city,
         address: address || `${governorate} - ${city}`,
         price, pay_mode: payMode,
-        images: [imageUrl], watermark_included: true, phone: null,
+        images: [imageUrl], watermark_included: true,
+        phone: ($("vPhone").value.trim()) || null,
+        description: ($("vDesc").value.trim()) || null,
         video_url: ytRaw || null,
       });
       FormUX.clearDraft();

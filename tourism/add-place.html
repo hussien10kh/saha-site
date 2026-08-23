@@ -102,6 +102,11 @@
     </div>
 
     <div class="f-field">
+      <label>رقم الجوال للتواصل (اختياري)</label>
+      <input id="fPhone" type="tel" placeholder="09xxxxxxxx" inputmode="tel" maxlength="20">
+    </div>
+
+    <div class="f-field">
       <label>رابط يوتيوب (اختياري)</label>
       <input id="fVideo" type="url" placeholder="https://youtu.be/... (فيديو تعريفي عن المكان)">
     </div>
@@ -220,6 +225,7 @@
           name, category, region, city,
           address: address || null,
           description: description || null,
+          phone: ($('fPhone').value.trim()) || null,
           images,
           video_url: ytRaw || null,
         });

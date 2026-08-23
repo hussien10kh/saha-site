@@ -75,6 +75,16 @@
     <input type="number" id="eFee" placeholder="مثال: 50000" min="0" step="1000" inputmode="numeric">
   </div>
 
+  <div class="field">
+    <label>وصف الفعالية (اختياري)</label>
+    <textarea id="eDesc" placeholder="نظام البطولة، الجوائز، شروط المشاركة..." maxlength="800" rows="3" style="resize:vertical;"></textarea>
+  </div>
+
+  <div class="field">
+    <label>رقم الجوال للتواصل (اختياري)</label>
+    <input type="tel" id="ePhone" placeholder="09xxxxxxxx" inputmode="tel" maxlength="20">
+  </div>
+
   <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إنشاء الفعالية</button>
   <p class="muted" style="font-size:0.8em;text-align:center;margin-top:0.6em;">املأ الحقول المطلوبة وراح تظهر فعاليتك بصفحة الفعاليات فوراً.</p>
 </div>
@@ -118,6 +128,8 @@
         date_label: dateLabel || "قريباً", day: null, time: time || "يحدّد لاحقاً",
         fee: fee || 0, teams: 0, max_teams: maxTeams,
         image: EMOJI[type] || "🏆",
+        phone: ($("ePhone").value.trim()) || null,
+        description: ($("eDesc").value.trim()) || null,
       });
       FormUX.clearDraft();
       FormUX.toast('تم إنشاء الفعالية ✓', 'success', 2000);
