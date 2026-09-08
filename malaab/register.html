@@ -15,6 +15,7 @@
 <script src="../js/vendor/supabase.js"></script>
 <script src="../js/supabase-client.js"></script>
 <script src="../js/form-ux.js"></script>
+<script src="../js/meta-pixel.js"></script>
 </head>
 <body>
 
@@ -123,6 +124,8 @@ document.addEventListener('click', (e) => {
       try {
         await sb.from("profiles").update({ name, phone: phone || null }).eq("id", data.user.id);
       } catch (_) {}
+      // Meta Pixel: تسجيل حساب مكتمل
+      try { if (typeof MetaPixel !== 'undefined') MetaPixel.register({ method: 'email' }); } catch (e) {}
       FormUX.toast('تم إنشاء الحساب ✓', 'success', 1500);
       setTimeout(() => { location.href = redirect; }, 1000);
     } catch (err) {

@@ -27,6 +27,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ساحة">
+<script src="js/meta-pixel.js"></script>
 </head>
 <body>
 
@@ -213,6 +214,7 @@
           toast('تم إنشاء حسابك! افتح بريدك الإلكتروني واضغط رابط التفعيل حتى تقدر تسجّل الدخول.');
           return; // no session yet — nothing to redirect into
         }
+        try { if (typeof MetaPixel !== 'undefined') MetaPixel.register({ method: 'email' }); } catch (e) {}
         toast('تم إنشاء حسابك بنجاح');
       } else {
         await signInWithEmail(contact, pass);
