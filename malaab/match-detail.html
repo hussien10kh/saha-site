@@ -18,6 +18,7 @@
 <script src="malaabak-api.js"></script>
 <script src="data-bridge.js"></script>
 <script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -39,6 +40,17 @@
   if (!m) { root.innerHTML = DetailCore.notFoundHTML("matches.html", "رجوع للمباريات"); return; }
 
   document.title = `${m.title} - ملعبك`;
+
+  /* Meta Pixel — ViewContent + أزرار التواصل. wireContactLinks شغّالة بالـdelegation
+     على document، فبتمسك أزرار "اتصل" اللي بتنبنى بالـinnerHTML تحت (وأي زر
+     تواصل ينضاف لاحقاً) بلا ما نلاحق كل زر لحاله. */
+  const _mpCtx = {
+    id: m.id, category: m.sport,
+    city: m.city, governorate: m.governorate,
+    section: 'malaab', type: 'match',
+  };
+  window.MetaPixel?.viewContent({ ..._mpCtx, name: m.title, price: m.fee });
+  window.MetaPixel?.wireContactLinks(document, _mpCtx);
   const isFull = m.participants >= m.maxParticipants;
   const spots = Math.max(0, m.maxParticipants - m.participants);
   const pct = Math.round((m.participants / m.maxParticipants) * 100);

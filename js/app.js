@@ -298,6 +298,19 @@ const CITY_GROUPS = [
 ];
 const CITIES = CITY_GROUPS.flatMap(g => g.cities);
 
+/* الإعلانات بتخزّن المدينة بس (مو المحافظة)، بس التقارير الإعلانية بدها المستوى
+   الأعلى — "دمشق جابت 40 تسجيل" أنفع من توزيع مبعثر على 10 بلدات. منشتقّها من
+   CITY_GROUPS بدل ما نكرّر الحقل بقاعدة البيانات. لو المدينة مو معروفة منرجّعها
+   كما هي بدل '' حتى ما نخسر الإشارة كلياً. */
+const CITY_TO_GOVERNORATE = CITY_GROUPS.reduce((map, g) => {
+  g.cities.forEach(c => { map[c] = g.governorate; });
+  return map;
+}, {});
+function governorateOf(city){
+  if(!city) return undefined;
+  return CITY_TO_GOVERNORATE[city] || city;
+}
+
 const AD_EXPIRY_DAYS = 90;
 
 /* ---------------------------------------------------------

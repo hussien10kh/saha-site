@@ -88,6 +88,7 @@
   }
 </style>
 <script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -173,6 +174,22 @@
   var mdesc = document.querySelector('meta[name="description"]');
   if(mdesc) mdesc.setAttribute('content', place.name + ' — ' + (place.desc || 'مكان سياحي في ' + place.city + ', سوريا.') + ' استعرض الوصف، الخريطة، والاتجاهات على ساحة سياحة.');
   var meta = CATEGORY_META[place.category] || {icon:'📍', label:''};
+
+  /* Meta Pixel — ViewContent + زر "الاتجاهات". الأماكن المُضافة من الفورم عندها
+     region (المحافظة)، بينما بيانات المعالم القديمة فيها city بس — فمنرجع للـcity
+     كبديل بدل ما نبعت محافظة فاضية. wireContactLinks بتمسك رابط خرائط Google
+     كـContact(method:'directions') وهو أوضح إشارة نيّة زيارة عنا بقسم السياحة. */
+  window.MetaPixel?.viewContent({
+    id: place.id, name: place.name,
+    category: meta.label || place.category,
+    city: place.city, governorate: place.region || place.city,
+    section: 'tourism', type: 'place',
+  });
+  window.MetaPixel?.wireContactLinks(document, {
+    id: place.id, category: meta.label || place.category,
+    city: place.city, governorate: place.region || place.city,
+    section: 'tourism', type: 'place',
+  });
 
   function initials(name){
     var parts = name.trim().split(/\s+/);

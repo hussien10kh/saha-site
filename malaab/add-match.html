@@ -19,6 +19,7 @@
 <script src="../js/form-ux.js"></script>
 <script src="malaabak-api.js"></script>
 <script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -149,6 +150,11 @@
         description: ($("mDesc").value.trim()) || null,
       });
       FormUX.clearDraft();
+      // Meta Pixel — قاع الـfunnel: الإضافة نجحت فعلاً (بعد ما رجع الـAPI بلا خطأ).
+      window.MetaPixel?.addListing({
+        type: 'match', category: sport,
+        governorate, city, section: 'malaab',
+      });
       FormUX.toast('تم إنشاء المباراة ✓', 'success', 2000);
       setTimeout(() => { location.href = "matches.html"; }, 1100);
     } catch (err) {

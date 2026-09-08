@@ -58,6 +58,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ساحة">
 <script src="js/meta-pixel.js"></script>
+<script src="js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -205,6 +206,16 @@
   if(cat) trackFilterEvent('category', cat);
   if(q) trackFilterEvent('search', q);
   if(city) trackFilterEvent('city', city);
+
+  /* Meta Pixel — Search واحد بكل الفلاتر مجموعة بدل ثلاث events منفصلة.
+     منطلقه بس لما يكون في فلتر فعلي، عشان تصفّح /ads.html الفاضي يضل PageView. */
+  if(cat || q || city){
+    window.MetaPixel?.search({
+      query: q, category: CATEGORY_LABELS[cat] || cat,
+      city, governorate: governorateOf(city),
+      section: 'ads', type: 'ad',
+    });
+  }
 
   async function loadFeed(){
     try{ await loadFavorites(); }

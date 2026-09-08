@@ -32,6 +32,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ساحة">
 <script src="js/meta-pixel.js"></script>
+<script src="js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -552,6 +553,11 @@
     }
     contentAlreadySaved = true;
     recordSuccessfulPost();
+    // Meta Pixel — إعلان جديد انحفظ فعلاً (مو التعديل: التعديل مو تحويل جديد).
+    window.MetaPixel?.addListing({
+      type: 'ad', category: CATEGORY_LABELS[selectedCat] || selectedCat,
+      city, governorate: governorateOf(city), section: 'ads',
+    });
     clearAdDraft();
     showPublishedModal(newAd);
   }

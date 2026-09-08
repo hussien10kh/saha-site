@@ -18,6 +18,7 @@
 <script src="data-bridge.js"></script>
 <script src="review-widget.js"></script>
 <script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -52,6 +53,17 @@
   }
 
   document.title = `${v.name} - ملعبك`;
+
+  /* Meta Pixel — ViewContent + أزرار التواصل. wireContactLinks شغّالة بالـdelegation
+     على document، فبتمسك أزرار "اتصل" اللي بتنبنى بالـinnerHTML تحت (وأي زر
+     تواصل ينضاف لاحقاً) بلا ما نلاحق كل زر لحاله. */
+  const _mpCtx = {
+    id: v.id, category: v.sport,
+    city: v.city, governorate: v.governorate,
+    section: 'malaab', type: 'venue',
+  };
+  window.MetaPixel?.viewContent({ ..._mpCtx, name: v.name, price: v.price });
+  window.MetaPixel?.wireContactLinks(document, _mpCtx);
 
   const stars = (n) => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
 

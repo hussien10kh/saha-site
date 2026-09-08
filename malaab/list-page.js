@@ -17,6 +17,14 @@ const ListPage = {
     const pagination = $(ids.pagination);
     if (!grid) return null;
 
+    // نوع العنصر للتحليلات — مشتقّ من اسم الصفحة بدل ما نضيف مفتاح إعداد
+    // جديد لكل وحدة من صفحات القوائم السبعة.
+    const PIXEL_TYPE = {
+      venues: "venue", coaches: "coach", academies: "academy", talents: "talent",
+      matches: "match", training: "training", events: "event",
+    };
+    const pixelType = PIXEL_TYPE[(location.pathname.split("/").pop() || "").replace(".html", "")];
+
     const cardSelector = config.cardSelector || ".venue-card";
     const tagsSelector = config.tagsSelector || ".venue-card-amenities";
 
@@ -215,6 +223,16 @@ const ListPage = {
       if (sidebarSport) {
         sidebarSport.value = [...sidebarSport.options].some((o) => o.value === heroSport) ? heroSport : "";
       }
+      /* Meta Pixel — بحث بادره المستخدم فعلاً. مو جوّا render() لأنها بتنستدعى
+         كمان بالرندر الأولي وعند تغيير حجم الشاشة — وهدول مو بحث. */
+      window.MetaPixel?.search({
+        query: heroTerm,
+        category: heroSport,
+        governorate: govSelect ? govSelect.value : undefined,
+        city: cityInput ? cityInput.value.trim() : undefined,
+        section: "malaab", type: pixelType,
+      });
+
       resetAndRender();
       const main = document.querySelector(".venues-main");
       if (main) main.scrollIntoView({ behavior: "smooth", block: "start" });

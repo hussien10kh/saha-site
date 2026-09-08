@@ -6,6 +6,12 @@
    ========================================================= */
 
 /* ============= الأماكن (Places) ============= */
+/* معرّفات Supabase كلها UUID، بينما المعالم الأصلية (PLACES_DATA) معرّفاتها
+   slug نصّي مثل "umayyad-mosque". إرسال slug لعمود من نوع uuid بيرجّع خطأ
+   22P02 من Postgres — طلب فاشل بكل زيارة لصفحة معلم قديم. */
+var TOURISM_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function tourismIsUuid(id) { return TOURISM_UUID_RE.test(String(id)); }
+
 function placesGetById(id) {
   if (typeof PLACES_DATA === 'undefined') return null;
   return PLACES_DATA.find(function (p) { return p.id === id; }) || null;
@@ -73,7 +79,7 @@ async function tourismGetPlaces() {
 async function tourismGetPlaceById(id) {
   if (!id) return null;
   var local = placesGetById(id);
-  if (typeof sb !== 'undefined') {
+  if (typeof sb !== 'undefined' && tourismIsUuid(id)) {
     try {
       var res = await sb.from('tourism_places')
         .select('*')

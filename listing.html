@@ -38,6 +38,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ساحة">
 <script src="js/meta-pixel.js"></script>
+<script src="js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -147,6 +148,20 @@
     ],
   });
   trackAdView(ad.id);
+
+  /* Meta Pixel — ViewContent + أزرار التواصل. wireContactLinks بتشتغل بالـdelegation
+     على document، فما بتنكسر لأن أزرار "اتصل"/"واتساب" بتنبنى جوّا renderDetail()
+     بعد هالسطر — وبتغطي كمان أي زر تواصل ينضاف للصفحة لاحقاً. */
+  window.MetaPixel?.viewContent({
+    id: ad.id, name: ad.title, category: catLabel,
+    city: ad.city, governorate: governorateOf(ad.city),
+    price: ad.price, section: 'ads', type: 'ad',
+  });
+  window.MetaPixel?.wireContactLinks(document, {
+    id: ad.id, category: catLabel,
+    city: ad.city, governorate: governorateOf(ad.city), section: 'ads', type: 'ad',
+  });
+
   await renderDetail();
 
   async function renderDetail(){

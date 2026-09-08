@@ -19,6 +19,7 @@
 <script src="../js/form-ux.js"></script>
 <script src="malaabak-api.js"></script>
 <script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -149,6 +150,11 @@
         description: ($("tDesc").value.trim()) || null,
       });
       FormUX.clearDraft();
+      // Meta Pixel — قاع الـfunnel: الإضافة نجحت فعلاً (بعد ما رجع الـAPI بلا خطأ).
+      window.MetaPixel?.addListing({
+        type: 'training', category: type,
+        governorate, city, section: 'malaab',
+      });
       FormUX.toast('تم إنشاء التمرين ✓', 'success', 2000);
       setTimeout(() => { location.href = "training.html"; }, 1100);
     } catch (err) {

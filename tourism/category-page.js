@@ -139,23 +139,36 @@
     renderPagination(items.length);
   }
 
+  /* Meta Pixel — فلترة بادرها المستخدم. مو جوّا refresh() لأنها بتنستدعى
+     بالرندر الأولي وعند تنقّل الصفحات كمان.
+     citySelect هوّي أخشن فلتر جغرافي بهالصفحة (وقيمه محافظات فعلياً بالبيانات
+     الحالية)، فمنعتمده كـgovernorate للتقارير. */
+  function trackFilterSearch() {
+    window.MetaPixel?.search({
+      category: config.label || category,
+      city: cityFilter, governorate: cityFilter,
+      section: 'tourism', type: 'place',
+    });
+  }
+
   function goToPage(p) {
     currentPage = p;
     refresh();
     window.scrollTo({ top: list.getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' });
   }
 
-  if (sortSelect) sortSelect.addEventListener('change', function () { sortBy = sortSelect.value; currentPage = 1; refresh(); });
-  if (priceSelect) priceSelect.addEventListener('change', function () { priceFilter = priceSelect.value; currentPage = 1; refresh(); });
-  if (vibeSelect) vibeSelect.addEventListener('change', function () { vibeFilter = vibeSelect.value; currentPage = 1; refresh(); });
+  if (sortSelect) sortSelect.addEventListener('change', function () { sortBy = sortSelect.value; currentPage = 1; refresh(); trackFilterSearch(); });
+  if (priceSelect) priceSelect.addEventListener('change', function () { priceFilter = priceSelect.value; currentPage = 1; refresh(); trackFilterSearch(); });
+  if (vibeSelect) vibeSelect.addEventListener('change', function () { vibeFilter = vibeSelect.value; currentPage = 1; refresh(); trackFilterSearch(); });
   if (citySelect) citySelect.addEventListener('change', function () {
     cityFilter = citySelect.value;
     areaFilter = '';
     refreshAreaOptions();
     currentPage = 1;
     refresh();
+    trackFilterSearch();
   });
-  if (areaSelect) areaSelect.addEventListener('change', function () { areaFilter = areaSelect.value; currentPage = 1; refresh(); });
+  if (areaSelect) areaSelect.addEventListener('change', function () { areaFilter = areaSelect.value; currentPage = 1; refresh(); trackFilterSearch(); });
 
   refresh();
 

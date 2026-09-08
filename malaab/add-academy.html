@@ -21,6 +21,7 @@
 <script src="../js/form-ux.js"></script>
 <script src="malaabak-api.js"></script>
 <script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -176,6 +177,11 @@
         video_url: ytRaw || null,
       });
       FormUX.clearDraft();
+      // Meta Pixel — قاع الـfunnel: الإضافة نجحت فعلاً (بعد ما رجع الـAPI بلا خطأ).
+      window.MetaPixel?.addListing({
+        type: 'academy', category: (sports || []).join('، '),
+        governorate, city, section: 'malaab',
+      });
       FormUX.toast('تم الإرسال للمراجعة ✓ أكاديميتك بتظهر بعد موافقة الإدارة.', 'success', 3000);
       setTimeout(() => { location.href = "academies.html"; }, 1400);
     } catch (err) {

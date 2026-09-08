@@ -19,6 +19,7 @@
 <script src="data-bridge.js"></script>
 <script src="review-widget.js"></script>
 <script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -38,6 +39,17 @@
   if (!a) { root.innerHTML = DetailCore.notFoundHTML("academies.html", "رجوع للأكاديميات"); return; }
 
   document.title = `${a.name} - ملعبك`;
+
+  /* Meta Pixel — ViewContent + أزرار التواصل. wireContactLinks شغّالة بالـdelegation
+     على document، فبتمسك أزرار "اتصل" اللي بتنبنى بالـinnerHTML تحت (وأي زر
+     تواصل ينضاف لاحقاً) بلا ما نلاحق كل زر لحاله. */
+  const _mpCtx = {
+    id: a.id, category: (a.sports || []).join('، '),
+    city: a.city, governorate: a.governorate,
+    section: 'malaab', type: 'academy',
+  };
+  window.MetaPixel?.viewContent({ ..._mpCtx, name: a.name, price: a.monthlyFee });
+  window.MetaPixel?.wireContactLinks(document, _mpCtx);
   const near = DetailCore.nearest(a, SITE_DATA.academies.filter((x) => x.status === "approved"));
 
   const sportsTags = a.sports.map((s) => `<span class="tag">${s}</span>`).join("");

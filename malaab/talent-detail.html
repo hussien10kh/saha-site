@@ -18,6 +18,7 @@
 <script src="malaabak-api.js"></script>
 <script src="data-bridge.js"></script>
 <script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
 </head>
 <body>
 
@@ -37,6 +38,17 @@
   if (!t) { root.innerHTML = DetailCore.notFoundHTML("talents.html", "رجوع للمواهب"); return; }
 
   document.title = `${t.name} - ملعبك`;
+
+  /* Meta Pixel — ViewContent + أزرار التواصل. wireContactLinks شغّالة بالـdelegation
+     على document، فبتمسك أزرار "اتصل" اللي بتنبنى بالـinnerHTML تحت (وأي زر
+     تواصل ينضاف لاحقاً) بلا ما نلاحق كل زر لحاله. */
+  const _mpCtx = {
+    id: t.id, category: t.sport,
+    city: t.city, governorate: t.governorate,
+    section: 'malaab', type: 'talent',
+  };
+  window.MetaPixel?.viewContent({ ..._mpCtx, name: t.name });
+  window.MetaPixel?.wireContactLinks(document, _mpCtx);
   const near = DetailCore.nearest(t, SITE_DATA.talents.filter((x) => x.status === "approved"));
 
   // غلاف كل فيديو (facade) - الملف ما بينحمّل إلا عند الضغط، واللوغو بينطبع فوقه
