@@ -409,8 +409,13 @@ async function getAdsByOwner(ownerId){
 /* Throws on a real failure; only returns null for a genuine "no such
    ad" (no error, no row) — callers need to tell those apart so a
    network hiccup doesn't get reported as "this ad was deleted". */
+/* عمود id نوعه uuid، فأي ?id= مشوّه (رابط قديم، لصق ناقص، زاحف بيجرّب)
+   بيرجّع خطأ 22P02 من Postgres — طلب فاشل + خطأ بالـconsole بدل ما يشوف
+   الزائر "الإعلان غير موجود" بهدوء. قيمة مو uuid ما بتطابق ولا صف أصلاً،
+   فالجواب الصحيح null بلا ما نسأل الشبكة. */
+const AD_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 async function getAdById(id){
-  if(!id) return null;
+  if(!id || !AD_UUID_RE.test(String(id))) return null;
   const { data, error } = await sb.from('ads').select('*, profiles!ads_owner_id_fkey(created_at)').eq('id', id).maybeSingle();
   if(error) throw error;
   return data ? mapAdRow(data) : null;

@@ -18,7 +18,7 @@ function placesGetById(id) {
 }
 
 function tourismLocalImage(src) {
-  if (!src) return 'header/hero-umayyad.png';
+  if (!src) return 'header/hero-umayyad.jpg';
   return String(src).indexOf('http') === 0 ? src : src.replace(/^images\//, '');
 }
 
@@ -29,7 +29,7 @@ function tourismNormalizeCategory(category) {
 
 function tourismRowToPlace(row) {
   var images = Array.isArray(row.images) ? row.images : [];
-  var image = images[0] || row.image || 'header/hero-umayyad.png';
+  var image = images[0] || row.image || 'header/hero-umayyad.jpg';
   return {
     id: row.id,
     name: row.name || 'مكان سياحي',

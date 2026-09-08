@@ -83,7 +83,7 @@ header.nav::-webkit-scrollbar { display: none; }
   gap: 14px;
   background-image:
     linear-gradient(rgba(4,20,10,.35), rgba(4,20,10,.55)),
-    url('header.png');
+    url('header.jpg');
   background-size: cover;
   background-position: center center;
 }

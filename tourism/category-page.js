@@ -66,7 +66,7 @@
 
   function priceWeight(p) { return p === '$' ? 1 : (p === '$$' ? 2 : 3); }
   function imgSrc(p) {
-    if (!p.image) return 'images/header/hero-umayyad.png';
+    if (!p.image) return 'images/header/hero-umayyad.jpg';
     return String(p.image).indexOf('http') === 0 ? p.image : 'images/' + p.image;
   }
 
