@@ -10,6 +10,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="siteHeader"></div>
+
+<div class="section" id="detailRoot"></div>
+
+<div id="siteFooter"></div>
+
+
 <script src="site-core.js"></script>
 <script src="data.js"></script>
 <script src="store.js"></script>
@@ -19,17 +29,10 @@
 <script src="malaabak-api.js"></script>
 <script src="data-bridge.js"></script>
 <script src="review-widget.js"></script>
-</head>
-<body>
-
-<div id="siteHeader"></div>
+<script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
 <script>SiteCore.mountHeader({ active: "academies" });</script>
-
-<div class="section" id="detailRoot"></div>
-
-<div id="siteFooter"></div>
 <script>SiteCore.mountFooter();</script>
-
 <script>
 (async function setupAcademyDetail() {
   await DataBridge.load("academies");
@@ -153,8 +156,5 @@
   ReviewWidget.mount(reviewsSlot, "academy", a.id);
 })();
 </script>
-
-<script src="../js/meta-pixel.js"></script>
-<script src="../js/consent-banner.js"></script>
 </body>
 </html>

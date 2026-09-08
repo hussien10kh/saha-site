@@ -12,21 +12,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../css/form-ux.css">
-<script src="site-core.js"></script>
-<script src="data.js"></script>
-<script src="store.js"></script>
-<script src="terms.js"></script>
 <!-- Supabase client + طبقة API لملعبك (تحلّ محل store.js عند النشر تحت ساحة) -->
-<script src="../js/vendor/supabase.js"></script>
-<script src="../js/supabase-client.js"></script>
-<script src="../js/media-processor.js"></script>
-<script src="../js/form-ux.js"></script>
-<script src="malaabak-api.js"></script>
 </head>
 <body>
 
 <div id="siteHeader"></div>
-<script>SiteCore.mountHeader();</script>
 
 <div class="form-box" style="max-width:520px;">
   <h1>أضف ملعبك</h1>
@@ -52,7 +42,6 @@
   <div class="field">
     <label>المحافظة <span class="req">*</span></label>
     <select id="vGov" required></select>
-    <script>document.getElementById('vGov').innerHTML = FormUX.governorateOptionsHTML();</script>
   </div>
   <div class="field">
     <label>المدينة / المنطقة <span class="req">*</span></label>
@@ -104,12 +93,28 @@
   </div>
 
   <div id="termsSlot"></div>
-  <script>document.getElementById("termsSlot").innerHTML = MalaabakTerms.block(); MalaabakTerms.init();</script>
 
   <button type="button" class="btn btn-primary" id="submitBtn" style="display:block;width:100%;">إرسال للمراجعة</button>
   <p class="muted" style="font-size:0.8em;text-align:center;margin-top:0.6em;">ملعبك رح يوصل للوحة التحكم للمراجعة، وبعد الموافقة بيظهر بصفحة الملاعب.</p>
 </div>
 
+
+<div id="siteFooter"></div>
+
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="terms.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/media-processor.js"></script>
+<script src="../js/form-ux.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
+<script>SiteCore.mountHeader();</script>
+    <script>document.getElementById('vGov').innerHTML = FormUX.governorateOptionsHTML();</script>
+  <script>document.getElementById("termsSlot").innerHTML = MalaabakTerms.block(); MalaabakTerms.init();</script>
 <script>
 (function () {
   const preview = document.getElementById("venueImagePreview");
@@ -245,11 +250,6 @@
   });
 })();
 </script>
-
-<div id="siteFooter"></div>
 <script>SiteCore.mountFooter();</script>
-
-<script src="../js/meta-pixel.js"></script>
-<script src="../js/consent-banner.js"></script>
 </body>
 </html>

@@ -12,18 +12,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../css/form-ux.css">
-<script src="site-core.js"></script>
-<script src="data.js"></script>
-<script src="store.js"></script>
-<script src="../js/vendor/supabase.js"></script>
-<script src="../js/supabase-client.js"></script>
-<script src="../js/form-ux.js"></script>
-<script src="malaabak-api.js"></script>
 </head>
 <body>
 
 <div id="siteHeader"></div>
-<script>SiteCore.mountHeader({ active: "events", hideAddVenue: true });</script>
 
 <div class="form-box" style="max-width:520px;">
   <h1>أنشئ فعالية</h1>
@@ -53,7 +45,6 @@
   <div class="field">
     <label>المحافظة <span class="req">*</span></label>
     <select id="eGov" required></select>
-    <script>document.getElementById('eGov').innerHTML = FormUX.governorateOptionsHTML();</script>
   </div>
   <div class="field">
     <label>المدينة / المنطقة <span class="req">*</span></label>
@@ -90,6 +81,20 @@
   <p class="muted" style="font-size:0.8em;text-align:center;margin-top:0.6em;">املأ الحقول المطلوبة وراح تظهر فعاليتك بصفحة الفعاليات فوراً.</p>
 </div>
 
+
+<div id="siteFooter"></div>
+
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/form-ux.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
+<script>SiteCore.mountHeader({ active: "events", hideAddVenue: true });</script>
+    <script>document.getElementById('eGov').innerHTML = FormUX.governorateOptionsHTML();</script>
 <script>
 (async function setupAddEvent() {
   const $ = (id) => document.getElementById(id);
@@ -148,11 +153,6 @@
   });
 })();
 </script>
-
-<div id="siteFooter"></div>
 <script>SiteCore.mountFooter();</script>
-
-<script src="../js/meta-pixel.js"></script>
-<script src="../js/consent-banner.js"></script>
 </body>
 </html>

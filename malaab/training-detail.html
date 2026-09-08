@@ -10,6 +10,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="siteHeader"></div>
+
+<div class="section" id="detailRoot"></div>
+
+<div id="siteFooter"></div>
+
+
 <script src="site-core.js"></script>
 <script src="data.js"></script>
 <script src="store.js"></script>
@@ -18,17 +28,10 @@
 <script src="../js/supabase-client.js"></script>
 <script src="malaabak-api.js"></script>
 <script src="data-bridge.js"></script>
-</head>
-<body>
-
-<div id="siteHeader"></div>
+<script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
 <script>SiteCore.mountHeader({ active: "training", hideAddVenue: true });</script>
-
-<div class="section" id="detailRoot"></div>
-
-<div id="siteFooter"></div>
 <script>SiteCore.mountFooter();</script>
-
 <script>
 // ===== صفحة تفاصيل التمرين =====
 (async function setupTrainingDetail() {
@@ -160,8 +163,5 @@
   }
 })();
 </script>
-
-<script src="../js/meta-pixel.js"></script>
-<script src="../js/consent-banner.js"></script>
 </body>
 </html>

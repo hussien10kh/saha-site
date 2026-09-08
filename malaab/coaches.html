@@ -11,19 +11,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<script src="site-core.js"></script>
-<script src="data.js"></script>
-<script src="store.js"></script>
-<script src="list-page.js"></script>
-<script src="../js/vendor/supabase.js"></script>
-<script src="../js/supabase-client.js"></script>
-<script src="malaabak-api.js"></script>
-<script src="data-bridge.js"></script>
 </head>
 <body>
 
 <div id="siteHeader"></div>
-<script>SiteCore.mountHeader({ active: "coaches" });</script>
 
 <section class="hero">
   <h1>المدربين المحترفين</h1>
@@ -183,8 +174,20 @@
 </div>
 
 <div id="siteFooter"></div>
-<script>SiteCore.mountFooter();</script>
 
+
+<script src="site-core.js"></script>
+<script src="data.js"></script>
+<script src="store.js"></script>
+<script src="list-page.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="malaabak-api.js"></script>
+<script src="data-bridge.js"></script>
+<script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
+<script>SiteCore.mountHeader({ active: "coaches" });</script>
+<script>SiteCore.mountFooter();</script>
 <script>
 SiteCore.fillDateSelects();
 const { govSelect, cityInput, refreshCityOptions } = SiteCore.setupGovCity();
@@ -301,8 +304,5 @@ const { govSelect, cityInput, refreshCityOptions } = SiteCore.setupGovCity();
   sbPriceInput.addEventListener("blur", () => { sbPriceInput.value = sbPrice.value; });
 })();
 </script>
-
-<script src="../js/meta-pixel.js"></script>
-<script src="../js/consent-banner.js"></script>
 </body>
 </html>

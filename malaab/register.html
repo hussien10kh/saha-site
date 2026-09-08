@@ -12,15 +12,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="../css/form-ux.css">
-<script src="site-core.js"></script>
-<script src="../js/vendor/supabase.js"></script>
-<script src="../js/supabase-client.js"></script>
-<script src="../js/form-ux.js"></script>
 </head>
 <body>
 
 <div id="siteHeader"></div>
-<script>SiteCore.mountHeader();</script>
 
 <div class="form-box" style="max-width:460px;">
   <h1>إنشاء حساب</h1>
@@ -66,8 +61,16 @@
 </div>
 
 <div id="siteFooter"></div>
-<script>SiteCore.mountFooter();</script>
 
+
+<script src="site-core.js"></script>
+<script src="../js/vendor/supabase.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/form-ux.js"></script>
+<script src="../js/meta-pixel.js"></script>
+<script src="../js/consent-banner.js"></script>
+<script>SiteCore.mountHeader();</script>
+<script>SiteCore.mountFooter();</script>
 <script>
 // zerar للـpassword toggles (عام لكل الصفحة)
 document.addEventListener('click', (e) => {
@@ -136,8 +139,5 @@ document.addEventListener('click', (e) => {
   });
 })();
 </script>
-
-<script src="../js/meta-pixel.js"></script>
-<script src="../js/consent-banner.js"></script>
 </body>
 </html>
