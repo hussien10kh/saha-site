@@ -14,6 +14,9 @@
 
    وبعد النشر: خلّي META_CAPI_ENABLED = true بـjs/meta-pixel.js.
 
+   للفحص: أضف ?debug=1 على الرابط وبترجع ردّ Meta الحقيقي بدل 204 —
+   بلاه ما في طريقة تعرف إذا Meta قبل الحدث، لأن 204 بترجع بالحالتين.
+
    ملاحظة خصوصية: الدالة ما بتخزّن شي. الإيميل/الجوال — لو انبعتوا — بينهشّوا
    بـSHA-256 قبل ما يطلعوا لMeta، وهاد اللي بيطلبه Meta أصلاً. */
 
@@ -61,11 +64,26 @@ exports.handler = async (event) => {
   const ACCESS_TOKEN = process.env.META_CAPI_ACCESS_TOKEN;
   const TEST_CODE = process.env.META_CAPI_TEST_CODE;
 
+  /* وضع التشخيص: ?debug=1 بيخلّي الدالة ترجّع ردّ Meta الحقيقي بدل 204.
+     بلاه ما في طريقة نعرف إذا Meta قبل الحدث أو رفضه — 204 بترجع بالحالتين
+     (وهاد مقصود: فشل التتبّع ما لازم يكسر الموقع لأي زائر).
+     الزوّار العاديين ما بيمرّروا العلم أبداً، فسلوكهم ما بيتغيّر.
+     ملاحظة: الردّ ما بيحتوي التوكن — رسائل Meta ما فيها أسرار. */
+  const debug = !!(event.queryStringParameters && event.queryStringParameters.debug === '1');
+  const reply = (statusCode, info) => (debug
+    ? { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(info) }
+    : { statusCode, body: '' });
+
   /* بلا إعدادات منرجع 204 بهدوء بدل خطأ: الموقع لازم يضل شغّال حتى لو التتبّع
      مو مضبوط، وما بدنا console الزائر يمتلي أخطاء. */
   if (!PIXEL_ID || !ACCESS_TOKEN) {
     console.warn('meta-capi: META_PIXEL_ID / META_CAPI_ACCESS_TOKEN not set — dropping event');
-    return { statusCode: 204, body: '' };
+    return reply(204, {
+      ok: false,
+      reason: 'env_missing',
+      has_pixel_id: !!PIXEL_ID,
+      has_access_token: !!ACCESS_TOKEN,
+    });
   }
 
   const raw = event.body || '';
@@ -75,10 +93,15 @@ exports.handler = async (event) => {
 
   let payload;
   try { payload = JSON.parse(raw); }
-  catch (e) { return { statusCode: 400, body: '' }; }
+  catch (e) { return reply(400, { ok: false, reason: 'bad_json' }); }
 
   if (!payload || !ALLOWED_EVENTS.has(payload.event_name)) {
-    return { statusCode: 400, body: '' };
+    return reply(400, {
+      ok: false,
+      reason: 'event_not_allowed',
+      event_name: payload && payload.event_name,
+      allowed: [...ALLOWED_EVENTS],
+    });
   }
 
   const headers = event.headers || {};
@@ -121,20 +144,36 @@ exports.handler = async (event) => {
   const url = `https://graph.facebook.com/${GRAPH_VERSION}/${PIXEL_ID}/events`
     + `?access_token=${encodeURIComponent(ACCESS_TOKEN)}`;
 
+  let metaStatus = null;
+  let metaBody = null;
   try {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    metaStatus = res.status;
+    metaBody = await res.text();      // منقراه دايماً، مو بس عند الفشل — التشخيص بيحتاجه
     if (!res.ok) {
       // منطبع نص Meta كامل — رسايله بتقول بالضبط أي حقل غلط
-      console.error('meta-capi: Meta rejected event', res.status, await res.text());
+      console.error('meta-capi: Meta rejected event', metaStatus, metaBody);
     }
   } catch (err) {
     console.error('meta-capi: request failed', err);
+    return reply(204, { ok: false, reason: 'network_error', error: String(err && err.message) });
   }
 
-  /* دايماً 204: الصفحة ما بتعمل شي بالردّ، وما بدنا فشل تتبّع يظهر للزائر. */
-  return { statusCode: 204, body: '' };
+  let parsed = null;
+  try { parsed = JSON.parse(metaBody); } catch (e) {}
+
+  /* دايماً 204 للزوّار: الصفحة ما بتعمل شي بالردّ، وما بدنا فشل تتبّع يظهر للزائر.
+     مع ?debug=1 منرجّع ردّ Meta كما هو عشان نعرف إذا قبله فعلاً. */
+  return reply(204, {
+    ok: metaStatus === 200 && !!(parsed && parsed.events_received),
+    pixel_id: PIXEL_ID,
+    test_event_code: TEST_CODE || null,
+    meta_status: metaStatus,
+    meta_response: parsed || metaBody,
+    sent_user_data_keys: Object.keys(user_data),
+  });
 };

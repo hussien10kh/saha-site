@@ -5,7 +5,7 @@
    untouched so auth/data calls behave normally.
    ========================================================= */
 
-const CACHE_NAME = 'saaha-v3';
+const CACHE_NAME = 'saaha-v4';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
