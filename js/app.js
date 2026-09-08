@@ -384,11 +384,22 @@ function adFieldsToRow(fields){
    silently returning [] — callers must tell "genuinely no ads" apart
    from "couldn't load ads" and show a different message for each;
    collapsing them into the same empty state is misleading. */
+/* renderFeaturedSidebar() و loadFeed() بتنطلقوا سوا على نفس الصفحة وكل وحدة
+   بتنادي هالدالة، فكان نفس الاستعلام بينبعت مرتين (~1.2s للواحد). منشارك الطلب
+   الطائر بين المنادين بدل ما نكرّره.
+   منمسحه أول ما يخلص — يعني ما في تخزين قديم: أي نداء بعد ما يرجع الأول
+   (مثلاً بعد نشر إعلان) بيجيب بيانات طازة متل قبل. */
+let _activeAdsInFlight = null;
 async function getActiveAds(){
-  const cutoff = new Date(Date.now() - AD_EXPIRY_DAYS*24*60*60*1000).toISOString();
-  const { data, error } = await sb.from('ads').select('*').gte('created_at', cutoff).order('created_at', {ascending:false});
-  if(error) throw error;
-  return data.map(mapAdRow);
+  if(_activeAdsInFlight) return _activeAdsInFlight;
+  _activeAdsInFlight = (async () => {
+    const cutoff = new Date(Date.now() - AD_EXPIRY_DAYS*24*60*60*1000).toISOString();
+    const { data, error } = await sb.from('ads').select('*').gte('created_at', cutoff).order('created_at', {ascending:false});
+    if(error) throw error;
+    return data.map(mapAdRow);
+  })();
+  try { return await _activeAdsInFlight; }
+  finally { _activeAdsInFlight = null; }
 }
 async function getAdsByOwner(ownerId){
   const { data, error } = await sb.from('ads').select('*, profiles!ads_owner_id_fkey(created_at)').eq('owner_id', ownerId).order('created_at', {ascending:false});
@@ -481,12 +492,19 @@ async function getAllCommentsFlat(){
   if(error) return [];
   return data.map(c=>({ id:c.id, adId:c.ad_id, adTitle: (c.ads && c.ads.title) || '', name:c.name, text:c.text, time: timeAgo(c.created_at) }));
 }
+// نفس مشكلة getActiveAds: منادى مرتين بنفس اللحظة، فمنشارك الطلب الطائر
+let _commentCountsInFlight = null;
 async function getCommentCounts(){
-  const { data, error } = await sb.from('comments').select('ad_id');
-  if(error) return {};
-  const map = {};
-  data.forEach(r=>{ map[r.ad_id] = (map[r.ad_id]||0) + 1; });
-  return map;
+  if(_commentCountsInFlight) return _commentCountsInFlight;
+  _commentCountsInFlight = (async () => {
+    const { data, error } = await sb.from('comments').select('ad_id');
+    if(error) return {};
+    const map = {};
+    data.forEach(r=>{ map[r.ad_id] = (map[r.ad_id]||0) + 1; });
+    return map;
+  })();
+  try { return await _commentCountsInFlight; }
+  finally { _commentCountsInFlight = null; }
 }
 
 /* ---------------------------------------------------------
