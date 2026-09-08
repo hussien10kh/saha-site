@@ -35,6 +35,13 @@ function sha256(value) {
   return crypto.createHash('sha256').update(String(value).trim().toLowerCase()).digest('hex');
 }
 
+// هاش SHA-256 بالـhex طوله 64 خانة دايماً — فهيك منميّز المهشّر عن الخام
+const SHA256_HEX = /^[0-9a-f]{64}$/i;
+function alreadyHashed(value) {
+  const v = String(value);
+  return SHA256_HEX.test(v) ? v.toLowerCase() : sha256(v);
+}
+
 // أرقام سوريا منخزّنها بصيغ مختلفة (09xx / +9639xx) — منوحّدها قبل الهاش
 // وإلا نفس المستخدم بينحسب شخصين مختلفين عند Meta.
 function normalizePhone(raw) {
@@ -84,9 +91,17 @@ exports.handler = async (event) => {
   // fbp/fbc هنّي أقوى إشارتَي مطابقة عندنا — بينوصلوا كما هم (مو PII)
   if (incoming.fbp) user_data.fbp = incoming.fbp;
   if (incoming.fbc) user_data.fbc = incoming.fbc;
-  if (incoming.email) user_data.em = [sha256(incoming.email)];
-  if (incoming.phone) user_data.ph = [sha256(normalizePhone(incoming.phone))];
-  if (incoming.external_id) user_data.external_id = [sha256(incoming.external_id)];
+
+  /* المتصفّح بيهشّر الهوية قبل ما يبعتها (em/ph/external_id)، فالخام ما بيوصل
+     لهون أصلاً. منقبل الشكلين: قيمة مهشّرة منمرّرها كما هي، وقيمة خام منهشّرها.
+     بلا هالتفريق كنّا رح نهشّر المهشّر مرتين وMeta ما بيلاقي ولا مطابقة. */
+  if (incoming.em) user_data.em = [alreadyHashed(incoming.em)];
+  else if (incoming.email) user_data.em = [sha256(incoming.email)];
+
+  if (incoming.ph) user_data.ph = [alreadyHashed(incoming.ph)];
+  else if (incoming.phone) user_data.ph = [sha256(normalizePhone(incoming.phone))];
+
+  if (incoming.external_id) user_data.external_id = [alreadyHashed(incoming.external_id)];
   if (clientIp) user_data.client_ip_address = clientIp;
   if (headers['user-agent']) user_data.client_user_agent = headers['user-agent'];
 

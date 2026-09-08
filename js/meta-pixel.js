@@ -26,10 +26,13 @@
 
 const META_PIXEL_ID = '1550849640101362';
 
-// Conversions API — نسخة server-side من نفس الأحداث (نفس event_id → Meta بيلغي التكرار).
-// خلّيه false لحد ما تنشر netlify/functions/meta-capi.js وتحطّ الـAccess Token بمتغيرات Netlify،
-// وإلا كل event رح يعمل طلب فاشل 404 بلا فائدة.
-const META_CAPI_ENABLED = false;
+// Conversions API — نسخة server-side من نفس الأحداث (نفس event_id → Meta بيدمجهم بواحد).
+// بتعوّض الأحداث اللي بتوقفها مانعات الإعلانات و ITP على iOS (20-40% مو نادر).
+//
+// شروط تشغيلها — كلها متحققة: netlify/functions/meta-capi.js منشورة، و
+// META_PIXEL_ID + META_CAPI_ACCESS_TOKEN محطوطين بمتغيّرات Netlify (مو بالريبو).
+// لو رجّعتها false بيضل بكسل المتصفّح شغّال عادي — بتخسر بس النسخة السيرفرية.
+const META_CAPI_ENABLED = true;
 const META_CAPI_ENDPOINT = '/.netlify/functions/meta-capi';
 
 // مفتاح قرار الكوكيز — الـPixel ما بينحمّل إلا بعد موافقة صريحة.
@@ -73,6 +76,7 @@ const MetaPixel = (() => {
   function grantConsent() {
     _persistConsent('granted');
     _bootPixel();
+    _primeIdentity();
     // نفرّغ الطابور بنفس ترتيب حدوثه (PageView أول شي)
     const queued = pending.splice(0, pending.length);
     queued.forEach((ev) => _send(ev));
@@ -131,6 +135,51 @@ const MetaPixel = (() => {
     return m ? decodeURIComponent(m[2]) : null;
   }
 
+  // ---------- هوية المستخدم (للمطابقة) ----------
+  // _fbp/_fbc لحالهم ضعاف: بيروحوا مع مسح الكوكيز و ITP على iOS. لما المستخدم
+  // يكون مسجّل دخول، إيميله ومعرّفه بيخلّوا Meta يربط "التسجيل" بالنقرة الأصلية
+  // حتى لو الكوكي ضاع — وهاد بالضبط الفرق بين "500 نقرة" و"40 منهم سجّلوا".
+  //
+  // الهاش بيصير هون بالمتصفّح، فالإيميل الخام ما بيطلع من الجهاز أبداً — لا
+  // لدالتنا ولا لMeta. Meta أصلاً بيتوقّع القيم مهشّرة SHA-256.
+
+  // بنقرا جلسة Supabase من localStorage مباشرةً بدل ما نعتمد على دالة auth
+  // مختلفة بكل قسم (ads/tourism/malaab عندهم ثلاث طرق مختلفة).
+  function _currentUser() {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || (k.indexOf('sb-') !== 0 && k.indexOf('supabase.auth.token') !== 0)) continue;
+        const obj = JSON.parse(localStorage.getItem(k));
+        const sess = (obj && (obj.currentSession || obj)) || null;
+        const u = sess && sess.user;
+        if (u && (u.id || u.email)) return { id: u.id, email: u.email };
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function _sha256Hex(value) {
+    const bytes = new TextEncoder().encode(String(value).trim().toLowerCase());
+    return crypto.subtle.digest('SHA-256', bytes).then((buf) =>
+      Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join(''));
+  }
+
+  /* منحسب الهاش مرة وحدة ومنخزّنه، مو عند كل حدث. السبب: الهاش async، ولو
+     انتظرناه جوّا _mirrorToCapi كان ممكن الحدث يضيع لما المستخدم يغادر الصفحة
+     فوراً (مثلاً يضغط "اتصل" وينتقل للاتصال). هيك الإرسال بيضل متزامن. */
+  let _identity = null;
+  function _primeIdentity() {
+    const u = _currentUser();
+    if (!u || !window.crypto || !crypto.subtle) return;   // crypto.subtle بدها https
+    Promise.all([
+      u.email ? _sha256Hex(u.email) : null,
+      u.id ? _sha256Hex(u.id) : null,
+    ]).then(([em, externalId]) => {
+      _identity = _clean({ em, external_id: externalId });
+    }).catch(() => {});
+  }
+
   // الإرسال الفعلي للـPixel + نسخة CAPI بنفس الـevent_id
   function _send(ev) {
     if (typeof fbq !== 'function') return;
@@ -149,7 +198,11 @@ const MetaPixel = (() => {
       event_source_url: location.href,
       action_source: 'website',
       custom_data: ev.params,
-      user_data: _clean({ fbp: _cookie('_fbp'), fbc: _cookie('_fbc') }),
+      // _identity مهشّر أصلاً (SHA-256) — الدالة بتمرّره كما هو لMeta
+      user_data: _clean(Object.assign(
+        { fbp: _cookie('_fbp'), fbc: _cookie('_fbc') },
+        _identity || {},
+      )),
     });
     // keepalive عشان الحدث ما يضيع لو المستخدم غادر الصفحة فوراً (مثلاً ضغط "اتصل")
     try {
@@ -311,7 +364,7 @@ const MetaPixel = (() => {
 
   // ---------- Init ----------
   if (enabled) {
-    if (consentState() === 'granted') _bootPixel();
+    if (consentState() === 'granted') { _bootPixel(); _primeIdentity(); }
     pageView();   // بينحفظ بالطابور لو الموافقة لسه ما إجت
   } else {
     console.log(_mpIsDevHost()
