@@ -35,7 +35,13 @@ const META_PIXEL_ID = '1875215833859027';
 const META_CAPI_ENABLED = true;
 const META_CAPI_ENDPOINT = '/.netlify/functions/meta-capi';
 
-// مفتاح قرار الكوكيز — الـPixel ما بينحمّل إلا بعد موافقة صريحة.
+/* Google Analytics — بيمرق من نفس بوابة الموافقة تماماً متل بكسل Meta.
+   حطّيناه هون مو بوسم <script> بكل صفحة لأن هالملف هو صاحب قرار الموافقة؛
+   لو ضل بالـHTML كان بيشتغل قبل ما يقرّر الزائر، ووقتها الأداتين ما بيكونوا
+   "متل بعض". بلا موافقة: ولا بايت لجوجل. */
+const GA_MEASUREMENT_ID = 'G-Y4216697RK';
+
+// مفتاح قرار الكوكيز — لا الـPixel ولا Analytics بينحمّلوا إلا بعد موافقة صريحة.
 const META_CONSENT_KEY = 'saaha:consent:v1';
 
 /* تصفّح التطوير ما بينحسب. بلا هالحارس كل reload على localhost بيبعت تحويل
@@ -75,6 +81,7 @@ const MetaPixel = (() => {
 
   function grantConsent() {
     _persistConsent('granted');
+    _bootGA();          // الاتنين بينطلقوا سوا — نفس اللحظة، نفس الشرط
     _bootPixel();
     _primeIdentity();
     // نفرّغ الطابور بنفس ترتيب حدوثه (PageView أول شي)
@@ -89,7 +96,24 @@ const MetaPixel = (() => {
     document.dispatchEvent(new CustomEvent('metapixel:consent', { detail: { state: 'denied' } }));
   }
 
-  // ---------- تحميل الـPixel ----------
+  // ---------- تحميل أدوات القياس (بعد الموافقة فقط) ----------
+
+  /* Google Analytics — نفس شروط بكسل Meta بالضبط: موافقة صريحة، وما بيشتغل
+     على localhost حتى ما يوسّخ تقاريرك بترافيك تطوير (?pixel_debug=1 بيتجاوزه).
+     منحمّله يدوياً بدل وسم <script> عشان التوقيت يكون بإيدنا. */
+  let gaBooted = false;
+  function _bootGA() {
+    if (gaBooted || !GA_MEASUREMENT_ID || _mpIsDevHost() || window.gtag) return;
+    gaBooted = true;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    gtag('js', new Date());
+    gtag('config', GA_MEASUREMENT_ID);
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
+    document.head.appendChild(s);
+  }
 
   // بوت Meta Pixel القياسي — يحمّل fbevents.js من Facebook
   function _bootPixel() {
@@ -363,6 +387,10 @@ const MetaPixel = (() => {
   }
 
   // ---------- Init ----------
+  /* GA برّا شرط enabled عمداً: enabled بيقيس صلاحية META_PIXEL_ID، وما إله
+     علاقة بجوجل. لو ربطناهم، أي خلل برقم بكسل Meta كان بيوقف Analytics كمان. */
+  if (consentState() === 'granted') _bootGA();
+
   if (enabled) {
     if (consentState() === 'granted') { _bootPixel(); _primeIdentity(); }
     pageView();   // بينحفظ بالطابور لو الموافقة لسه ما إجت
