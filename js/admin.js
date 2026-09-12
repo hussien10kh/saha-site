@@ -1060,7 +1060,8 @@ async function renderUsers(mount, adminsOnly){
             <div style="font-weight:700;">${name}${badge}${isMe?'<span style="color:var(--muted);font-size:.8em;margin-inline-start:6px;">(أنت)</span>':''}</div>
             <div style="font-size:.8em;color:var(--muted);">${escapeHTML(u.phone||'—')} · انضم ${when} · <code style="font-size:.85em;">${u.id.slice(0,8)}...</code></div>
           </div>
-          ${isMe ? '' : `<button class="btn ${u.is_admin?'btn-outline':'btn-primary'} usr-toggle" data-id="${u.id}" data-admin="${u.is_admin?'1':'0'}" style="font-size:.8em;padding:6px 12px;flex-shrink:0;">${toggleLabel}</button>`}
+          ${isMe ? '' : `<button class="btn ${u.is_admin?'btn-outline':'btn-primary'} usr-toggle" data-id="${u.id}" data-admin="${u.is_admin?'1':'0'}" style="font-size:.8em;padding:6px 12px;flex-shrink:0;">${toggleLabel}</button>
+          <button class="btn btn-outline usr-delete" data-id="${u.id}" data-name="${escapeHTML(u.name||'')}" title="حذف الحساب نهائياً" style="font-size:.8em;padding:6px 12px;flex-shrink:0;border-color:#e0453d;color:#e0453d;">حذف</button>`}
         </div>`;
     }).join('') || `<div class="admin-empty">لا نتائج مطابقة.</div>`;
   }
@@ -1068,6 +1069,9 @@ async function renderUsers(mount, adminsOnly){
   document.getElementById('usrSearch').addEventListener('input', (e)=> render(e.target.value.trim()));
 
   mount.addEventListener('click', async (e)=>{
+    const del = e.target.closest('.usr-delete');
+    if(del){ await deleteUserFlow(del, data, ()=> render(document.getElementById('usrSearch').value.trim())); return; }
+
     const btn = e.target.closest('.usr-toggle'); if(!btn) return;
     const id = btn.dataset.id;
     const makeAdmin = btn.dataset.admin === '0';
@@ -1079,4 +1083,58 @@ async function renderUsers(mount, adminsOnly){
     const u = data.find(x=>x.id===id); if(u) u.is_admin = makeAdmin;
     render(document.getElementById('usrSearch').value.trim());
   });
+}
+
+/* حذف حساب — على مرحلتين عن قصد.
+   الحذف بيصير بدالة سيرفر (netlify/functions/admin-delete-user.js) لأن حذف
+   مستخدم من auth بيحتاج service_role، وهاد ما لازم يوصل للمتصفّح أبداً.
+   المرحلة الأولى "معاينة" بتعدّ شو رح يروح بلا ما تحذف شي — المشرف لازم يشوف
+   إن هالحساب إله 40 إعلان و12 صورة قبل ما يضغط تأكيد، مو بعده. */
+async function callDeleteUserApi(userId, mode){
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session) throw new Error('الجلسة منتهية — سجّل دخول من جديد');
+  const res = await fetch('/.netlify/functions/admin-delete-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify({ user_id: userId, mode }),
+  });
+  const body = await res.json().catch(()=> ({}));
+  if(!res.ok) throw new Error(body.error || ('خطأ ' + res.status));
+  return body;
+}
+
+function countsSummary(counts, files){
+  const lines = Object.entries(counts || {})
+    .filter(([, n]) => n === null || n > 0)
+    .map(([label, n]) => `  • ${label}: ${n === null ? 'غير معروف' : n}`);
+  if(files) lines.push(`  • ملفات صور: ${files}`);
+  return lines.length ? lines.join('\n') : '  (لا يوجد محتوى مرتبط)';
+}
+
+async function deleteUserFlow(btn, cache, rerender){
+  const id = btn.dataset.id;
+  const name = btn.dataset.name || '(بلا اسم)';
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = '...';
+
+  let preview;
+  try{ preview = await callDeleteUserApi(id, 'preview'); }
+  catch(err){ alert('تعذّرت المعاينة: ' + err.message); btn.disabled = false; btn.textContent = original; return; }
+
+  const msg = `حذف حساب "${name}" نهائياً؟\n\nرح ينحذف معه:\n${countsSummary(preview.counts, preview.files)}\n\nهالعملية ما بتنرجع.`;
+  if(!confirm(msg)){ btn.disabled = false; btn.textContent = original; return; }
+
+  // تأكيد ثاني بكتابة كلمة — الحذف نهائي ومع كل المحتوى، فمنع ضغطة بالغلط
+  const typed = prompt('للتأكيد اكتب كلمة: حذف');
+  if(typed !== 'حذف'){ btn.disabled = false; btn.textContent = original; return; }
+
+  btn.textContent = 'جاري الحذف...';
+  let result;
+  try{ result = await callDeleteUserApi(id, 'delete'); }
+  catch(err){ alert('فشل الحذف: ' + err.message); btn.disabled = false; btn.textContent = original; return; }
+
+  const idx = cache.findIndex(u => u.id === id);
+  if(idx !== -1) cache.splice(idx, 1);
+  rerender();
+  alert(`تم حذف الحساب.\n\n${countsSummary(result.deleted)}`);
 }
