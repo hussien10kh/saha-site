@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<link rel="canonical" id="canonicalLink" href="">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>تفاصيل المباراة - ملعبك</title>
 <meta name="description" content="تفاصيل المباراة: الفريق، الوقت، الملعب — انضم على ملعبك.">
@@ -39,9 +40,10 @@
   await DataBridge.load("matches");
   const root = document.getElementById("detailRoot");
   const m = DetailCore.fromQuery(SITE_DATA.matches);
-  if (!m) { root.innerHTML = DetailCore.notFoundHTML("matches.html", "رجوع للمباريات"); return; }
+  if (!m) { document.head.insertAdjacentHTML('beforeend', '<meta name="robots" content="noindex">'); root.innerHTML = DetailCore.notFoundHTML("matches.html", "رجوع للمباريات"); return; }
 
   document.title = `${m.title} - ملعبك`;
+  document.getElementById('canonicalLink').href = location.origin + location.pathname + '?id=' + encodeURIComponent(m.id);
 
   /* Meta Pixel — ViewContent + أزرار التواصل. wireContactLinks شغّالة بالـdelegation
      على document، فبتمسك أزرار "اتصل" اللي بتنبنى بالـinnerHTML تحت (وأي زر

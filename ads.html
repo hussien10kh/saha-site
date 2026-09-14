@@ -13,7 +13,7 @@
 <meta property="og:title" content="ساحة | عروض سوريا عقارات سيارات خدمات">
 <meta property="og:description" content="منصة إعلانات مبوبة مجانية لبيع وشراء العقارات والسيارات وكل ما تحتاجه في سوريا.">
 <meta property="og:locale" content="ar_AR">
-<link rel="canonical" id="canonicalLink" href="https://saaha.net/">
+<link rel="canonical" id="canonicalLink" href="https://saaha.net/ads.html">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -32,7 +32,7 @@
   "inLanguage": "ar",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": "https://saaha.net/?q={search_term_string}",
+    "target": "https://saaha.net/ads.html?q={search_term_string}",
     "query-input": "required name=search_term_string"
   }
 }
@@ -159,7 +159,7 @@
     if(q){
       document.title = `نتائج البحث عن "${q}" | ساحة`;
       heading.textContent = `نتائج البحث عن "${q}"`;
-      canonicalLink.href = cat ? `https://saaha.net/?cat=${encodeURIComponent(cat)}` : 'https://saaha.net/';
+      canonicalLink.href = cat ? `https://saaha.net/ads.html?cat=${encodeURIComponent(cat)}` : 'https://saaha.net/ads.html';
     }else if(cat && SEO_BY_CAT[cat] && city){
       const seo = SEO_BY_CAT[cat];
       const title = `${seo.noun} للبيع في ${city} | ساحة`;
@@ -169,7 +169,7 @@
       ogTitleTag.setAttribute('content', title);
       ogDescTag.setAttribute('content', desc);
       heading.textContent = seo.h1City(city);
-      canonicalLink.href = `https://saaha.net/?cat=${encodeURIComponent(cat)}&city=${encodeURIComponent(city)}`;
+      canonicalLink.href = `https://saaha.net/ads.html?cat=${encodeURIComponent(cat)}&city=${encodeURIComponent(city)}`;
     }else if(cat && SEO_BY_CAT[cat]){
       const seo = SEO_BY_CAT[cat];
       document.title = seo.title;
@@ -177,7 +177,7 @@
       ogTitleTag.setAttribute('content', seo.title);
       ogDescTag.setAttribute('content', seo.desc);
       heading.textContent = seo.h1;
-      canonicalLink.href = `https://saaha.net/?cat=${encodeURIComponent(cat)}`;
+      canonicalLink.href = `https://saaha.net/ads.html?cat=${encodeURIComponent(cat)}`;
     }else if(city){
       const title = `أحدث الإعلانات المبوبة في ${city} | ساحة`;
       const desc = `تصفح أحدث الإعلانات المبوبة في ${city}: عقارات، سيارات وإعلانات متنوعة. انشر إعلانك مجاناً على ساحة.`;
@@ -186,7 +186,7 @@
       ogTitleTag.setAttribute('content', title);
       ogDescTag.setAttribute('content', desc);
       heading.textContent = `عروض إعلانات في ${city}: بيع وشراء جديد ومستعمل`;
-      canonicalLink.href = `https://saaha.net/?city=${encodeURIComponent(city)}`;
+      canonicalLink.href = `https://saaha.net/ads.html?city=${encodeURIComponent(city)}`;
     }
   })();
 

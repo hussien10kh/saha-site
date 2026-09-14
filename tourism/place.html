@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<link rel="canonical" id="canonicalLink" href="">
 <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>تفاصيل المكان | ساحة سياحة</title>
@@ -168,11 +169,13 @@
   var currentUser = authGetUser();
 
   if (!place) {
+    document.head.insertAdjacentHTML('beforeend', '<meta name="robots" content="noindex">');
     root.innerHTML = '<div class="p-notfound"><h2>ما لقينا هالمكان</h2><p>تأكد من الرابط أو <a href="index.html">ارجع للتصفح</a>.</p></div>';
     return;
   }
 
   document.title = place.name + ' | ساحة سياحة';
+  document.getElementById('canonicalLink').href = location.origin + location.pathname + '?id=' + encodeURIComponent(place.id);
   // meta description ديناميكي حسب المكان
   var mdesc = document.querySelector('meta[name="description"]');
   if(mdesc) mdesc.setAttribute('content', place.name + ' — ' + (place.desc || 'مكان سياحي في ' + place.city + ', سوريا.') + ' استعرض الوصف، الخريطة، والاتجاهات على ساحة سياحة.');

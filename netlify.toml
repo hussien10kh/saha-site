@@ -7,3 +7,29 @@
   to = "/.netlify/functions/sitemap"
   status = 200
   force = true
+
+# الإعلانات كانت على الجذر وانتقلت لـ/ads.html، بس الـsitemap القديم و107 رابط
+# عند جوجل لسا على /?cat=…&city=… — وهدول صاروا يخدموا بوابة الأقسام اللي
+# بتتجاهل الفلاتر. 301 بيحوّل كل رابط قديم لمكانه الصح وبينقل إشارته.
+# force مطلوب لأن / ملف موجود، وإلا Netlify بيخدمه وبيتخطّى القاعدة.
+# الأخصّ أول: قاعدة الفلترين بتمسك قبل قاعدة الفلتر الواحد.
+[[redirects]]
+  from = "/"
+  to = "/ads.html?cat=:cat&city=:city"
+  status = 301
+  force = true
+  query = { cat = ":cat", city = ":city" }
+
+[[redirects]]
+  from = "/"
+  to = "/ads.html?cat=:cat"
+  status = 301
+  force = true
+  query = { cat = ":cat" }
+
+[[redirects]]
+  from = "/"
+  to = "/ads.html?city=:city"
+  status = 301
+  force = true
+  query = { city = ":city" }

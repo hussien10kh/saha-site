@@ -96,6 +96,7 @@
   }
 
   if(!ad){
+    document.head.insertAdjacentHTML('beforeend', '<meta name="robots" content="noindex">');   // Soft 404: الصفحة بترجع 200 بس ما فيها إعلان
     document.getElementById('detailRoot').innerHTML = `
       <div class="panel empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>

@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<link rel="canonical" id="canonicalLink" href="">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>تفاصيل الفعالية - ملعبك</title>
 <meta name="description" content="تفاصيل الفعالية: النوع، المكان، والتسجيل على ملعبك.">
@@ -39,9 +40,10 @@
   const root = document.getElementById("detailRoot");
   const approved = SITE_DATA.events.filter((x) => x.status === "approved");
   const ev = DetailCore.fromQuery(approved);
-  if (!ev) { root.innerHTML = DetailCore.notFoundHTML("events.html", "رجوع للفعاليات"); return; }
+  if (!ev) { document.head.insertAdjacentHTML('beforeend', '<meta name="robots" content="noindex">'); root.innerHTML = DetailCore.notFoundHTML("events.html", "رجوع للفعاليات"); return; }
 
   document.title = `${ev.title} - ملعبك`;
+  document.getElementById('canonicalLink').href = location.origin + location.pathname + '?id=' + encodeURIComponent(ev.id);
 
   /* Meta Pixel — ViewContent + أزرار التواصل. wireContactLinks شغّالة بالـdelegation
      على document، فبتمسك أزرار "اتصل" اللي بتنبنى بالـinnerHTML تحت (وأي زر

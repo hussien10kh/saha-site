@@ -17,13 +17,14 @@ const CATEGORIES = ['realestate', 'cars', 'mobiles', 'furniture', 'electronics',
 const MAJOR_CITIES = ['دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية', 'طرطوس', 'درعا', 'السويداء', 'دير الزور', 'الحسكة', 'الرقة', 'إدلب', 'القنيطرة'];
 
 const CITY_PAGES = MAJOR_CITIES.flatMap(city => [
-  { loc: `/?city=${encodeURIComponent(city)}`, changefreq: 'daily', priority: '0.7' },
-  ...CATEGORIES.map(cat => ({ loc: `/?cat=${cat}&city=${encodeURIComponent(city)}`, changefreq: 'daily', priority: '0.75' })),
+  { loc: `/ads.html?city=${encodeURIComponent(city)}`, changefreq: 'daily', priority: '0.7' },
+  ...CATEGORIES.map(cat => ({ loc: `/ads.html?cat=${cat}&city=${encodeURIComponent(city)}`, changefreq: 'daily', priority: '0.75' })),
 ]);
 
 const STATIC_PAGES = [
   { loc: '/', changefreq: 'hourly', priority: '1.0' },
-  ...CATEGORIES.map(cat => ({ loc: `/?cat=${cat}`, changefreq: 'hourly', priority: '0.9' })),
+  { loc: '/ads.html', changefreq: 'hourly', priority: '0.95' },
+  ...CATEGORIES.map(cat => ({ loc: `/ads.html?cat=${cat}`, changefreq: 'hourly', priority: '0.9' })),
   ...CITY_PAGES,
   { loc: '/add-ad.html', changefreq: 'monthly', priority: '0.6' },
   { loc: '/about.html', changefreq: 'monthly', priority: '0.4' },
