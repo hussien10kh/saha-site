@@ -2,6 +2,27 @@
   publish = "."
   functions = "netlify/functions"
 
+# دوال الرسم على السيرفر بتقرا صفحات HTML كقوالب وملف السيو المشترك —
+# لازم ينحزموا مع الدالة وإلا ما بتلاقيهم وقت التشغيل.
+[functions]
+  included_files = ["ads.html", "listing.html", "js/seo-config.js"]
+
+# الرسم على السيرفر (SSR): الصفحتين الأهم للبحث بتتخدما من دالة بتحقن
+# المحتوى بالـHTML قبل ما يوصل — جوجل بيشوف الإعلانات بلا ما يشغّل JS، والزائر
+# بيشوف المحتوى من أول لحظة بدل هياكل التحميل. status 200 = rewrite مو تحويل،
+# فالرابط بيضل /ads.html بالمتصفّح. force لأن الملفين موجودين فعلاً.
+[[redirects]]
+  from = "/ads.html"
+  to = "/.netlify/functions/ssr-ads"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/listing.html"
+  to = "/.netlify/functions/ssr-listing"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"

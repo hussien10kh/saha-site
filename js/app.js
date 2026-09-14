@@ -389,9 +389,22 @@ function adFieldsToRow(fields){
    الطائر بين المنادين بدل ما نكرّره.
    منمسحه أول ما يخلص — يعني ما في تخزين قديم: أي نداء بعد ما يرجع الأول
    (مثلاً بعد نشر إعلان) بيجيب بيانات طازة متل قبل. */
+/* لمّا الصفحة مرسومة من السيرفر (ssr-ads.js / ssr-listing.js)، البيانات جاية
+   جاهزة بـwindow.__SSR__ — نفس الاستعلام بالضبط، فمنستعملها بدل ما نعيد الطلب.
+   بتضل صالحة طول عمر الصفحة: loadFeed و renderFeaturedSidebar بينادوا
+   getActiveAds بأوقات مختلفة (التاني بعد await على المصادقة)، ولو استهلكناها
+   من أول نداء كان التاني بيرجع للشبكة — وهاد بالضبط اللي كنا نتجنّبه. ما في
+   عملية بهالصفحات بتغيّر قائمة الإعلانات؛ النشر بيصير بصفحة تانية وبتحميل جديد. */
+function readSSR(key){
+  const ssr = window.__SSR__;
+  return (ssr && key in ssr) ? ssr[key] : undefined;
+}
+
 let _activeAdsInFlight = null;
 async function getActiveAds(){
   if(_activeAdsInFlight) return _activeAdsInFlight;
+  const ssrRows = readSSR('ads');
+  if(Array.isArray(ssrRows)) return ssrRows.map(mapAdRow);
   _activeAdsInFlight = (async () => {
     const cutoff = new Date(Date.now() - AD_EXPIRY_DAYS*24*60*60*1000).toISOString();
     const { data, error } = await sb.from('ads').select('*').gte('created_at', cutoff).order('created_at', {ascending:false});
@@ -416,6 +429,9 @@ async function getAdsByOwner(ownerId){
 const AD_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 async function getAdById(id){
   if(!id || !AD_UUID_RE.test(String(id))) return null;
+  // مرسوم من السيرفر (ssr-listing.js)؟ الصف جاهز — null معناه "ما في إعلان" مؤكّد
+  const ssrRow = readSSR('ad');
+  if(ssrRow !== undefined) return ssrRow && ssrRow.id === id ? mapAdRow(ssrRow) : null;
   const { data, error } = await sb.from('ads').select('*, profiles!ads_owner_id_fkey(created_at)').eq('id', id).maybeSingle();
   if(error) throw error;
   return data ? mapAdRow(data) : null;
@@ -501,6 +517,8 @@ async function getAllCommentsFlat(){
 let _commentCountsInFlight = null;
 async function getCommentCounts(){
   if(_commentCountsInFlight) return _commentCountsInFlight;
+  const ssrCounts = readSSR('commentCounts');
+  if(ssrCounts && typeof ssrCounts === 'object') return ssrCounts;
   _commentCountsInFlight = (async () => {
     const { data, error } = await sb.from('comments').select('ad_id');
     if(error) return {};
