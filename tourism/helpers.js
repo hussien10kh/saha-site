@@ -78,6 +78,13 @@ async function tourismGetPlaces() {
 
 async function tourismGetPlaceById(id) {
   if (!id) return null;
+  /* صفحة المكان بتيجي مرسومة من السيرفر (ssr-place) ومعها السجل نفسه بـwindow.__SSR__.place —
+     منستعمله بدل ما نعيد الاستعلام. لمّا السيرفر ما يلاقي المكان ما بيحقن شي، فمنكمّل بالطريق العادي. */
+  var ssr = typeof window !== 'undefined' ? window.__SSR__ : null;
+  if (ssr && 'place' in ssr) {
+    var ssrRow = ssr.place;
+    return ssrRow && String(ssrRow.id) === String(id) ? tourismRowToPlace(ssrRow) : null;
+  }
   var local = placesGetById(id);
   if (typeof sb !== 'undefined' && tourismIsUuid(id)) {
     try {

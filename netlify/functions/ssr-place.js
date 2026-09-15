@@ -76,7 +76,8 @@ exports.handler = async (event) => {
   const notFound = () => {
     html = R.injectHead(html, { title: 'المكان غير موجود | ساحة سياحة', desc: 'هذا المكان غير موجود أو تم حذفه.', noindex: true });
     html = R.replaceInner(html, 'pRoot', NOT_FOUND);
-    html = R.injectSSRData(html, { place: null });
+    // بلا window.__SSR__ هون: صفحة "غير موجود" بيعيد المتصفّح فيها استعلامه العادي — لو كانت النسخة
+    // المخزّنة بالحافة قديمة (عنصر انعتمد قبل شوي) بيلاقيه، وما منقفل عليه بنتيجة السيرفر.
     return { statusCode: 404, headers: R.CACHE_HEADERS, body: html };
   };
   if (!id) return notFound();

@@ -71,11 +71,16 @@
 
   const stars = (n) => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
 
+  // بيانات Supabase (DataBridge) بتجي بـreviews = عدد التقييمات وreviewList = القائمة، بينما
+  // البيانات القديمة بـdata.js كانت reviews = القائمة نفسها — منقبل الشكلين حتى ما تتكسر الصفحة.
+  const reviewList = Array.isArray(v.reviewList) ? v.reviewList : (Array.isArray(v.reviews) ? v.reviews : []);
+  const reviewCount = typeof v.reviews === "number" ? v.reviews : reviewList.length;
+
   // توزيع النجوم محسوب من التقييمات الفعلية (مو أرقام ثابتة)
   function ratingBreakdown() {
     const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    v.reviews.forEach((r) => { counts[r.rating] = (counts[r.rating] || 0) + 1; });
-    const total = v.reviews.length || 1;
+    reviewList.forEach((r) => { counts[r.rating] = (counts[r.rating] || 0) + 1; });
+    const total = reviewList.length || 1;
     return [5, 4, 3, 2, 1].map((s) => ({ star: s, count: counts[s], pct: Math.round((counts[s] / total) * 100) }));
   }
 
@@ -103,7 +108,7 @@
     return map[name] || "✅";
   }
 
-  const reviewsHTML = v.reviews.map((r) => `
+  const reviewsHTML = reviewList.map((r) => `
     <div class="review-card">
       <div class="review-card-head">
         <span class="review-card-name">${r.name}</span>
@@ -189,8 +194,8 @@
 
     <div class="detail-specs">
       <div class="detail-spec"><div class="detail-spec-icon">🥅</div><div class="detail-spec-label">عدد الملاعب</div><div class="detail-spec-value">${v.fieldCount}</div></div>
-      <div class="detail-spec"><div class="detail-spec-icon">📐</div><div class="detail-spec-label">المساحة</div><div class="detail-spec-value">${v.area.toLocaleString("en-US")} م²</div></div>
-      <div class="detail-spec"><div class="detail-spec-icon">🌱</div><div class="detail-spec-label">نوع الأرضية</div><div class="detail-spec-value">${v.surface}</div></div>
+      <div class="detail-spec"><div class="detail-spec-icon">📐</div><div class="detail-spec-label">المساحة</div><div class="detail-spec-value">${v.area ? v.area.toLocaleString("en-US") + " م²" : "—"}</div></div>
+      <div class="detail-spec"><div class="detail-spec-icon">🌱</div><div class="detail-spec-label">نوع الأرضية</div><div class="detail-spec-value">${v.surface || "—"}</div></div>
       <div class="detail-spec"><div class="detail-spec-icon">💡</div><div class="detail-spec-label">إضاءة ليلية</div><div class="detail-spec-value">${v.amenities.includes("إضاءة ليلية") ? "متوفرة" : "غير متوفرة"}</div></div>
       <div class="detail-spec"><div class="detail-spec-icon">🅿️</div><div class="detail-spec-label">مواقف سيارات</div><div class="detail-spec-value">${v.amenities.includes("مواقف سيارات") ? "متوفرة" : "غير متوفرة"}</div></div>
     </div>
@@ -217,12 +222,12 @@
         </div>
 
         <div class="detail-panel">
-          <h3>التقييمات (${v.reviews.length})</h3>
+          <h3>التقييمات (${reviewCount})</h3>
           <div class="review-summary">
             <div class="review-score">
               <div class="review-score-num">${v.rating.toFixed(1)}</div>
               <div class="review-card-stars">${stars(v.rating)}</div>
-              <div class="review-score-meta">${v.reviews.length} تقييم</div>
+              <div class="review-score-meta">${reviewCount} تقييم</div>
             </div>
             <div class="review-bars">${barsHTML}</div>
           </div>

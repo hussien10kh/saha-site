@@ -96,8 +96,20 @@ const esc = R.escapeHTML;
 const breadcrumbHTML = (links) => `<p class="detail-breadcrumb">${links.map((l, i) =>
   (i ? '<span>›</span>' : '') + (l.href ? `<a href="${l.href}">${esc(l.label)}</a>` : esc(l.label))).join('')}</p>`;
 
+// مرايا DataBridge.pickImage: أول صورة، وإلا إيموجي حسب الرياضة/النوع
+const SPORT_EMOJI = {
+  'كرة قدم': '⚽', 'كرة صالات': '🥅', 'كرة سلة': '🏀', 'تنس': '🎾', 'كرة طائرة': '🏐',
+  'سباحة': '🏊', 'لياقة بدنية': '💪', 'حراس مرمى': '🧤', 'يوغا': '🧘', 'كروس فت': '🏋️', 'تأهيل إصابات': '🩺',
+};
+const TYPE_EMOJI = { 'بطولة': '🏆', 'دوري': '🥇', 'يوم رياضي': '🎉', 'مهرجان رياضي': '🎪', 'مباراة استعراضية': '⭐' };
+function pickImage(r) {
+  if (r.images && r.images.length) return r.images[0];
+  if (r.image) return r.image;
+  return SPORT_EMOJI[r.sport] || SPORT_EMOJI[r.specialty] || TYPE_EMOJI[r.type] || '🏟️';
+}
+
 function heroHTML(T, r) {
-  const image = (r.images && r.images[0]) || r.image || '';
+  const image = pickImage(r);
   const isUrl = /^https?:\/\//.test(String(image));
   return `
     ${breadcrumbHTML([T.crumb, { label: r.governorate }, { label: T.title(r) }])}
@@ -111,7 +123,7 @@ function heroHTML(T, r) {
         <p class="detail-address">${T.address(r)}</p>
       </div>
       <div class="detail-gallery">
-        <div class="detail-main-img">${isUrl ? `<img src="${esc(image)}" alt="${esc(T.title(r))}">` : esc(image)}</div>
+        <div class="detail-main-img">${isUrl ? `<img class="db-img" src="${esc(image)}" alt="${esc(T.title(r))}">` : esc(image)}</div>
       </div>
     </div>`;
 }
@@ -143,7 +155,8 @@ exports.handler = async (event) => {
   const notFound = () => {
     html = R.injectHead(html, { title: 'غير موجود - ملعبك', desc: 'هذا العنصر غير موجود أو تم حذفه.', noindex: true });
     html = R.replaceInner(html, 'detailRoot', notFoundHTML(T));
-    html = R.injectSSRData(html, { malaab: { [T.listKey]: [] } });
+    // بلا window.__SSR__ هون: صفحة "غير موجود" بيعيد المتصفّح فيها استعلامه العادي — لو كانت النسخة
+    // المخزّنة بالحافة قديمة (عنصر انعتمد قبل شوي) بيلاقيه، وما منقفل عليه بنتيجة السيرفر.
     return { statusCode: 404, headers: R.CACHE_HEADERS, body: html };
   };
   if (!UUID_RE.test(id)) return notFound();
@@ -162,7 +175,8 @@ exports.handler = async (event) => {
   const pageUrl = `${SITE}/malaab/${T.page}?id=${encodeURIComponent(id)}`;
   const title = `${T.title(r)} - ملعبك`;
   const desc = T.desc(r);
-  const image = (r.images && r.images[0]) || (/^https?:\/\//.test(String(r.image || '')) ? r.image : `${SITE}/icon-512.png`);
+  const picked = pickImage(r);
+  const image = /^https?:\/\//.test(String(picked)) ? picked : `${SITE}/icon-512.png`;
 
   html = R.injectHead(html, { title, desc, canonical: pageUrl, ogUrl: pageUrl, ogImage: image });
   if (!/property="og:title"/.test(html)) {

@@ -21,8 +21,13 @@ const DataBridge = (() => {
   function pickImage(row, sportKey) {
     // للجداول اللي عندها images[] → أول صورة؛ للجداول اللي عندها image (string) → يستعمل مباشرة؛
     // fallback: إيموجي حسب الرياضة/النوع.
-    if (row.images && row.images.length) return row.images[0];
-    if (row.image) return row.image;
+    // كل الصفحات بتحط الناتج بالـHTML مباشرة (${v.image}) على أساس إنه إيموجي — فالصورة
+    // المرفوعة (رابط) لازم ترجع كوسم <img> جاهز وإلا بيظهر الرابط كنص جوّا البطاقة.
+    const src = (row.images && row.images.length) ? row.images[0] : row.image;
+    if (src && /^https?:\/\//.test(String(src))) {
+      return `<img class="db-img" src="${String(src).replace(/"/g, "&quot;").replace(/</g, "&lt;")}" alt="" loading="lazy">`;
+    }
+    if (src) return src;
     return SPORT_EMOJI[row.sport] || SPORT_EMOJI[row.specialty] || TYPE_EMOJI[row.type] || "🏟️";
   }
 
@@ -93,7 +98,12 @@ const DataBridge = (() => {
   async function load(type, opts = {}) {
     if (cache[type] && !opts.force) return cache[type];
     try {
-      const rows = await MalaabakAPI.list(type, { onlyApproved: true });
+      // صفحات التفاصيل بتيجي مرسومة من السيرفر (ssr-malaab) ومعها القائمة المعتمدة نفسها
+      // بـwindow.__SSR__.malaab[type] — منستعملها بدل ما نعيد الاستعلام نفسه.
+      const ssr = window.__SSR__ && window.__SSR__.malaab;
+      const rows = (ssr && Array.isArray(ssr[type]) && !opts.force)
+        ? ssr[type]
+        : await MalaabakAPI.list(type, { onlyApproved: true });
       const mapper = MAPPERS[type] || ((r) => r);
       const mapped = rows.map(mapper);
       // استبدل SITE_DATA بالبيانات الحقيقية (بلا دمج مع الوهمي)

@@ -5,7 +5,13 @@
 # دوال الرسم على السيرفر بتقرا صفحات HTML كقوالب وملف السيو المشترك —
 # لازم ينحزموا مع الدالة وإلا ما بتلاقيهم وقت التشغيل.
 [functions]
-  included_files = ["ads.html", "listing.html", "js/seo-config.js"]
+  included_files = [
+    "ads.html", "listing.html", "js/seo-config.js",
+    "tourism/place.html", "tourism/places-data.js",
+    "malaab/venue-detail.html", "malaab/coach-detail.html", "malaab/academy-detail.html",
+    "malaab/talent-detail.html", "malaab/match-detail.html", "malaab/training-detail.html",
+    "malaab/event-detail.html"
+  ]
 
 # الرسم على السيرفر (SSR): الصفحتين الأهم للبحث بتتخدما من دالة بتحقن
 # المحتوى بالـHTML قبل ما يوصل — جوجل بيشوف الإعلانات بلا ما يشغّل JS، والزائر
@@ -22,6 +28,64 @@
   to = "/.netlify/functions/ssr-listing"
   status = 200
   force = true
+
+# نفس الشي لصفحة المكان السياحي وصفحات تفاصيل ملعبك السبعة. ملعبك كلها بدالة
+# وحدة: النوع بينمرّر صراحةً بالـto، والمعرّف بينقل بـquery = { id = ":id" } —
+# فالقاعدة بتمسك بس لمّا يكون في ?id=، وبلا معرّف بينخدم الملف الثابت متل قبل.
+[[redirects]]
+  from = "/tourism/place.html"
+  to = "/.netlify/functions/ssr-place"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/malaab/venue-detail.html"
+  to = "/.netlify/functions/ssr-malaab?type=venue&id=:id"
+  status = 200
+  force = true
+  query = { id = ":id" }
+
+[[redirects]]
+  from = "/malaab/coach-detail.html"
+  to = "/.netlify/functions/ssr-malaab?type=coach&id=:id"
+  status = 200
+  force = true
+  query = { id = ":id" }
+
+[[redirects]]
+  from = "/malaab/academy-detail.html"
+  to = "/.netlify/functions/ssr-malaab?type=academy&id=:id"
+  status = 200
+  force = true
+  query = { id = ":id" }
+
+[[redirects]]
+  from = "/malaab/talent-detail.html"
+  to = "/.netlify/functions/ssr-malaab?type=talent&id=:id"
+  status = 200
+  force = true
+  query = { id = ":id" }
+
+[[redirects]]
+  from = "/malaab/match-detail.html"
+  to = "/.netlify/functions/ssr-malaab?type=match&id=:id"
+  status = 200
+  force = true
+  query = { id = ":id" }
+
+[[redirects]]
+  from = "/malaab/training-detail.html"
+  to = "/.netlify/functions/ssr-malaab?type=training&id=:id"
+  status = 200
+  force = true
+  query = { id = ":id" }
+
+[[redirects]]
+  from = "/malaab/event-detail.html"
+  to = "/.netlify/functions/ssr-malaab?type=event&id=:id"
+  status = 200
+  force = true
+  query = { id = ":id" }
 
 [[redirects]]
   from = "/sitemap.xml"
