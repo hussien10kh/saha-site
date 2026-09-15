@@ -152,12 +152,15 @@ exports.handler = async (event) => {
   try { html = R.readTemplate(path.join('malaab', T.page)); }
   catch (err) { console.error('ssr-malaab: template', err); return { statusCode: 500, body: 'template error' }; }
 
+  // علامة تشخيص بالـHTML: بتبيّن شو وصل الدالة فعلاً من قاعدة الـrewrite (النوع والمعرّف)
+  const mark = (h) => h.replace('</head>', '<!-- ssr-malaab type=' + type + ' id=' + esc(id).replace(/-{2,}/g, '-') + ' -->\n</head>');
+
   const notFound = () => {
     html = R.injectHead(html, { title: 'غير موجود - ملعبك', desc: 'هذا العنصر غير موجود أو تم حذفه.', noindex: true });
     html = R.replaceInner(html, 'detailRoot', notFoundHTML(T));
     // بلا window.__SSR__ هون: صفحة "غير موجود" بيعيد المتصفّح فيها استعلامه العادي — لو كانت النسخة
     // المخزّنة بالحافة قديمة (عنصر انعتمد قبل شوي) بيلاقيه، وما منقفل عليه بنتيجة السيرفر.
-    return { statusCode: 404, headers: R.CACHE_HEADERS, body: html };
+    return { statusCode: 404, headers: R.CACHE_HEADERS, body: mark(html) };
   };
   if (!UUID_RE.test(id)) return notFound();
 
@@ -195,5 +198,5 @@ exports.handler = async (event) => {
 
   html = R.replaceInner(html, 'detailRoot', heroHTML(T, r));
   html = R.injectSSRData(html, { malaab: { [T.listKey]: rows } });
-  return { statusCode: 200, headers: R.CACHE_HEADERS, body: html };
+  return { statusCode: 200, headers: R.CACHE_HEADERS, body: mark(html) };
 };
