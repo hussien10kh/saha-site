@@ -221,6 +221,6 @@ const CACHE_HEADERS = {
 module.exports = {
   escapeHTML, jsonForScript, timeAgo, memberSinceLabel, formatPrice, mapAdRow,
   adCardHTML, featuredItemHTML, ICONS,
-  fetchActiveAdRows, fetchAdRowById, fetchCommentCounts,
+  supabaseGet, fetchActiveAdRows, fetchAdRowById, fetchCommentCounts,
   readTemplate, injectHead, replaceInner, injectSSRData, CACHE_HEADERS,
 };
