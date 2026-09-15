@@ -62,6 +62,66 @@
     position:sticky;bottom:0;background:var(--surface,#fff);
   }
   .admin-review-actions .btn{flex:1;}
+
+  /* ---- أزرار القرار: أحمر للرفض/الحذف ---- */
+  .btn-danger{background:var(--danger,#e0453d);color:#fff;border:1.5px solid var(--danger,#e0453d);}
+  .btn-danger:hover{filter:brightness(.92);}
+  .btn-danger-outline{background:transparent;color:var(--danger,#e0453d);border:1.5px solid var(--danger,#e0453d);}
+  .btn-danger-outline:hover{background:var(--danger,#e0453d);color:#fff;}
+
+  /* ---- تبويبات الحالة (بانتظار المراجعة / منشور / مرفوض) ---- */
+  .admin-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px;}
+  .admin-tab{
+    display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--border);
+    background:var(--surface);color:var(--text);font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
+  }
+  .admin-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .admin-tab-count{font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:rgba(0,0,0,.08);}
+  .admin-tab.active .admin-tab-count{background:rgba(255,255,255,.25);}
+  .admin-select{border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:13.5px;background:var(--surface);color:var(--text);}
+  .admin-count{font-size:12.5px;color:var(--muted);margin:0 0 10px;}
+  .admin-hint{font-size:12.5px;color:var(--muted);line-height:1.8;margin:6px 0 0;}
+  .admin-badge.is-expired{background:#fde8e7;color:#b3261e;margin-inline-start:6px;}
+
+  /* ---- ملخّص المحتوى بنظرة عامة ---- */
+  .content-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:22px;}
+  .content-summary-card{
+    text-align:start;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);
+    color:var(--text);font-family:inherit;cursor:pointer;
+  }
+  .content-summary-card:hover{border-color:var(--primary);}
+  .cs-label{font-weight:800;margin-bottom:8px;}
+  .cs-row{display:flex;flex-wrap:wrap;gap:6px;}
+  .cs-pill{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--border);color:var(--muted);}
+  .cs-pill.is-pending{background:#d93025;color:#fff;}
+  .cs-pill.is-approved{background:#e3f6ec;color:#127a47;}
+
+  /* ---- بطاقة عنصر خاضع للإشراف ---- */
+  .mod-card{display:flex;gap:14px;align-items:flex-start;padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface);}
+  .mod-img{width:84px;height:84px;object-fit:cover;border-radius:10px;flex-shrink:0;background:var(--border);}
+  .mod-img-emoji{display:grid;place-items:center;font-size:2em;}
+  .mod-body{flex:1;min-width:0;}
+  .mod-title{font-weight:800;font-size:15px;}
+  .mod-meta{font-size:.85em;color:var(--muted);margin-top:2px;}
+  .mod-desc{font-size:.85em;margin-top:6px;line-height:1.7;}
+  .mod-hint{font-size:.78em;color:var(--muted);margin:6px 0 0;line-height:1.7;}
+  .mod-hint.is-ok{color:var(--success,#1a9c5e);font-weight:700;}
+  .mod-yt{margin-top:10px;padding:10px;border:1px dashed var(--border);border-radius:8px;}
+  .mod-yt label{display:block;font-size:.8em;color:var(--muted);margin-bottom:4px;}
+  .mod-yt-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .mod-yt-row input{flex:1;min-width:200px;}
+  .mod-yt input,.mod-video input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.85em;background:var(--surface);color:var(--text);}
+  .mod-yt-row .btn{font-size:.8em;padding:6px 10px;}
+  .mod-videos{margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+  .mod-video{padding:10px;border:1px dashed var(--border);border-radius:8px;}
+  .mod-video-title{font-weight:700;margin-bottom:6px;font-size:.9em;}
+  .mod-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;min-width:150px;}
+  .mod-actions .btn{font-size:.82em;padding:7px 12px;text-align:center;}
+  @media (max-width:640px){
+    .mod-card{flex-wrap:wrap;}
+    .mod-actions{flex-direction:row;flex-wrap:wrap;width:100%;min-width:0;}
+    .mod-actions .btn{flex:1 1 45%;}
+  }
 </style>
 </head>
 <body>

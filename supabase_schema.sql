@@ -66,3 +66,26 @@ drop policy if exists "Admins delete tourism reviews" on public.tourism_reviews;
 create policy "Admins delete tourism reviews"
 on public.tourism_reviews for delete
 using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true));
+
+-- ---------------------------------------------------------------
+-- لوحة الأدمن — صلاحيات ناقصة بالسياسات الأصلية (شغّلها مرة وحدة بـSQL Editor):
+--   1) حذف مكان سياحي نهائياً: كان في تعديل للمشرف بس بلا حذف.
+--   2) حجوزات ملعبك: السياسة الأصلية "own only" بتخلّي المشرف يشوف حجوزاته
+--      هو بس — تبويب الحجوزات باللوحة بدو قراءة وتعديل لكل الحجوزات.
+-- الاثنين إضافيّين (permissive) — ما بيضيّقوا شي موجود.
+-- ---------------------------------------------------------------
+drop policy if exists "Admins delete tourism places" on public.tourism_places;
+create policy "Admins delete tourism places"
+on public.tourism_places for delete
+using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true));
+
+drop policy if exists "Admins read all bookings" on public.malaabak_bookings;
+create policy "Admins read all bookings"
+on public.malaabak_bookings for select
+using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true));
+
+drop policy if exists "Admins update all bookings" on public.malaabak_bookings;
+create policy "Admins update all bookings"
+on public.malaabak_bookings for update
+using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true))
+with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true));
