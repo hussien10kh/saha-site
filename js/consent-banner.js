@@ -34,9 +34,12 @@ const SaahaConsent = (() => {
     .saaha-consent .sc-deny{background:transparent;color:var(--muted,#6b7686);
       border-color:var(--border,#e6e9f0)}
     @media (max-width:520px){
-      .saaha-consent{flex-direction:column;align-items:stretch;text-align:center;padding:16px}
+      .saaha-consent{flex-direction:column;align-items:stretch;text-align:center;padding:12px 14px;gap:10px;font-size:13px}
+      /* بالعمود، flex-basis:320px تبع الفقرة صار ارتفاع — فالبانر كان ياكل نص الشاشة
+         بالجوال ويغطّي نموذج الدخول وزر النشر. الفقرة بتاخد ارتفاع نصّها بس. */
+      .saaha-consent p{flex:0 0 auto;max-width:none}
       .saaha-consent-actions{justify-content:center}
-      .saaha-consent button{flex:1}
+      .saaha-consent button{flex:1;padding:8px 14px}
     }
     @media (prefers-reduced-motion:reduce){
       .saaha-consent{transition:none}

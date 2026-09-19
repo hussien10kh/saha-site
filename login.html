@@ -38,6 +38,7 @@
       <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.8-.1-1.5-.2-2.2H12v4.3h5.9c-.3 1.4-1 2.5-2.2 3.3v2.7h3.6c2.1-1.9 3.2-4.8 3.2-8.1Z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.1-4.5H2.2v2.8C4.1 20.5 7.8 23 12 23Z"/><path fill="#FBBC05" d="M5.9 14.2c-.2-.7-.3-1.4-.3-2.2s.1-1.5.3-2.2V7H2.2C1.4 8.6 1 10.3 1 12s.4 3.4 1.2 5l3.7-2.8Z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2C17.4 2 15 1 12 1 7.8 1 4.1 3.5 2.2 7l3.7 2.8c.8-2.6 3.2-4.4 6.1-4.4Z"/></svg>
       <span>الدخول عبر جوجل</span>
     </button>
+    <div id="googleBtnGsi" style="display:none;justify-content:center;min-height:44px;"></div>
     <div style="display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted-2);font-size:13px;">
       <div style="flex:1;height:1px;background:var(--border);"></div>أو<div style="flex:1;height:1px;background:var(--border);"></div>
     </div>
@@ -127,6 +128,18 @@
   tabLogin.addEventListener('click', ()=> setActiveTab('login'));
   tabSignup.addEventListener('click', ()=> setActiveTab('signup'));
   tabGuest.addEventListener('click', ()=> setActiveTab('guest'));
+
+  /* جاي من "نشر الإعلان" ومعه مسودّة؟ غالباً زائر جديد بلا حساب — كان يوصل على تبويب
+     "تسجيل الدخول" (بريد وكلمة مرور ما عنده) ويطلع. منفتحله "كضيف" (اسم + جوال، أسرع
+     طريق) ومنقلّه صراحةً إنها الخطوة الأخيرة قبل النشر ومسودّته محفوظة. */
+  let hasPendingAd = false;
+  try{ hasPendingAd = !!sessionStorage.getItem('sahat_pending_ad'); }catch(e){}
+  if(hasPendingAd){
+    document.querySelector('.auth-tabs').insertAdjacentHTML('beforebegin',
+      '<div style="background:var(--primary-light,#eef0ff);color:var(--primary-dark,#15264a);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13.5px;font-weight:600;line-height:1.8;">' +
+      '📝 إعلانك محفوظ — خطوة أخيرة وبينشر: كمّل <b>كضيف</b> باسمك وجوالك، أو سجّل بجوجل أو بالبريد.</div>');
+    setActiveTab('guest');
+  }
 
   const passInput = document.getElementById('passInput');
   const togglePassBtn = document.getElementById('togglePassBtn');
@@ -235,55 +248,71 @@
     location.href = 'forgot-password.html' + location.search;
   });
 
-  /* Google sign-in: fully wired to Google Identity Services, but needs a
-     real OAuth Client ID (created in Google Cloud Console, authorized for
-     this site's domain) before it can actually authenticate anyone. Once
-     configured, it signs the user into Supabase via the Google ID token. */
+  /* Google sign-in عبر Google Identity Services.
+     كان الزر بيستدعي One Tap (google.accounts.id.prompt) — وهاد بيشتغل بس لو الزائر
+     مسجّل بحساب جوجل بالمتصفّح ومسموح FedCM؛ غير هيك بيفشل بصمت بلا أي رسالة
+     (والدوال isNotDisplayed/isSkippedMoment اللي كنا نعتمد عليها للتنبيه صارت مهملة مع FedCM).
+     الحل: زر جوجل الرسمي (renderButton) — بيفتح نافذة اختيار الحساب بكل الحالات وبيرجّع
+     الـID token لنفس الـcallback → Supabase signInWithIdToken. لو خدمة جوجل ما حمّلت أصلاً
+     (حظر شبكة) بنخلّي الزر القديم يبيّن رسالة واضحة بدل ما يسكت. */
   const GOOGLE_CLIENT_ID = '212224115105-3qjssjv7ei3p637ld6en88qdmgj421ee.apps.googleusercontent.com';
-  document.getElementById('googleBtn').addEventListener('click', ()=>{
-    if(GOOGLE_CLIENT_ID.startsWith('TODO')){
-      toast('تسجيل الدخول عبر جوجل يحتاج إعداد Client ID أولاً', 'error');
-      return;
-    }
-    if(typeof google === 'undefined' || !google.accounts){
-      toast('لسا عم يتم تحميل خدمة جوجل، انتظر لحظة وحاول مجدداً', 'error');
-      return;
-    }
-    setRememberPref(document.getElementById('rememberMe').checked);
-    google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: async (response)=>{
-        try{
-          const { data, error } = await sb.auth.signInWithIdToken({ provider:'google', token: response.credential });
-          if(error){ console.error('Google signInWithIdToken failed:', error); toast('تعذّر تسجيل الدخول عبر جوجل', 'error'); return; }
-          // first Google login for this account — profiles.name starts empty,
-          // so fill it from Google's own name (never leave it as the raw email)
-          const { data: profile } = await sb.from('profiles').select('name').eq('id', data.user.id).maybeSingle();
-          if(!profile || !profile.name){
-            const meta = data.user.user_metadata || {};
-            let googleName = meta.full_name || meta.name || emailPrefix(data.user.email);
-            const nameCheck = await findAvailableNameVariant(googleName, data.user.id);
-            if(nameCheck.taken && nameCheck.suggested) googleName = nameCheck.suggested;
-            const googleAvatar = meta.avatar_url || meta.picture || null;
-            await updateProfile({ name: googleName, avatar: googleAvatar });
-          }
-          toast('تم تسجيل الدخول عبر جوجل بنجاح');
-          goToRedirect();
-        }catch(err){
-          console.error('Google sign-in flow failed:', err);
-          toast('تعذّر تسجيل الدخول عبر جوجل، تحقق من اتصالك بالإنترنت وحاول مجدداً', 'error');
-        }
-      },
-    });
-    google.accounts.id.prompt(notification=>{
-      if(notification.isNotDisplayed() || notification.isSkippedMoment()){
-        toast('تعذّر فتح نافذة جوجل — تحقق من إعدادات الخصوصية بالمتصفح (حظر النوافذ المنبثقة أو الكوكيز)، أو جرّب متصفحاً آخر', 'error', 6000);
+  const googleFallbackBtn = document.getElementById('googleBtn');
+  const googleGsiMount = document.getElementById('googleBtnGsi');
+
+  async function onGoogleCredential(response){
+    try{
+      const { data, error } = await sb.auth.signInWithIdToken({ provider:'google', token: response.credential });
+      if(error){ console.error('Google signInWithIdToken failed:', error); toast('تعذّر تسجيل الدخول عبر جوجل', 'error'); return; }
+      // first Google login for this account — profiles.name starts empty,
+      // so fill it from Google's own name (never leave it as the raw email)
+      const { data: profile } = await sb.from('profiles').select('name').eq('id', data.user.id).maybeSingle();
+      if(!profile || !profile.name){
+        const meta = data.user.user_metadata || {};
+        let googleName = meta.full_name || meta.name || emailPrefix(data.user.email);
+        const nameCheck = await findAvailableNameVariant(googleName, data.user.id);
+        if(nameCheck.taken && nameCheck.suggested) googleName = nameCheck.suggested;
+        const googleAvatar = meta.avatar_url || meta.picture || null;
+        await updateProfile({ name: googleName, avatar: googleAvatar });
+        try { if (typeof MetaPixel !== 'undefined') MetaPixel.register({ method: 'google' }); } catch (e) {}
       }
-    });
+      toast('تم تسجيل الدخول عبر جوجل بنجاح');
+      goToRedirect();
+    }catch(err){
+      console.error('Google sign-in flow failed:', err);
+      toast('تعذّر تسجيل الدخول عبر جوجل، تحقق من اتصالك بالإنترنت وحاول مجدداً', 'error');
+    }
+  }
+
+  function mountGoogleButton(){
+    if(typeof google === 'undefined' || !google.accounts || !google.accounts.id) return false;
+    try{
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential, ux_mode: 'popup', itp_support: true });
+      google.accounts.id.renderButton(googleGsiMount, {
+        type: 'standard', theme: 'outline', size: 'large', shape: 'pill',
+        text: 'continue_with', locale: 'ar', logo_alignment: 'center',
+        // عرض الزر القديم (الظاهر لحظتها) = عرض البطاقة الفعلي، حتى ما يفيض زر جوجل عن الحواف بالجوال
+        width: Math.min(400, Math.max(200, Math.floor(googleFallbackBtn.getBoundingClientRect().width || 320))),
+      });
+      googleFallbackBtn.style.display = 'none';
+      googleGsiMount.style.display = 'flex';
+      return true;
+    }catch(err){ console.error('Google button render failed:', err); return false; }
+  }
+  // سكربت جوجل بيحمّل async — منجرّب لمّا يجهز، ولو ما جهز خلال ثواني بنضل على الزر القديم
+  window.__onGsiLoad = mountGoogleButton;
+  (function waitForGsi(tries){
+    if(mountGoogleButton() || tries <= 0) return;
+    setTimeout(()=> waitForGsi(tries - 1), 250);
+  })(40);
+
+  googleFallbackBtn.addEventListener('click', ()=>{
+    setRememberPref(document.getElementById('rememberMe').checked);
+    if(mountGoogleButton()){ toast('اضغط زر جوجل للمتابعة'); return; }
+    toast('تعذّر تحميل خدمة جوجل على جهازك — سجّل بالبريد الإلكتروني أو تابع كضيف بالاسم والجوال.', 'error', 6000);
   });
 </script>
 <script src="js/meta-pixel.js"></script>
 <script src="js/consent-banner.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="window.__onGsiLoad && window.__onGsiLoad()"></script>
 </body>
 </html>
