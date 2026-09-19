@@ -112,6 +112,7 @@
 <script src="malaabak-api.js"></script>
 <script src="../js/meta-pixel.js"></script>
 <script src="../js/consent-banner.js"></script>
+<script src="../js/site-stats.js"></script>
 <script>SiteCore.mountHeader({ active: "coaches" });</script>
     <script>document.getElementById('cGov').innerHTML = FormUX.governorateOptionsHTML();</script>
   <script>document.getElementById("termsSlot").innerHTML = MalaabakTerms.block(); MalaabakTerms.init();</script>
@@ -192,6 +193,7 @@
       });
       FormUX.clearDraft();
       // Meta Pixel — قاع الـfunnel: الإضافة نجحت فعلاً (بعد ما رجع الـAPI بلا خطأ).
+      window.SiteStats?.event('post', { kind: 'coach' });
       window.MetaPixel?.addListing({
         type: 'coach', category: specialty,
         governorate, city, section: 'malaab',

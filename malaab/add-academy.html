@@ -108,6 +108,7 @@
 <script src="malaabak-api.js"></script>
 <script src="../js/meta-pixel.js"></script>
 <script src="../js/consent-banner.js"></script>
+<script src="../js/site-stats.js"></script>
 <script>SiteCore.mountHeader({ active: "academies" });</script>
     <script>document.getElementById('aGov').innerHTML = FormUX.governorateOptionsHTML();</script>
   <script>document.getElementById("termsSlot").innerHTML = MalaabakTerms.block(); MalaabakTerms.init();</script>
@@ -181,6 +182,7 @@
       });
       FormUX.clearDraft();
       // Meta Pixel — قاع الـfunnel: الإضافة نجحت فعلاً (بعد ما رجع الـAPI بلا خطأ).
+      window.SiteStats?.event('post', { kind: 'academy' });
       window.MetaPixel?.addListing({
         type: 'academy', category: (sports || []).join('، '),
         governorate, city, section: 'malaab',

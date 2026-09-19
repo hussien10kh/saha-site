@@ -52,6 +52,7 @@
 <script src="../js/form-ux.js"></script>
 <script src="../js/meta-pixel.js"></script>
 <script src="../js/consent-banner.js"></script>
+<script src="../js/site-stats.js"></script>
 <script>SiteCore.mountHeader();</script>
 <script>SiteCore.mountFooter();</script>
 <script>
@@ -86,7 +87,9 @@ document.addEventListener('click', (e) => {
     try {
       const { error } = await sb.auth.signInWithPassword({ email, password: passEl.value });
       if (error) throw error;
-      location.href = redirect;
+      window.SiteStats?.event('login', { method: 'email' });
+      // لحظة صغيرة حتى يوصل حدث الإحصائيات قبل الانتقال
+      setTimeout(() => { location.href = redirect; }, 150);
     } catch (err) {
       console.error(err);
       FormUX.toast(FormUX.friendlyError(err), 'error');

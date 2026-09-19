@@ -144,6 +144,7 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/meta-pixel.js"></script>
 <script src="js/consent-banner.js"></script>
+<script src="js/site-stats.js"></script>
 <script src="js/app.js"></script>
 <script>
 (async function main(){
@@ -549,6 +550,7 @@
     contentAlreadySaved = true;
     recordSuccessfulPost();
     // Meta Pixel — إعلان جديد انحفظ فعلاً (مو التعديل: التعديل مو تحويل جديد).
+    window.SiteStats?.event('post', { kind: 'ad' });
     window.MetaPixel?.addListing({
       type: 'ad', category: CATEGORY_LABELS[selectedCat] || selectedCat,
       city, governorate: governorateOf(city), section: 'ads',

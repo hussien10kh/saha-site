@@ -301,7 +301,10 @@ async function getAllAdsAdmin(){
 async function renderOverview(mount){
   const [ads, comments] = await Promise.all([getAllAdsAdmin(), getAllCommentsFlat()]);
   const totalViews = ads.reduce((s,a)=> s + (a.views||0), 0);
-  const vstats = getVisitorStats();
+  // زوار آخر 7 أيام من site_events (كل الموقع) — لو الجدول مو جاهز بعد منعرض صفر مع تلميح بتبويب الزوار
+  let vstats = { dailyCount:0, weeklyCount:0, avgDurationSec:0 };
+  try { const st = summarizeEvents(await fetchSiteEvents(7)); vstats = { dailyCount: st.visitsToday, weeklyCount: st.visits, avgDurationSec: st.avgDuration }; }
+  catch(e){ console.warn('site_events غير متاح بعد:', e.message); }
   const byCategory = {
     realestate: ads.filter(a=>a.category==='realestate').length,
     cars: ads.filter(a=>a.category==='cars').length,
@@ -309,8 +312,8 @@ async function renderOverview(mount){
   };
   mount.innerHTML = `
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-num">${vstats.dailyCount}</div><div class="stat-label">زوار اليوم</div></div>
-      <div class="stat-card"><div class="stat-num">${vstats.weeklyCount}</div><div class="stat-label">زوار هذا الأسبوع</div></div>
+      <div class="stat-card"><div class="stat-num">${vstats.dailyCount}</div><div class="stat-label">زيارات اليوم</div></div>
+      <div class="stat-card"><div class="stat-num">${vstats.weeklyCount}</div><div class="stat-label">زيارات آخر 7 أيام</div></div>
       <div class="stat-card"><div class="stat-num">${formatDuration(vstats.avgDurationSec)}</div><div class="stat-label">متوسط مدة الزيارة</div></div>
       <div class="stat-card"><div class="stat-num">${ads.length}</div><div class="stat-label">إجمالي الإعلانات</div></div>
     </div>
@@ -561,71 +564,198 @@ async function saveAdFromModal(){
   renderTab();
 }
 
-/* ---------------- Visitors tab ---------------- */
+/* ---------------- الزوار — إحصائيات داخلية من كل الموقع (site_events) ----------------
+   المصدر: js/site-stats.js بيكتب بجدول site_events من كل صفحة بالأقسام الثلاثة:
+   pageview (فتح صفحة) · pageleave (مدة البقاء الفعلية) · login · signup · post.
+   الزيارة (جلسة) = نفس session_id (بيموت مع إغلاق التبويب). كل الأرقام هون من
+   كل الزوار فعلاً — مو من متصفّح المشرف متل الإحصائيات المحلية القديمة. */
+const STATS_COLS = 'type,session_id,visitor_id,view_id,user_id,section,path,title,referrer,utm_source,utm_medium,utm_campaign,device,duration_sec,meta,created_at';
+const SECTION_LABEL = { ads:'الإعلانات', tourism:'السياحة', malaab:'ملعبك' };
+const METHOD_LABEL = { email:'بريد', google:'جوجل', guest:'ضيف' };
+const POST_LABEL = { ad:'إعلان', place:'مكان سياحي', venue:'ملعب', coach:'مدرب', academy:'أكاديمية', talent:'موهبة', match:'مباراة', training:'تمرين', event:'فعالية' };
+let statsDays = 7;
+
+async function fetchSiteEvents(days){
+  const since = new Date(Date.now() - days * 864e5).toISOString();
+  const rows = []; const PAGE = 1000; let from = 0;
+  while(true){
+    const { data, error } = await sb.from('site_events').select(STATS_COLS)
+      .gte('created_at', since).order('created_at', { ascending:false }).range(from, from + PAGE - 1);
+    if(error) throw error;
+    rows.push(...(data || []));
+    if(!data || data.length < PAGE || rows.length >= 30000) break;
+    from += PAGE;
+  }
+  return rows;
+}
+
+function summarizeEvents(rows){
+  const sessions = new Map();
+  const S = (id) => { let s = sessions.get(id); if(!s){ s = { id, start:Infinity, end:0, views:0, duration:0, sections:new Set(), device:null, source:null, sourceAt:Infinity, user_id:null, visitor:null, paths:[] }; sessions.set(id, s); } return s; };
+  const pageViews = {}, pageDur = {}, pageDurN = {}, sections = {}, devices = {}, days = {};
+  const logins = [], signups = [], posts = [];
+  const dayKey = (t) => new Date(t).toLocaleDateString('en-CA');   // YYYY-MM-DD بالتوقيت المحلي
+  for(const r of rows){
+    const t = new Date(r.created_at).getTime();
+    const s = S(r.session_id);
+    if(t < s.start) s.start = t; if(t > s.end) s.end = t;
+    if(r.section) s.sections.add(r.section);
+    if(r.device) s.device = r.device;
+    if(r.user_id) s.user_id = r.user_id;
+    if(r.visitor_id) s.visitor = r.visitor_id;
+    if(r.type === 'pageview'){
+      s.views++; s.paths.push(r.path);
+      pageViews[r.path] = (pageViews[r.path] || 0) + 1;
+      if(r.section) sections[r.section] = (sections[r.section] || 0) + 1;
+      // مصدر الجلسة = أول صفحة فيها: utm أو المُحيل الخارجي، وإلا "مباشر / محفوظ"
+      if(t < s.sourceAt){
+        s.sourceAt = t;
+        s.source = r.utm_source ? `${r.utm_source}${r.utm_campaign ? ' / ' + r.utm_campaign : ''}`
+          : r.referrer ? r.referrer.split('/')[0] : 'مباشر / محفوظ';
+      }
+    } else if(r.type === 'pageleave'){
+      s.duration += r.duration_sec || 0;
+      pageDur[r.path] = (pageDur[r.path] || 0) + (r.duration_sec || 0);
+      pageDurN[r.path] = (pageDurN[r.path] || 0) + 1;
+    } else if(r.type === 'login') logins.push(r);
+    else if(r.type === 'signup') signups.push(r);
+    else if(r.type === 'post') posts.push(r);
+  }
+  const list = [...sessions.values()].filter(s => s.views > 0);
+  for(const s of list){
+    devices[s.device || 'غير معروف'] = (devices[s.device || 'غير معروف'] || 0) + 1;
+    days[dayKey(s.start)] = (days[dayKey(s.start)] || 0) + 1;
+  }
+  const withDur = list.filter(s => s.duration > 0);
+  const visitors = new Set(list.map(s => s.visitor || s.id)).size;
+  const sources = {};
+  for(const s of list){ sources[s.source || 'مباشر / محفوظ'] = (sources[s.source || 'مباشر / محفوظ'] || 0) + 1; }
+  const today = dayKey(Date.now());
+  return {
+    sessions: list.sort((a, b) => b.start - a.start),
+    visits: list.length, visitors,
+    visitsToday: list.filter(s => dayKey(s.start) === today).length,
+    pageviews: rows.filter(r => r.type === 'pageview').length,
+    avgDuration: withDur.length ? Math.round(withDur.reduce((a, s) => a + s.duration, 0) / withDur.length) : 0,
+    bounce: list.length ? Math.round(list.filter(s => s.views === 1).length / list.length * 100) : 0,
+    pages: Object.entries(pageViews).map(([path, n]) => ({ path, n, avg: pageDurN[path] ? Math.round(pageDur[path] / pageDurN[path]) : null })).sort((a, b) => b.n - a.n),
+    sections, devices, sources: Object.entries(sources).sort((a, b) => b[1] - a[1]), days,
+    logins, signups, posts,
+  };
+}
+
+const fmtWhen = (iso) => new Date(iso).toLocaleString('ar-SY', { dateStyle:'short', timeStyle:'short' });
+const pageLabel = (p) => escapeHTML(String(p || '').replace(/^\//, '') || '/');
+
 async function renderVisitorsTab(mount){
-  const v = getVisitorStats();
-  const fstats = getFilterStats().slice(0, 8);
-  const allAds = await getAllAdsAdmin();
-  const ads = allAds.slice().sort((a,b)=> (b.views||0)-(a.views||0)).slice(0,6);
-
   mount.innerHTML = `
-    <div class="stat-grid">
-      <div class="stat-card"><div class="stat-num">${v.dailyCount}</div><div class="stat-label">زوار اليوم</div></div>
-      <div class="stat-card"><div class="stat-num">${v.weeklyCount}</div><div class="stat-label">زوار هذا الأسبوع</div></div>
-      <div class="stat-card"><div class="stat-num">${formatDuration(v.avgDurationSec)}</div><div class="stat-label">متوسط مدة الزيارة</div></div>
-      <div class="stat-card"><div class="stat-num">${v.totalSessions}</div><div class="stat-label">إجمالي الزيارات المسجّلة</div></div>
+    <div class="admin-toolbar">
+      <div class="admin-tabs" style="margin:0;border:0;padding:0;">
+        ${[[1,'اليوم'],[7,'7 أيام'],[30,'30 يوم'],[90,'90 يوم']].map(([d,l]) => `<button type="button" class="admin-tab ${d===statsDays?'active':''}" data-days="${d}">${l}</button>`).join('')}
+      </div>
+      <button class="btn btn-outline" id="statsRefresh">تحديث</button>
     </div>
+    <div id="statsBody"><div class="admin-empty">جاري التحميل...</div></div>`;
+  mount.querySelectorAll('[data-days]').forEach(b => b.addEventListener('click', () => { statsDays = Number(b.dataset.days); renderVisitorsTab(mount); }));
+  mount.querySelector('#statsRefresh').addEventListener('click', () => renderVisitorsTab(mount));
 
-    <h3 class="section-heading">مصدر الزيارات</h3>
-    ${v.sources && v.sources.length ? `
-    <table class="admin-table">
-      <thead><tr><th>المصدر</th><th>عدد الزيارات</th><th>النسبة</th></tr></thead>
-      <tbody>
-        ${v.sources.map(s=>`
-          <tr>
-            <td class="cell-title">${s.source}</td>
-            <td>${s.count}</td>
-            <td>${Math.round(s.count / v.totalSessions * 100)}%</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>` : `<div class="admin-empty">لا توجد بيانات مصادر بعد</div>`}
+  const body = mount.querySelector('#statsBody');
+  let rows;
+  try { rows = await fetchSiteEvents(statsDays); }
+  catch(err){
+    const missing = /site_events/.test(err.message || '') && /does not exist|schema cache/.test(err.message || '');
+    body.innerHTML = `<div class="admin-empty">${missing
+      ? 'جدول الإحصائيات غير موجود بعد — شغّل قسم <b>site_events</b> من ملف supabase_schema.sql بـSQL Editor مرة وحدة.'
+      : 'تعذّر التحميل: ' + escapeHTML(err.message || String(err))}</div>`;
+    return;
+  }
+  const st = summarizeEvents(rows);
+  if(!st.visits && !st.logins.length && !st.signups.length && !st.posts.length){
+    body.innerHTML = `<div class="admin-empty">ما في زيارات مسجّلة بهالفترة بعد. الإحصائيات بتبلّش تتجمّع من أول زيارة بعد تفعيل السكربت.</div>`;
+    return;
+  }
 
-    <h3 class="section-heading">الإعلانات الأكثر مشاهدة</h3>
-    ${ads.length ? `
-    <table class="admin-table">
-      <thead><tr><th></th><th>الإعلان</th><th>التصنيف</th><th>المشاهدات</th></tr></thead>
-      <tbody>
-        ${ads.map(ad=>`
-          <tr>
-            <td><img src="${ad.images[0] || PLACEHOLDER_IMG}" alt=""></td>
-            <td class="cell-title">${escapeHTML(ad.title)}</td>
-            <td><span class="admin-badge">${escapeHTML(CATEGORY_LABELS[ad.category]||ad.category)}</span></td>
-            <td>${(ad.views||0).toLocaleString('en-US')}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>` : `<div class="admin-empty">لا توجد بيانات بعد</div>`}
+  // أسماء المستخدمين للأحداث والجلسات المسجّلة
+  const userIds = [...new Set([...st.logins, ...st.signups, ...st.posts].map(r => r.user_id).concat(st.sessions.map(s => s.user_id)).filter(Boolean))];
+  const names = {};
+  if(userIds.length){
+    const { data } = await sb.from('profiles').select('id, name').in('id', userIds.slice(0, 500));
+    (data || []).forEach(p => { names[p.id] = p.name; });
+  }
+  const userName = (id) => id ? escapeHTML(names[id] || ('مستخدم ' + String(id).slice(0, 6))) : '—';
 
-    <h3 class="section-heading">التصنيفات والبحث الأكثر استخداماً (فلترة)</h3>
-    ${fstats.length ? `
-    <table class="admin-table">
-      <thead><tr><th>النوع</th><th>القيمة</th><th>عدد المرات</th></tr></thead>
-      <tbody>
-        ${fstats.map(f=>`
-          <tr>
-            <td>${f.type==='category' ? 'تصنيف' : 'بحث'}</td>
-            <td class="cell-title">${f.type==='category' ? (CATEGORY_LABELS[f.value]||f.value) : f.value}</td>
-            <td>${f.count}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>` : `<div class="admin-empty">لا توجد بيانات فلترة/بحث بعد</div>`}
+  // شريط يومي بسيط للزيارات (بلا مكتبات)
+  const dayList = []; const n = Math.min(statsDays, 90);
+  for(let i = n - 1; i >= 0; i--){ const d = new Date(Date.now() - i * 864e5).toLocaleDateString('en-CA'); dayList.push([d, st.days[d] || 0]); }
+  const maxDay = Math.max(1, ...dayList.map(x => x[1]));
+  const chart = statsDays === 1 ? '' : `
+    <h3 class="section-heading">الزيارات يوم بيوم</h3>
+    <div class="stats-bars ${dayList.length > 31 ? 'dense' : ''}" style="grid-template-columns:repeat(${dayList.length},1fr);">
+      ${dayList.map(([d, v]) => `<div class="stats-bar" title="${d}: ${v} زيارة"><div class="stats-bar-fill" style="height:${Math.round(v / maxDay * 100)}%"></div><span>${v}</span></div>`).join('')}
+    </div>`;
 
-    <p style="font-size:12.5px;color:var(--muted-2);margin-top:18px;line-height:1.9;">
-      ملاحظة: إحصائيات الزوار محلية تُحسب من زيارات هذا المتصفح فقط (لا يوجد خادم مركزي يجمع بيانات كل الزوار الحقيقيين)، بينما الإعلانات والمشاهدات مصدرها قاعدة البيانات الفعلية.
-    </p>
-  `;
+  const table = (head, rowsHTML, empty) => rowsHTML
+    ? `<table class="admin-table"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rowsHTML}</tbody></table>`
+    : `<div class="admin-empty">${empty}</div>`;
+  const pct = (v, total) => total ? Math.round(v / total * 100) + '%' : '0%';
+  const sectionRows = Object.entries(st.sections).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td class="cell-title">${SECTION_LABEL[k] || k}</td><td>${v}</td><td>${pct(v, st.pageviews)}</td></tr>`).join('');
+  const deviceRows = Object.entries(st.devices).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td class="cell-title">${k === 'mobile' ? 'جوال' : k === 'desktop' ? 'حاسوب' : k}</td><td>${v}</td><td>${pct(v, st.visits)}</td></tr>`).join('');
+  const sourceRows = st.sources.slice(0, 12).map(([k, v]) => `<tr><td class="cell-title">${escapeHTML(k)}</td><td>${v}</td><td>${pct(v, st.visits)}</td></tr>`).join('');
+  const pageRows = st.pages.slice(0, 15).map(p => `<tr><td class="cell-title" style="direction:ltr;text-align:end;">${pageLabel(p.path)}</td><td>${p.n}</td><td>${p.avg != null ? formatDuration(p.avg) : '—'}</td></tr>`).join('');
+  const authRows = [...st.signups.map(r => ({ r, k:'حساب جديد' })), ...st.logins.map(r => ({ r, k:'تسجيل دخول' }))]
+    .sort((a, b) => new Date(b.r.created_at) - new Date(a.r.created_at)).slice(0, 30)
+    .map(({ r, k }) => `<tr><td>${fmtWhen(r.created_at)}</td><td class="cell-title">${k}</td><td>${METHOD_LABEL[(r.meta || {}).method] || escapeHTML((r.meta || {}).method || '—')}</td><td>${userName(r.user_id)}</td><td>${SECTION_LABEL[r.section] || r.section || '—'}</td></tr>`).join('');
+  const postRows = st.posts.slice(0, 20).map(r => `<tr><td>${fmtWhen(r.created_at)}</td><td class="cell-title">${POST_LABEL[(r.meta || {}).kind] || escapeHTML((r.meta || {}).kind || '—')}</td><td>${userName(r.user_id)}</td><td>${SECTION_LABEL[r.section] || r.section || '—'}</td></tr>`).join('');
+  const sessionRows = st.sessions.slice(0, 40).map(s => `<tr>
+      <td>${fmtWhen(s.start)}</td>
+      <td>${s.views}</td>
+      <td>${s.duration ? formatDuration(s.duration) : '—'}</td>
+      <td>${[...s.sections].map(x => SECTION_LABEL[x] || x).join('، ') || '—'}</td>
+      <td class="cell-title" style="max-width:220px;">${escapeHTML(s.source || '—')}</td>
+      <td>${s.device === 'mobile' ? 'جوال' : s.device === 'desktop' ? 'حاسوب' : '—'}</td>
+      <td>${s.user_id ? userName(s.user_id) : '<span style="color:var(--muted);">زائر</span>'}</td>
+      <td class="cell-title" style="max-width:260px;direction:ltr;text-align:end;font-size:12px;">${s.paths.slice(0, 4).map(pageLabel).join(' ← ')}${s.paths.length > 4 ? ' …' : ''}</td>
+    </tr>`).join('');
+
+  body.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num">${st.visits}</div><div class="stat-label">زيارة${statsDays === 1 ? ' اليوم' : ''}</div></div>
+      <div class="stat-card"><div class="stat-num">${st.visitors}</div><div class="stat-label">زائر</div></div>
+      <div class="stat-card"><div class="stat-num">${st.pageviews}</div><div class="stat-label">صفحة مفتوحة</div></div>
+      <div class="stat-card"><div class="stat-num">${formatDuration(st.avgDuration)}</div><div class="stat-label">متوسط مدة الزيارة</div></div>
+    </div>
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);">
+      <div class="stat-card"><div class="stat-num">${st.signups.length}</div><div class="stat-label">حساب جديد</div></div>
+      <div class="stat-card"><div class="stat-num">${st.logins.length}</div><div class="stat-label">تسجيل دخول</div></div>
+      <div class="stat-card"><div class="stat-num">${st.posts.length}</div><div class="stat-label">محتوى منشور</div></div>
+      <div class="stat-card"><div class="stat-num">${st.bounce}%</div><div class="stat-label">غادروا من أول صفحة</div></div>
+    </div>
+    ${chart}
+    <div class="stats-cols">
+      <div><h3 class="section-heading">حسب القسم</h3>${table(['القسم','صفحات','النسبة'], sectionRows, 'لا بيانات')}</div>
+      <div><h3 class="section-heading">الأجهزة</h3>${table(['الجهاز','زيارات','النسبة'], deviceRows, 'لا بيانات')}</div>
+    </div>
+    <h3 class="section-heading">من وين إجوا الزوار</h3>
+    ${table(['المصدر (utm / المُحيل)','زيارات','النسبة'], sourceRows, 'لا بيانات')}
+    <h3 class="section-heading">أكثر الصفحات فتحاً</h3>
+    ${table(['الصفحة','مرات الفتح','متوسط البقاء'], pageRows, 'لا بيانات')}
+    <h3 class="section-heading">تسجيلات الدخول والحسابات الجديدة</h3>
+    ${table(['الوقت','الحدث','الطريقة','المستخدم','القسم'], authRows, 'ما في تسجيل دخول ولا حساب جديد بهالفترة')}
+    <h3 class="section-heading">المحتوى المنشور</h3>
+    ${table(['الوقت','النوع','المستخدم','القسم'], postRows, 'ما انتشر محتوى بهالفترة')}
+    <h3 class="section-heading">آخر الزيارات</h3>
+    <div style="overflow-x:auto;">${table(['البداية','صفحات','المدة','القسم','المصدر','الجهاز','المستخدم','المسار'], sessionRows, 'لا زيارات')}</div>
+    <div class="admin-toolbar" style="margin-top:18px;">
+      <p class="admin-hint" style="margin:0;">الأرقام من جدول site_events (بلا IP ولا بيانات شخصية). مدة الزيارة = الوقت اللي كانت فيه الصفحة ظاهرة فعلاً.</p>
+      <button class="btn btn-outline" id="statsPurge">حذف السجلات الأقدم من 90 يوم</button>
+    </div>`;
+  body.querySelector('#statsPurge').addEventListener('click', async () => {
+    if(!confirm('حذف كل سجلات الزيارات الأقدم من 90 يوم؟ ما بتنرجع.')) return;
+    const cutoff = new Date(Date.now() - 90 * 864e5).toISOString();
+    const { error } = await sb.from('site_events').delete().lt('created_at', cutoff);
+    if(error){ alert('تعذّر الحذف: ' + error.message); return; }
+    toast('تم حذف السجلات القديمة');
+  });
 }
 
 /* ---------------- Errors tab ---------------- */

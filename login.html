@@ -184,6 +184,7 @@
           toast(`الاسم "${document.getElementById('nameInput').value.trim()}" مستخدم من قبل — تم استخدام "${nameVal}" لتمييزك عن غيرك`, null, 5000);
         }
         await signInAsGuest(nameVal, phone);
+        window.SiteStats?.event('signup', { method: 'guest' });
         toast('تم المتابعة كضيف بنجاح');
         goToRedirect();
       }catch(err){
@@ -221,9 +222,11 @@
           return; // no session yet — nothing to redirect into
         }
         try { if (typeof MetaPixel !== 'undefined') MetaPixel.register({ method: 'email' }); } catch (e) {}
+        window.SiteStats?.event('signup', { method: 'email' });
         toast('تم إنشاء حسابك بنجاح');
       } else {
         await signInWithEmail(contact, pass);
+        window.SiteStats?.event('login', { method: 'email' });
         toast('تم تسجيل الدخول بنجاح');
       }
       goToRedirect();
@@ -274,6 +277,9 @@
         const googleAvatar = meta.avatar_url || meta.picture || null;
         await updateProfile({ name: googleName, avatar: googleAvatar });
         try { if (typeof MetaPixel !== 'undefined') MetaPixel.register({ method: 'google' }); } catch (e) {}
+        window.SiteStats?.event('signup', { method: 'google' });
+      } else {
+        window.SiteStats?.event('login', { method: 'google' });
       }
       toast('تم تسجيل الدخول عبر جوجل بنجاح');
       goToRedirect();
@@ -313,6 +319,7 @@
 </script>
 <script src="js/meta-pixel.js"></script>
 <script src="js/consent-banner.js"></script>
+<script src="js/site-stats.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer onload="window.__onGsiLoad && window.__onGsiLoad()"></script>
 </body>
 </html>

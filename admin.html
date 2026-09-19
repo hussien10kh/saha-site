@@ -96,6 +96,14 @@
   .cs-pill.is-pending{background:#d93025;color:#fff;}
   .cs-pill.is-approved{background:#e3f6ec;color:#127a47;}
 
+  /* ---- تبويب الزوار: شريط يومي وأعمدة جنب بعض ---- */
+  .stats-bars{display:grid;gap:3px;align-items:end;height:120px;padding:8px 10px 22px;border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:18px;position:relative;}
+  .stats-bar{position:relative;height:100%;display:flex;align-items:flex-end;}
+  .stats-bar-fill{width:100%;min-height:2px;background:var(--primary);border-radius:3px 3px 0 0;opacity:.85;}
+  .stats-bar span{position:absolute;bottom:-18px;inset-inline:0;text-align:center;font-size:10px;color:var(--muted);}
+  .stats-bars.dense .stats-bar span{display:none;}
+  .stats-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
+
   /* ---- بطاقة عنصر خاضع للإشراف ---- */
   .mod-card{display:flex;gap:14px;align-items:flex-start;padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface);}
   .mod-img{width:84px;height:84px;object-fit:cover;border-radius:10px;flex-shrink:0;background:var(--border);}
@@ -153,6 +161,7 @@
 <script src="malaab/malaabak-api.js"></script>
 <script src="js/meta-pixel.js"></script>
 <script src="js/consent-banner.js"></script>
+<script src="js/site-stats.js"></script>
 <script src="js/admin.js"></script>
 <script>
   document.getElementById('modalCloseBtn').addEventListener('click', ()=>{

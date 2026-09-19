@@ -98,6 +98,7 @@
 <script src="malaabak-api.js"></script>
 <script src="../js/meta-pixel.js"></script>
 <script src="../js/consent-banner.js"></script>
+<script src="../js/site-stats.js"></script>
 <script>SiteCore.mountHeader({ hideAddVenue: true });</script>
     <script>document.getElementById('mGov').innerHTML = FormUX.governorateOptionsHTML();</script>
 <script>
@@ -156,6 +157,7 @@
       });
       FormUX.clearDraft();
       // Meta Pixel — قاع الـfunnel: الإضافة نجحت فعلاً (بعد ما رجع الـAPI بلا خطأ).
+      window.SiteStats?.event('post', { kind: 'match' });
       window.MetaPixel?.addListing({
         type: 'match', category: sport,
         governorate, city, section: 'malaab',

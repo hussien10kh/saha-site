@@ -148,6 +148,7 @@
 <script src="helpers.js"></script>
 <script src="../js/meta-pixel.js"></script>
 <script src="../js/consent-banner.js"></script>
+<script src="../js/site-stats.js"></script>
 <script src="header-auth.js"></script>
 <script>
   document.querySelectorAll('.f-role-chip').forEach(chip=>{
@@ -238,6 +239,7 @@
 
         FormUX.clearDraft();
         // Meta Pixel — قاع الـfunnel: الإضافة نجحت فعلاً (بعد ما رجع الـAPI بلا خطأ).
+        window.SiteStats?.event('post', { kind: 'place' });
         window.MetaPixel?.addListing({
           type: 'place', category,
           governorate: region, city, section: 'tourism',

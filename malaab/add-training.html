@@ -102,6 +102,7 @@
 <script src="malaabak-api.js"></script>
 <script src="../js/meta-pixel.js"></script>
 <script src="../js/consent-banner.js"></script>
+<script src="../js/site-stats.js"></script>
 <script>SiteCore.mountHeader({ active: "training", hideAddVenue: true });</script>
     <script>document.getElementById('tGov').innerHTML = FormUX.governorateOptionsHTML();</script>
 <script>
@@ -156,6 +157,7 @@
       });
       FormUX.clearDraft();
       // Meta Pixel — قاع الـfunnel: الإضافة نجحت فعلاً (بعد ما رجع الـAPI بلا خطأ).
+      window.SiteStats?.event('post', { kind: 'training' });
       window.MetaPixel?.addListing({
         type: 'training', category: type,
         governorate, city, section: 'malaab',
