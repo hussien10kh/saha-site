@@ -101,7 +101,7 @@ with check (exists (select 1 from public.profiles p where p.id = auth.uid() and 
 create table if not exists public.site_events (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
-  type text not null check (type in ('pageview', 'pageleave', 'login', 'signup', 'post')),
+  type text not null check (type in ('pageview', 'pageleave', 'login', 'signup', 'post', 'step', 'error')),
   session_id text not null check (length(session_id) <= 40),
   visitor_id text check (length(visitor_id) <= 40),
   view_id text check (length(view_id) <= 40),
@@ -136,3 +136,9 @@ drop policy if exists "Admins delete site events" on public.site_events;
 create policy "Admins delete site events"
 on public.site_events for delete
 using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true));
+
+-- إضافة أنواع "step" (خطوات مسار الزائر: تواصل، بدء نموذج، ضغط نشر) و"error" (أخطاء الزوار)
+-- لجدول الإحصائيات — شغّلها لو الجدول كان منشأ بالنسخة الأولى:
+alter table public.site_events drop constraint if exists site_events_type_check;
+alter table public.site_events add constraint site_events_type_check
+  check (type in ('pageview', 'pageleave', 'login', 'signup', 'post', 'step', 'error'));

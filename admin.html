@@ -103,6 +103,24 @@
   .stats-bar span{position:absolute;bottom:-18px;inset-inline:0;text-align:center;font-size:10px;color:var(--muted);}
   .stats-bars.dense .stats-bar span{display:none;}
   .stats-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
+  .stats-bars.dense-hours .stats-bar span{font-size:9px;}
+  @media (max-width:700px){ .stats-bars.dense-hours .stats-bar:nth-child(even) span{display:none;} }
+  .ltr{direction:ltr;text-align:end;}
+  /* ---- ملاحظات جاهزة ---- */
+  .insights{display:flex;flex-direction:column;gap:8px;margin:4px 0 20px;}
+  .insight{padding:10px 14px;border-radius:10px;font-size:13.5px;line-height:1.8;border:1px solid var(--border);background:var(--surface);}
+  .insight.is-warn{border-color:#f0c36d;background:#fff8e6;color:#6b4e00;}
+  .insight.is-ok{border-color:#9fd8b6;background:#ecf9f1;color:#0f5c2a;}
+  .insight.is-info{border-color:var(--border);}
+  :root[data-theme="dark"] .insight.is-warn{background:#3a2e10;color:#f5d98b;border-color:#6b5320;}
+  :root[data-theme="dark"] .insight.is-ok{background:#12301f;color:#a9e6c0;border-color:#1f5a38;}
+  /* ---- مسار التحويل ---- */
+  .funnel{display:flex;flex-direction:column;gap:12px;margin-bottom:8px;}
+  .funnel-step{padding:10px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);}
+  .funnel-label{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;margin-bottom:6px;}
+  .funnel-bar{height:12px;background:var(--border);border-radius:999px;overflow:hidden;}
+  .funnel-fill{height:100%;background:var(--primary);border-radius:999px;transition:width .3s;}
+  .funnel-drop{margin-top:6px;font-size:12.5px;font-weight:700;color:var(--danger,#e0453d);}
 
   /* ---- بطاقة عنصر خاضع للإشراف ---- */
   .mod-card{display:flex;gap:14px;align-items:flex-start;padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--surface);}

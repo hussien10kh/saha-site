@@ -190,9 +190,12 @@ function renderSidebar(){
       {id:'overview', label:'نظرة عامة', icon:ADMIN_ICONS.overview},
       {id:'ads',      label:'الإعلانات', icon:ADMIN_ICONS.ads},
       {id:'comments', label:'تعليقات الإعلانات', icon:ADMIN_ICONS.comments},
-      {id:'visitors', label:'الزوار',    icon:ADMIN_ICONS.visitors},
-      {id:'errors',   label:'الأخطاء',   icon:ADMIN_ICONS.errors},
       {id:'settings', label:'الإعدادات', icon:ADMIN_ICONS.settings},
+    ]},
+    { title:'التحليلات', items:[
+      {id:'visitors', label:'الزوار',        icon:ADMIN_ICONS.visitors},
+      {id:'funnel',   label:'مسار التحويل',  icon:ADMIN_ICONS.overview},
+      {id:'quality',  label:'أخطاء وأداء',   icon:ADMIN_ICONS.errors},
     ]},
     { title:'السياحة', items:[
       {id:'tourism-places',  label:'الأماكن السياحية', icon:ADMIN_ICONS.overview, badge: pendingOf('tourism')},
@@ -247,7 +250,7 @@ function renderSidebar(){
 
 function renderTopbar(){
   const titles = {
-    overview:'نظرة عامة', ads:'الإعلانات — كل الإعلانات', visitors:'الزوار', errors:'الأخطاء',
+    overview:'نظرة عامة', ads:'الإعلانات — كل الإعلانات', visitors:'التحليلات — الزوار', funnel:'التحليلات — مسار التحويل', quality:'التحليلات — أخطاء وأداء',
     comments:'الإعلانات — التعليقات', settings:'الإعدادات',
     'tourism-places':'السياحة — الأماكن السياحية',
     'tourism-reviews':'السياحة — التعليقات',
@@ -277,7 +280,8 @@ function renderTab(){
   if(currentTab==='overview') return renderOverview(mount);
   if(currentTab==='ads') return renderAdsTab(mount);
   if(currentTab==='visitors') return renderVisitorsTab(mount);
-  if(currentTab==='errors') return renderErrorsTab(mount);
+  if(currentTab==='funnel') return renderFunnelTab(mount);
+  if(currentTab==='quality') return renderQualityTab(mount);
   if(currentTab==='comments') return renderCommentsTab(mount);
   if(currentTab==='settings') return renderSettingsTab(mount);
   if(currentTab==='tourism-places') return renderModeration(mount, 'tourism');
@@ -303,7 +307,7 @@ async function renderOverview(mount){
   const totalViews = ads.reduce((s,a)=> s + (a.views||0), 0);
   // زوار آخر 7 أيام من site_events (كل الموقع) — لو الجدول مو جاهز بعد منعرض صفر مع تلميح بتبويب الزوار
   let vstats = { dailyCount:0, weeklyCount:0, avgDurationSec:0 };
-  try { const st = summarizeEvents(await fetchSiteEvents(7)); vstats = { dailyCount: st.visitsToday, weeklyCount: st.visits, avgDurationSec: st.avgDuration }; }
+  try { const st = summarizeEvents(await loadStats(7)); vstats = { dailyCount: st.visitsToday, weeklyCount: st.visits, avgDurationSec: st.avgDuration }; }
   catch(e){ console.warn('site_events غير متاح بعد:', e.message); }
   const byCategory = {
     realestate: ads.filter(a=>a.category==='realestate').length,
@@ -564,16 +568,20 @@ async function saveAdFromModal(){
   renderTab();
 }
 
-/* ---------------- الزوار — إحصائيات داخلية من كل الموقع (site_events) ----------------
-   المصدر: js/site-stats.js بيكتب بجدول site_events من كل صفحة بالأقسام الثلاثة:
-   pageview (فتح صفحة) · pageleave (مدة البقاء الفعلية) · login · signup · post.
-   الزيارة (جلسة) = نفس session_id (بيموت مع إغلاق التبويب). كل الأرقام هون من
-   كل الزوار فعلاً — مو من متصفّح المشرف متل الإحصائيات المحلية القديمة. */
+/* ================= التحليلات — من جدول site_events (كل الموقع، كل الأقسام) =================
+   المصدر js/site-stats.js: pageview (فتح صفحة + الأداء + نظام التشغيل) · pageleave (مدة
+   البقاء الفعلية) · login / signup / post · step (contact, form_start, form_submit) ·
+   error (أخطاء الزوار). الزيارة = session_id واحد (بيموت مع التبويب).
+   ثلاث شاشات: الزوار (من وين وكيف) · مسار التحويل (وين بيوقفوا) · أخطاء وأداء (شو بيكسر). */
 const STATS_COLS = 'type,session_id,visitor_id,view_id,user_id,section,path,title,referrer,utm_source,utm_medium,utm_campaign,device,duration_sec,meta,created_at';
 const SECTION_LABEL = { ads:'الإعلانات', tourism:'السياحة', malaab:'ملعبك' };
 const METHOD_LABEL = { email:'بريد', google:'جوجل', guest:'ضيف' };
+const CONTACT_LABEL = { phone:'اتصال', whatsapp:'واتساب', directions:'اتجاهات' };
+const OS_LABEL = { android:'أندرويد', ios:'آيفون', windows:'ويندوز', mac:'ماك', linux:'لينكس', other:'أخرى' };
 const POST_LABEL = { ad:'إعلان', place:'مكان سياحي', venue:'ملعب', coach:'مدرب', academy:'أكاديمية', talent:'موهبة', match:'مباراة', training:'تمرين', event:'فعالية' };
+const WEEKDAY = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 let statsDays = 7;
+let statsCache = null;
 
 async function fetchSiteEvents(days){
   const since = new Date(Date.now() - days * 864e5).toISOString();
@@ -588,13 +596,29 @@ async function fetchSiteEvents(days){
   }
   return rows;
 }
+// الشاشات الثلاث بتشارك نفس القراءة (دقيقة كاش) حتى التنقّل بيناتها ما يعيد التحميل
+async function loadStats(days, force){
+  if(!force && statsCache && statsCache.days === days && Date.now() - statsCache.at < 60000) return statsCache.rows;
+  const rows = await fetchSiteEvents(days);
+  statsCache = { days, at: Date.now(), rows };
+  return rows;
+}
+
+const dayKey = (t) => new Date(t).toLocaleDateString('en-CA');   // YYYY-MM-DD بالتوقيت المحلي
+const isDetailPath = (p) => /^\/listing\.html|^\/tourism\/place\.html|^\/malaab\/[a-z]+-detail\.html/.test(p || '');
+const isAddPath = (p) => /^\/add-ad\.html|^\/tourism\/add-place\.html|^\/malaab\/add-[a-z]+\.html/.test(p || '');
+const isLoginPath = (p) => /^\/login\.html|^\/malaab\/(login|register)\.html/.test(p || '');
+const sectionOfPath = (p) => /^\/tourism\//.test(p || '') ? 'tourism' : /^\/malaab\//.test(p || '') ? 'malaab' : 'ads';
+const sourceLabel = (r) => r.utm_source ? `${r.utm_source}${r.utm_campaign ? ' / ' + r.utm_campaign : ''}` : r.referrer ? r.referrer.split('/')[0] : 'مباشر / محفوظ';
 
 function summarizeEvents(rows){
   const sessions = new Map();
-  const S = (id) => { let s = sessions.get(id); if(!s){ s = { id, start:Infinity, end:0, views:0, duration:0, sections:new Set(), device:null, source:null, sourceAt:Infinity, user_id:null, visitor:null, paths:[] }; sessions.set(id, s); } return s; };
-  const pageViews = {}, pageDur = {}, pageDurN = {}, sections = {}, devices = {}, days = {};
-  const logins = [], signups = [], posts = [];
-  const dayKey = (t) => new Date(t).toLocaleDateString('en-CA');   // YYYY-MM-DD بالتوقيت المحلي
+  const S = (id) => { let s = sessions.get(id); if(!s){ s = { id, start:Infinity, end:0, views:0, duration:0, sections:new Set(), device:null, os:null, source:null, sourceAt:Infinity,
+    user_id:null, visitor:null, paths:[], landing:null, landingAt:Infinity, exit:null, exitAt:0,
+    detail:false, add:false, formStart:false, formSubmit:false, loginView:false, signup:false, login:false, post:false, contacts:0, errors:0 }; sessions.set(id, s); } return s; };
+  const pageViews = {}, pageDur = {}, pageDurN = {}, sections = {}, days = {}, hours = new Array(24).fill(0), weekdays = new Array(7).fill(0);
+  const searches = {}, cats = {}, cities = {}, perf = {};
+  const logins = [], signups = [], posts = [], contacts = [], errorsRaw = [];
   for(const r of rows){
     const t = new Date(r.created_at).getTime();
     const s = S(r.session_id);
@@ -603,210 +627,320 @@ function summarizeEvents(rows){
     if(r.device) s.device = r.device;
     if(r.user_id) s.user_id = r.user_id;
     if(r.visitor_id) s.visitor = r.visitor_id;
+    const m = r.meta || {};
     if(r.type === 'pageview'){
       s.views++; s.paths.push(r.path);
+      if(m.os) s.os = m.os;
+      if(t < s.landingAt){ s.landingAt = t; s.landing = r.path; }
+      if(t > s.exitAt){ s.exitAt = t; s.exit = r.path; }
       pageViews[r.path] = (pageViews[r.path] || 0) + 1;
       if(r.section) sections[r.section] = (sections[r.section] || 0) + 1;
-      // مصدر الجلسة = أول صفحة فيها: utm أو المُحيل الخارجي، وإلا "مباشر / محفوظ"
-      if(t < s.sourceAt){
-        s.sourceAt = t;
-        s.source = r.utm_source ? `${r.utm_source}${r.utm_campaign ? ' / ' + r.utm_campaign : ''}`
-          : r.referrer ? r.referrer.split('/')[0] : 'مباشر / محفوظ';
+      if(t < s.sourceAt){ s.sourceAt = t; s.source = sourceLabel(r); s.campaign = r.utm_campaign || null; s.utmSource = r.utm_source || null; }
+      if(isDetailPath(r.path)) s.detail = true;
+      if(isAddPath(r.path)) s.add = true;
+      if(isLoginPath(r.path)) s.loginView = true;
+      // بحث وفلاتر الإعلانات من رابط الصفحة
+      const qi = (r.path || '').indexOf('?');
+      if(qi !== -1){
+        const q = new URLSearchParams((r.path || '').slice(qi + 1));
+        const term = (q.get('q') || '').trim(); if(term) searches[term] = (searches[term] || 0) + 1;
+        if(q.get('cat')) cats[q.get('cat')] = (cats[q.get('cat')] || 0) + 1;
+        if(q.get('city')) cities[q.get('city')] = (cities[q.get('city')] || 0) + 1;
       }
+      if(m.load_ms){ const p = (perf[r.path] = perf[r.path] || { n:0, sum:0, list:[] }); p.n++; p.sum += m.load_ms; p.list.push(m.load_ms); }
     } else if(r.type === 'pageleave'){
       s.duration += r.duration_sec || 0;
       pageDur[r.path] = (pageDur[r.path] || 0) + (r.duration_sec || 0);
       pageDurN[r.path] = (pageDurN[r.path] || 0) + 1;
-    } else if(r.type === 'login') logins.push(r);
-    else if(r.type === 'signup') signups.push(r);
-    else if(r.type === 'post') posts.push(r);
+    } else if(r.type === 'login'){ logins.push(r); s.login = true; }
+    else if(r.type === 'signup'){ signups.push(r); s.signup = true; }
+    else if(r.type === 'post'){ posts.push(r); s.post = true; }
+    else if(r.type === 'step'){
+      if(m.name === 'contact'){ contacts.push(r); s.contacts++; }
+      else if(m.name === 'form_start') s.formStart = true;
+      else if(m.name === 'form_submit') s.formSubmit = true;
+    } else if(r.type === 'error'){ errorsRaw.push(r); s.errors++; }
   }
   const list = [...sessions.values()].filter(s => s.views > 0);
+  const devices = {}, os = {}, landing = {}, exit = {}, sources = {}, campaigns = {};
   for(const s of list){
     devices[s.device || 'غير معروف'] = (devices[s.device || 'غير معروف'] || 0) + 1;
+    os[s.os || 'other'] = (os[s.os || 'other'] || 0) + 1;
     days[dayKey(s.start)] = (days[dayKey(s.start)] || 0) + 1;
+    const d = new Date(s.start); hours[d.getHours()]++; weekdays[d.getDay()]++;
+    landing[s.landing] = (landing[s.landing] || 0) + 1;
+    exit[s.exit] = (exit[s.exit] || 0) + 1;
+    const src = s.source || 'مباشر / محفوظ';
+    sources[src] = (sources[src] || 0) + 1;
+    const c = (campaigns[src] = campaigns[src] || { visits:0, dur:0, durN:0, bounce:0, signups:0, posts:0, contacts:0, formStart:0 });
+    c.visits++; if(s.duration){ c.dur += s.duration; c.durN++; } if(s.views === 1) c.bounce++;
+    if(s.signup) c.signups++; if(s.post) c.posts++; c.contacts += s.contacts; if(s.formStart) c.formStart++;
   }
   const withDur = list.filter(s => s.duration > 0);
-  const visitors = new Set(list.map(s => s.visitor || s.id)).size;
-  const sources = {};
-  for(const s of list){ sources[s.source || 'مباشر / محفوظ'] = (sources[s.source || 'مباشر / محفوظ'] || 0) + 1; }
   const today = dayKey(Date.now());
+  // مسار التحويل لكل قسم (عدد الجلسات اللي وصلت كل خطوة)
+  const funnel = {};
+  for(const sec of ['ads', 'tourism', 'malaab']){
+    const inSec = list.filter(s => s.sections.has(sec));
+    const secPaths = (s, fn) => s.paths.some(p => sectionOfPath(p) === sec && fn(p));
+    funnel[sec] = {
+      visits: inSec.length,
+      detail: inSec.filter(s => secPaths(s, isDetailPath)).length,
+      add: inSec.filter(s => secPaths(s, isAddPath)).length,
+      formStart: inSec.filter(s => s.formStart && secPaths(s, isAddPath)).length,
+      formSubmit: inSec.filter(s => s.formSubmit && secPaths(s, isAddPath)).length,
+      loginView: inSec.filter(s => s.loginView && secPaths(s, isAddPath)).length,
+      account: inSec.filter(s => (s.signup || s.login) && secPaths(s, isAddPath)).length,
+      post: inSec.filter(s => s.post && secPaths(s, isAddPath)).length,
+      contacts: inSec.reduce((a, s) => a + s.contacts, 0),
+    };
+  }
+  // أخطاء الزوار مجمّعة
+  const errorsMap = {};
+  for(const r of errorsRaw){
+    const m = r.meta || {}; const key = (m.message || '').slice(0, 120) + '|' + (r.path || '').split('?')[0];
+    const e = (errorsMap[key] = errorsMap[key] || { message: m.message || '', page: (r.path || '').split('?')[0], source: m.source, line: m.line, count:0, last:0, devices:new Set(), sessions:new Set() });
+    e.count++; const t = new Date(r.created_at).getTime(); if(t > e.last) e.last = t; if(r.device) e.devices.add(r.device); e.sessions.add(r.session_id);
+  }
+  const perfList = Object.entries(perf).map(([path, p]) => { const sorted = p.list.slice().sort((a, b) => a - b); return { path, n:p.n, avg:Math.round(p.sum / p.n), p75: sorted[Math.floor(sorted.length * 0.75)] || sorted[sorted.length - 1] }; }).sort((a, b) => b.avg - a.avg);
+  const contactItems = {};
+  for(const r of contacts){ const m = r.meta || {}; const k = `${m.kind || sectionOfPath(r.path)}|${m.id || r.path}`; const c = (contactItems[k] = contactItems[k] || { kind:m.kind, id:m.id, path:r.path, section:r.section, category:m.category, city:m.city, n:0, methods:{} }); c.n++; c.methods[m.method] = (c.methods[m.method] || 0) + 1; }
   return {
     sessions: list.sort((a, b) => b.start - a.start),
-    visits: list.length, visitors,
+    visits: list.length, visitors: new Set(list.map(s => s.visitor || s.id)).size,
     visitsToday: list.filter(s => dayKey(s.start) === today).length,
     pageviews: rows.filter(r => r.type === 'pageview').length,
     avgDuration: withDur.length ? Math.round(withDur.reduce((a, s) => a + s.duration, 0) / withDur.length) : 0,
     bounce: list.length ? Math.round(list.filter(s => s.views === 1).length / list.length * 100) : 0,
+    pagesPerVisit: list.length ? (list.reduce((a, s) => a + s.views, 0) / list.length).toFixed(1) : '0',
     pages: Object.entries(pageViews).map(([path, n]) => ({ path, n, avg: pageDurN[path] ? Math.round(pageDur[path] / pageDurN[path]) : null })).sort((a, b) => b.n - a.n),
-    sections, devices, sources: Object.entries(sources).sort((a, b) => b[1] - a[1]), days,
-    logins, signups, posts,
+    sections, devices, os, days, hours, weekdays,
+    sources: Object.entries(sources).sort((a, b) => b[1] - a[1]),
+    campaigns: Object.entries(campaigns).map(([k, c]) => Object.assign({ name:k }, c, { avgDur: c.durN ? Math.round(c.dur / c.durN) : 0, bouncePct: c.visits ? Math.round(c.bounce / c.visits * 100) : 0 })).sort((a, b) => b.visits - a.visits),
+    landing: Object.entries(landing).sort((a, b) => b[1] - a[1]), exit: Object.entries(exit).sort((a, b) => b[1] - a[1]),
+    searches: Object.entries(searches).sort((a, b) => b[1] - a[1]), cats: Object.entries(cats).sort((a, b) => b[1] - a[1]), cities: Object.entries(cities).sort((a, b) => b[1] - a[1]),
+    logins, signups, posts, contacts, contactItems: Object.values(contactItems).sort((a, b) => b.n - a.n),
+    errors: Object.values(errorsMap).sort((a, b) => b.count - a.count), errorsTotal: errorsRaw.length,
+    perf: perfList, funnel,
   };
 }
 
-const fmtWhen = (iso) => new Date(iso).toLocaleString('ar-SY', { dateStyle:'short', timeStyle:'short' });
-const pageLabel = (p) => escapeHTML(String(p || '').replace(/^\//, '') || '/');
+/* ملاحظات جاهزة — قواعد بسيطة على الأرقام، بتطلع بس لمّا البيانات تكفي */
+function buildInsights(st){
+  const out = [];
+  const add = (level, text) => out.push({ level, text });
+  if(st.visits < 5){ add('info', 'البيانات لسا قليلة — الملاحظات بتصير أدق بعد عشرات الزيارات.'); return out; }
+  const mobile = st.devices.mobile || 0, mobilePct = Math.round(mobile / st.visits * 100);
+  if(mobilePct >= 60) add('info', `${mobilePct}% من الزوار من الجوال — أي تعديل اختبره على الجوال أولاً.`);
+  if(st.bounce >= 60) add('warn', `${st.bounce}% من الزيارات غادرت من أول صفحة. أعلى صفحة هبوط: ${st.landing[0] ? st.landing[0][0].replace(/^\//, '') : '—'} — راجع هل الزائر بيلاقي فيها اللي جاي مشانه.`);
+  if(st.avgDuration && st.avgDuration < 20) add('warn', `متوسط الزيارة ${formatDuration(st.avgDuration)} فقط — الزوار ما عم يلاقوا سبب يكمّلوا.`);
+  for(const sec of ['ads', 'tourism', 'malaab']){
+    const f = st.funnel[sec]; if(!f || f.visits < 10) continue;
+    const L = SECTION_LABEL[sec];
+    if(f.add === 0) add('warn', `${L}: ${f.visits} زيارة وولا زائر فتح صفحة الإضافة — زر "أضف" مو ظاهر كفاية أو الزوار جايين يتصفّحوا بس.`);
+    else if(f.formStart && f.formSubmit / f.formStart < 0.5) add('warn', `${L}: ${f.formStart} بدؤوا يعبّوا النموذج و${f.formSubmit} بس ضغطوا نشر — النموذج طويل أو في حقل بيوقّفهم.`);
+    else if(f.formSubmit && f.account === 0) add('warn', `${L}: ${f.formSubmit} ضغطوا نشر ووصلوا لصفحة الدخول، وولا واحد سجّل — الانسحاب عند إنشاء الحساب.`);
+    else if(f.account && f.post === 0) add('warn', `${L}: ${f.account} سجّلوا حساب بعد النشر بس ما انتشر شي — تحقق من صفحة الإضافة بعد الرجوع من الدخول.`);
+    if(f.detail && f.contacts === 0 && f.detail >= 10) add('info', `${L}: ${f.detail} زيارة لصفحات التفاصيل بلا أي ضغطة اتصال/واتساب — يمكن المحتوى الحالي ما بيقنع، أو أزرار التواصل مو واضحة.`);
+  }
+  const best = st.campaigns.filter(c => c.visits >= 5 && c.name !== 'مباشر / محفوظ');
+  for(const c of best.slice(0, 3)){
+    if(c.bouncePct >= 70 && !c.contacts && !c.signups) add('warn', `مصدر "${c.name}": ${c.visits} زيارة، ${c.bouncePct}% غادروا فوراً وبلا أي تواصل أو تسجيل — الجمهور أو صفحة الهبوط مو مناسبين.`);
+    else if(c.contacts || c.signups) add('ok', `مصدر "${c.name}": ${c.visits} زيارة جابت ${c.contacts} تواصل و${c.signups} حساب — هاد اللي يستاهل الميزانية.`);
+  }
+  const slow = st.perf.filter(p => p.n >= 3 && p.avg > 3000)[0];
+  if(slow) add('warn', `صفحة ${slow.path.replace(/^\//, '')} بتحمّل بمتوسط ${(slow.avg / 1000).toFixed(1)} ث — بطيئة على الزوار.`);
+  if(st.errorsTotal) add('warn', `${st.errorsTotal} خطأ برمجي عند الزوار (${st.errors.length} نوع) — شوف "أخطاء وأداء".`);
+  const peak = st.hours.map((v, h) => [h, v]).sort((a, b) => b[1] - a[1])[0];
+  if(peak && peak[1] >= 3) add('info', `ذروة الزيارات حوالي الساعة ${peak[0]}:00 — وقت مناسب لنشر المحتوى وتشغيل الحملات.`);
+  if(st.searches.length) add('info', `أكثر بحث: "${st.searches[0][0]}" (${st.searches[0][1]} مرة) — لو ما في نتائج إلها، هاد محتوى ناقص بيطلبه الزوار.`);
+  return out;
+}
 
-async function renderVisitorsTab(mount){
-  mount.innerHTML = `
+/* ---------- عناصر عرض مشتركة ---------- */
+const fmtWhen = (iso) => new Date(iso).toLocaleString('ar-SY', { dateStyle:'short', timeStyle:'short' });
+const pageLabel = (p) => escapeHTML(decodeURIComponent(String(p || '')).replace(/^\//, '') || '/');
+const pct = (v, total) => total ? Math.round(v / total * 100) + '%' : '0%';
+const table = (head, rowsHTML, empty) => rowsHTML
+  ? `<div style="overflow-x:auto;"><table class="admin-table"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rowsHTML}</tbody></table></div>`
+  : `<div class="admin-empty">${empty}</div>`;
+const barsHTML = (items, cls) => { const max = Math.max(1, ...items.map(x => x[1])); return `<div class="stats-bars ${cls || ''}" style="grid-template-columns:repeat(${items.length},1fr);">${items.map(([label, v]) => `<div class="stats-bar" title="${escapeHTML(String(label))}: ${v}"><div class="stats-bar-fill" style="height:${Math.round(v / max * 100)}%"></div><span>${escapeHTML(String(label))}</span></div>`).join('')}</div>`; };
+const insightsHTML = (list) => list.length ? `<div class="insights">${list.map(i => `<div class="insight is-${i.level}">${i.level === 'warn' ? '⚠️' : i.level === 'ok' ? '✅' : 'ℹ️'} ${escapeHTML(i.text)}</div>`).join('')}</div>` : '';
+
+function statsToolbarHTML(extra){
+  return `
     <div class="admin-toolbar">
       <div class="admin-tabs" style="margin:0;border:0;padding:0;">
         ${[[1,'اليوم'],[7,'7 أيام'],[30,'30 يوم'],[90,'90 يوم']].map(([d,l]) => `<button type="button" class="admin-tab ${d===statsDays?'active':''}" data-days="${d}">${l}</button>`).join('')}
       </div>
-      <button class="btn btn-outline" id="statsRefresh">تحديث</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">${extra || ''}<button class="btn btn-outline" id="statsRefresh">تحديث</button></div>
     </div>
     <div id="statsBody"><div class="admin-empty">جاري التحميل...</div></div>`;
-  mount.querySelectorAll('[data-days]').forEach(b => b.addEventListener('click', () => { statsDays = Number(b.dataset.days); renderVisitorsTab(mount); }));
-  mount.querySelector('#statsRefresh').addEventListener('click', () => renderVisitorsTab(mount));
-
+}
+async function statsBoot(mount, rerender, extra){
+  mount.innerHTML = statsToolbarHTML(extra);
+  mount.querySelectorAll('[data-days]').forEach(b => b.addEventListener('click', () => { statsDays = Number(b.dataset.days); rerender(); }));
+  mount.querySelector('#statsRefresh').addEventListener('click', () => { statsCache = null; rerender(); });
   const body = mount.querySelector('#statsBody');
-  let rows;
-  try { rows = await fetchSiteEvents(statsDays); }
+  try { return { body, st: summarizeEvents(await loadStats(statsDays)) }; }
   catch(err){
     const missing = /site_events/.test(err.message || '') && /does not exist|schema cache/.test(err.message || '');
     body.innerHTML = `<div class="admin-empty">${missing
       ? 'جدول الإحصائيات غير موجود بعد — شغّل قسم <b>site_events</b> من ملف supabase_schema.sql بـSQL Editor مرة وحدة.'
       : 'تعذّر التحميل: ' + escapeHTML(err.message || String(err))}</div>`;
-    return;
+    return null;
   }
-  const st = summarizeEvents(rows);
-  if(!st.visits && !st.logins.length && !st.signups.length && !st.posts.length){
-    body.innerHTML = `<div class="admin-empty">ما في زيارات مسجّلة بهالفترة بعد. الإحصائيات بتبلّش تتجمّع من أول زيارة بعد تفعيل السكربت.</div>`;
-    return;
-  }
+}
+async function userNamesFor(ids){
+  const names = {}; ids = [...new Set(ids.filter(Boolean))].slice(0, 500);
+  if(ids.length){ const { data } = await sb.from('profiles').select('id, name').in('id', ids); (data || []).forEach(p => { names[p.id] = p.name; }); }
+  return (id) => id ? escapeHTML(names[id] || ('مستخدم ' + String(id).slice(0, 6))) : '—';
+}
 
-  // أسماء المستخدمين للأحداث والجلسات المسجّلة
-  const userIds = [...new Set([...st.logins, ...st.signups, ...st.posts].map(r => r.user_id).concat(st.sessions.map(s => s.user_id)).filter(Boolean))];
-  const names = {};
-  if(userIds.length){
-    const { data } = await sb.from('profiles').select('id, name').in('id', userIds.slice(0, 500));
-    (data || []).forEach(p => { names[p.id] = p.name; });
-  }
-  const userName = (id) => id ? escapeHTML(names[id] || ('مستخدم ' + String(id).slice(0, 6))) : '—';
+/* ---------- 1) الزوار ---------- */
+async function renderVisitorsTab(mount){
+  const r = await statsBoot(mount, () => renderVisitorsTab(mount), '<button class="btn btn-outline" id="statsExport">تصدير CSV</button>');
+  if(!r) return; const { body, st } = r;
+  if(!st.visits){ body.innerHTML = `<div class="admin-empty">ما في زيارات مسجّلة بهالفترة بعد.</div>`; return; }
+  const userName = await userNamesFor(st.sessions.map(s => s.user_id));
 
-  // شريط يومي بسيط للزيارات (بلا مكتبات)
-  const dayList = []; const n = Math.min(statsDays, 90);
-  for(let i = n - 1; i >= 0; i--){ const d = new Date(Date.now() - i * 864e5).toLocaleDateString('en-CA'); dayList.push([d, st.days[d] || 0]); }
-  const maxDay = Math.max(1, ...dayList.map(x => x[1]));
-  const chart = statsDays === 1 ? '' : `
-    <h3 class="section-heading">الزيارات يوم بيوم</h3>
-    <div class="stats-bars ${dayList.length > 31 ? 'dense' : ''}" style="grid-template-columns:repeat(${dayList.length},1fr);">
-      ${dayList.map(([d, v]) => `<div class="stats-bar" title="${d}: ${v} زيارة"><div class="stats-bar-fill" style="height:${Math.round(v / maxDay * 100)}%"></div><span>${v}</span></div>`).join('')}
-    </div>`;
-
-  const table = (head, rowsHTML, empty) => rowsHTML
-    ? `<table class="admin-table"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rowsHTML}</tbody></table>`
-    : `<div class="admin-empty">${empty}</div>`;
-  const pct = (v, total) => total ? Math.round(v / total * 100) + '%' : '0%';
-  const sectionRows = Object.entries(st.sections).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td class="cell-title">${SECTION_LABEL[k] || k}</td><td>${v}</td><td>${pct(v, st.pageviews)}</td></tr>`).join('');
-  const deviceRows = Object.entries(st.devices).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td class="cell-title">${k === 'mobile' ? 'جوال' : k === 'desktop' ? 'حاسوب' : k}</td><td>${v}</td><td>${pct(v, st.visits)}</td></tr>`).join('');
-  const sourceRows = st.sources.slice(0, 12).map(([k, v]) => `<tr><td class="cell-title">${escapeHTML(k)}</td><td>${v}</td><td>${pct(v, st.visits)}</td></tr>`).join('');
-  const pageRows = st.pages.slice(0, 15).map(p => `<tr><td class="cell-title" style="direction:ltr;text-align:end;">${pageLabel(p.path)}</td><td>${p.n}</td><td>${p.avg != null ? formatDuration(p.avg) : '—'}</td></tr>`).join('');
-  const authRows = [...st.signups.map(r => ({ r, k:'حساب جديد' })), ...st.logins.map(r => ({ r, k:'تسجيل دخول' }))]
-    .sort((a, b) => new Date(b.r.created_at) - new Date(a.r.created_at)).slice(0, 30)
-    .map(({ r, k }) => `<tr><td>${fmtWhen(r.created_at)}</td><td class="cell-title">${k}</td><td>${METHOD_LABEL[(r.meta || {}).method] || escapeHTML((r.meta || {}).method || '—')}</td><td>${userName(r.user_id)}</td><td>${SECTION_LABEL[r.section] || r.section || '—'}</td></tr>`).join('');
-  const postRows = st.posts.slice(0, 20).map(r => `<tr><td>${fmtWhen(r.created_at)}</td><td class="cell-title">${POST_LABEL[(r.meta || {}).kind] || escapeHTML((r.meta || {}).kind || '—')}</td><td>${userName(r.user_id)}</td><td>${SECTION_LABEL[r.section] || r.section || '—'}</td></tr>`).join('');
-  const sessionRows = st.sessions.slice(0, 40).map(s => `<tr>
-      <td>${fmtWhen(s.start)}</td>
-      <td>${s.views}</td>
-      <td>${s.duration ? formatDuration(s.duration) : '—'}</td>
-      <td>${[...s.sections].map(x => SECTION_LABEL[x] || x).join('، ') || '—'}</td>
-      <td class="cell-title" style="max-width:220px;">${escapeHTML(s.source || '—')}</td>
-      <td>${s.device === 'mobile' ? 'جوال' : s.device === 'desktop' ? 'حاسوب' : '—'}</td>
-      <td>${s.user_id ? userName(s.user_id) : '<span style="color:var(--muted);">زائر</span>'}</td>
-      <td class="cell-title" style="max-width:260px;direction:ltr;text-align:end;font-size:12px;">${s.paths.slice(0, 4).map(pageLabel).join(' ← ')}${s.paths.length > 4 ? ' …' : ''}</td>
-    </tr>`).join('');
+  const n = Math.min(statsDays, 90); const dayList = [];
+  for(let i = n - 1; i >= 0; i--){ const d = new Date(Date.now() - i * 864e5).toLocaleDateString('en-CA'); dayList.push([d.slice(5), st.days[d] || 0]); }
+  const hourList = st.hours.map((v, h) => [h, v]);
+  const weekList = st.weekdays.map((v, d) => [WEEKDAY[d], v]);
+  const kv = (entries, total, labelFn) => entries.map(([k, v]) => `<tr><td class="cell-title">${labelFn ? labelFn(k) : escapeHTML(k)}</td><td>${v}</td><td>${pct(v, total)}</td></tr>`).join('');
 
   body.innerHTML = `
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-num">${st.visits}</div><div class="stat-label">زيارة${statsDays === 1 ? ' اليوم' : ''}</div></div>
+      <div class="stat-card"><div class="stat-num">${st.visits}</div><div class="stat-label">زيارة</div></div>
       <div class="stat-card"><div class="stat-num">${st.visitors}</div><div class="stat-label">زائر</div></div>
       <div class="stat-card"><div class="stat-num">${st.pageviews}</div><div class="stat-label">صفحة مفتوحة</div></div>
       <div class="stat-card"><div class="stat-num">${formatDuration(st.avgDuration)}</div><div class="stat-label">متوسط مدة الزيارة</div></div>
     </div>
     <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);">
-      <div class="stat-card"><div class="stat-num">${st.signups.length}</div><div class="stat-label">حساب جديد</div></div>
-      <div class="stat-card"><div class="stat-num">${st.logins.length}</div><div class="stat-label">تسجيل دخول</div></div>
-      <div class="stat-card"><div class="stat-num">${st.posts.length}</div><div class="stat-label">محتوى منشور</div></div>
+      <div class="stat-card"><div class="stat-num">${st.pagesPerVisit}</div><div class="stat-label">صفحة لكل زيارة</div></div>
       <div class="stat-card"><div class="stat-num">${st.bounce}%</div><div class="stat-label">غادروا من أول صفحة</div></div>
+      <div class="stat-card"><div class="stat-num">${st.signups.length + st.logins.length}</div><div class="stat-label">دخول / حساب جديد</div></div>
+      <div class="stat-card"><div class="stat-num">${st.contacts.length}</div><div class="stat-label">ضغطة تواصل</div></div>
     </div>
-    ${chart}
+    ${insightsHTML(buildInsights(st))}
+    ${statsDays > 1 ? `<h3 class="section-heading">الزيارات يوم بيوم</h3>${barsHTML(dayList, dayList.length > 31 ? 'dense' : '')}` : ''}
     <div class="stats-cols">
-      <div><h3 class="section-heading">حسب القسم</h3>${table(['القسم','صفحات','النسبة'], sectionRows, 'لا بيانات')}</div>
-      <div><h3 class="section-heading">الأجهزة</h3>${table(['الجهاز','زيارات','النسبة'], deviceRows, 'لا بيانات')}</div>
+      <div><h3 class="section-heading">حسب ساعة اليوم</h3>${barsHTML(hourList, 'dense-hours')}</div>
+      <div><h3 class="section-heading">حسب يوم الأسبوع</h3>${barsHTML(weekList)}</div>
     </div>
-    <h3 class="section-heading">من وين إجوا الزوار</h3>
-    ${table(['المصدر (utm / المُحيل)','زيارات','النسبة'], sourceRows, 'لا بيانات')}
+    <div class="stats-cols">
+      <div><h3 class="section-heading">حسب القسم</h3>${table(['القسم','صفحات','النسبة'], kv(Object.entries(st.sections).sort((a,b)=>b[1]-a[1]), st.pageviews, k => SECTION_LABEL[k] || k), 'لا بيانات')}</div>
+      <div><h3 class="section-heading">الأجهزة</h3>${table(['الجهاز','زيارات','النسبة'], kv(Object.entries(st.devices).sort((a,b)=>b[1]-a[1]), st.visits, k => k === 'mobile' ? 'جوال' : k === 'desktop' ? 'حاسوب' : k), 'لا بيانات')}</div>
+      <div><h3 class="section-heading">نظام التشغيل</h3>${table(['النظام','زيارات','النسبة'], kv(Object.entries(st.os).sort((a,b)=>b[1]-a[1]), st.visits, k => OS_LABEL[k] || k), 'لا بيانات')}</div>
+    </div>
+    <h3 class="section-heading">المصادر والحملات — شو جاب فعلاً</h3>
+    ${table(['المصدر (utm / المُحيل)','زيارات','متوسط المدة','غادروا فوراً','بدؤوا نموذج','تواصل','حساب جديد','نشر'],
+      st.campaigns.slice(0, 15).map(c => `<tr><td class="cell-title">${escapeHTML(c.name)}</td><td>${c.visits}</td><td>${c.avgDur ? formatDuration(c.avgDur) : '—'}</td><td>${c.bouncePct}%</td><td>${c.formStart}</td><td>${c.contacts}</td><td>${c.signups}</td><td>${c.posts}</td></tr>`).join(''), 'لا بيانات')}
+    <div class="stats-cols">
+      <div><h3 class="section-heading">صفحات الهبوط (أول صفحة)</h3>${table(['الصفحة','زيارات'], st.landing.slice(0, 10).map(([p, v]) => `<tr><td class="cell-title ltr">${pageLabel(p)}</td><td>${v}</td></tr>`).join(''), 'لا بيانات')}</div>
+      <div><h3 class="section-heading">صفحات الخروج (آخر صفحة)</h3>${table(['الصفحة','زيارات'], st.exit.slice(0, 10).map(([p, v]) => `<tr><td class="cell-title ltr">${pageLabel(p)}</td><td>${v}</td></tr>`).join(''), 'لا بيانات')}</div>
+    </div>
     <h3 class="section-heading">أكثر الصفحات فتحاً</h3>
-    ${table(['الصفحة','مرات الفتح','متوسط البقاء'], pageRows, 'لا بيانات')}
-    <h3 class="section-heading">تسجيلات الدخول والحسابات الجديدة</h3>
-    ${table(['الوقت','الحدث','الطريقة','المستخدم','القسم'], authRows, 'ما في تسجيل دخول ولا حساب جديد بهالفترة')}
-    <h3 class="section-heading">المحتوى المنشور</h3>
-    ${table(['الوقت','النوع','المستخدم','القسم'], postRows, 'ما انتشر محتوى بهالفترة')}
+    ${table(['الصفحة','مرات الفتح','متوسط البقاء'], st.pages.slice(0, 15).map(p => `<tr><td class="cell-title ltr">${pageLabel(p.path)}</td><td>${p.n}</td><td>${p.avg != null ? formatDuration(p.avg) : '—'}</td></tr>`).join(''), 'لا بيانات')}
+    <div class="stats-cols">
+      <div><h3 class="section-heading">شو بيبحثوا (الإعلانات)</h3>${table(['البحث','مرات'], st.searches.slice(0, 12).map(([k, v]) => `<tr><td class="cell-title">${escapeHTML(k)}</td><td>${v}</td></tr>`).join(''), 'ما في عمليات بحث')}</div>
+      <div><h3 class="section-heading">أقسام الإعلانات المطلوبة</h3>${table(['القسم','مرات'], st.cats.slice(0, 8).map(([k, v]) => `<tr><td class="cell-title">${escapeHTML(CATEGORY_LABELS[k] || k)}</td><td>${v}</td></tr>`).join(''), 'لا بيانات')}</div>
+      <div><h3 class="section-heading">المدن المطلوبة</h3>${table(['المدينة','مرات'], st.cities.slice(0, 8).map(([k, v]) => `<tr><td class="cell-title">${escapeHTML(k)}</td><td>${v}</td></tr>`).join(''), 'لا بيانات')}</div>
+    </div>
     <h3 class="section-heading">آخر الزيارات</h3>
-    <div style="overflow-x:auto;">${table(['البداية','صفحات','المدة','القسم','المصدر','الجهاز','المستخدم','المسار'], sessionRows, 'لا زيارات')}</div>
+    ${table(['البداية','صفحات','المدة','القسم','المصدر','الجهاز','المستخدم','المسار'], st.sessions.slice(0, 40).map(s => `<tr>
+      <td>${fmtWhen(s.start)}</td><td>${s.views}</td><td>${s.duration ? formatDuration(s.duration) : '—'}</td>
+      <td>${[...s.sections].map(x => SECTION_LABEL[x] || x).join('، ') || '—'}</td>
+      <td class="cell-title" style="max-width:200px;">${escapeHTML(s.source || '—')}</td>
+      <td>${s.device === 'mobile' ? 'جوال' : s.device === 'desktop' ? 'حاسوب' : '—'}${s.os ? ' · ' + (OS_LABEL[s.os] || s.os) : ''}</td>
+      <td>${s.user_id ? userName(s.user_id) : '<span style="color:var(--muted);">زائر</span>'}</td>
+      <td class="cell-title ltr" style="max-width:260px;font-size:12px;">${s.paths.slice(0, 4).map(pageLabel).join(' → ')}${s.paths.length > 4 ? ' …' : ''}${s.contacts ? ` <b>☎${s.contacts}</b>` : ''}</td>
+    </tr>`).join(''), 'لا زيارات')}
     <div class="admin-toolbar" style="margin-top:18px;">
-      <p class="admin-hint" style="margin:0;">الأرقام من جدول site_events (بلا IP ولا بيانات شخصية). مدة الزيارة = الوقت اللي كانت فيه الصفحة ظاهرة فعلاً.</p>
+      <p class="admin-hint" style="margin:0;">من جدول site_events (بلا IP ولا بيانات شخصية). مدة الزيارة = الوقت اللي كانت فيه الصفحة ظاهرة فعلاً.</p>
       <button class="btn btn-outline" id="statsPurge">حذف السجلات الأقدم من 90 يوم</button>
     </div>`;
   body.querySelector('#statsPurge').addEventListener('click', async () => {
     if(!confirm('حذف كل سجلات الزيارات الأقدم من 90 يوم؟ ما بتنرجع.')) return;
-    const cutoff = new Date(Date.now() - 90 * 864e5).toISOString();
-    const { error } = await sb.from('site_events').delete().lt('created_at', cutoff);
+    const { error } = await sb.from('site_events').delete().lt('created_at', new Date(Date.now() - 90 * 864e5).toISOString());
     if(error){ alert('تعذّر الحذف: ' + error.message); return; }
     toast('تم حذف السجلات القديمة');
   });
+  mount.querySelector('#statsExport').addEventListener('click', () => {
+    const esc = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const lines = [['البداية','صفحات','المدة بالثواني','الأقسام','المصدر','الحملة','الجهاز','النظام','مستخدم','تواصل','هبوط','خروج','المسار'].map(esc).join(',')];
+    for(const s of st.sessions) lines.push([new Date(s.start).toISOString(), s.views, s.duration, [...s.sections].join(' '), s.source, s.campaign || '', s.device, s.os, s.user_id ? 'نعم' : '', s.contacts, s.landing, s.exit, s.paths.join(' > ')].map(esc).join(','));
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\n')], { type:'text/csv;charset=utf-8' }));
+    a.download = `saaha-visits-${statsDays}d-${dayKey(Date.now())}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  });
 }
 
-/* ---------------- Errors tab ---------------- */
-function renderErrorsTab(mount){
-  const errors = getErrors();
-  const hook = getErrorWebhook();
-  mount.innerHTML = `
-    <div class="panel" style="margin-bottom:20px;">
-      <h3 class="panel-title">إرسال الأخطاء تلقائياً (اختياري)</h3>
-      <p style="font-size:13px;color:var(--muted);margin-top:-8px;margin-bottom:14px;">
-        الأخطاء تُسجَّل تلقائياً في هذه اللوحة بمجرد حدوثها. لإرسالها فورياً أيضاً لخدمة خارجية
-        (مثل Slack أو Discord webhook أو أي رابط استقبال تختاره)، ضع الرابط هنا:
-      </p>
-      <div class="form-grid">
-        <div class="field full">
-          <input type="text" id="webhookInput" placeholder="https://example.com/webhook" value="${hook}">
-        </div>
-      </div>
-      <button class="btn btn-primary" id="saveWebhookBtn">حفظ</button>
+/* ---------- 2) مسار التحويل ---------- */
+let funnelSection = 'ads';
+async function renderFunnelTab(mount){
+  const r = await statsBoot(mount, () => renderFunnelTab(mount));
+  if(!r) return; const { body, st } = r;
+  const f = st.funnel[funnelSection];
+  const STEPS = {
+    ads:     [['visits','زار قسم الإعلانات'], ['detail','فتح إعلان'], ['add','فتح صفحة "أضف إعلانك"'], ['formStart','بدأ يكتب بالنموذج'], ['formSubmit','ضغط "نشر الإعلان"'], ['loginView','وصل لصفحة الدخول'], ['account','سجّل حساب / دخل'], ['post','نشر إعلان']],
+    tourism: [['visits','زار قسم السياحة'], ['detail','فتح صفحة مكان'], ['add','فتح "أضف مكان"'], ['formStart','بدأ يكتب بالنموذج'], ['formSubmit','ضغط إرسال'], ['loginView','وصل لصفحة الدخول'], ['account','سجّل حساب / دخل'], ['post','أضاف مكاناً']],
+    malaab:  [['visits','زار ملعبك'], ['detail','فتح صفحة تفاصيل'], ['add','فتح صفحة إضافة'], ['formStart','بدأ يكتب بالنموذج'], ['formSubmit','ضغط إرسال'], ['loginView','وصل لصفحة الدخول/التسجيل'], ['account','سجّل حساب / دخل'], ['post','أضاف محتوى']],
+  }[funnelSection];
+  let prev = null;
+  const stepsHTML = STEPS.map(([k, label]) => {
+    const v = f[k]; const ofPrev = prev ? pct(v, prev) : '100%'; const ofAll = pct(v, f.visits);
+    const width = f.visits ? Math.max(2, Math.round(v / f.visits * 100)) : 0;
+    const drop = prev != null && prev > 0 ? prev - v : 0;
+    const html = `
+      <div class="funnel-step">
+        <div class="funnel-label"><b>${label}</b><span class="mod-meta">${v} زيارة · ${ofAll} من الكل${prev != null ? ` · ${ofPrev} من الخطوة السابقة` : ''}</span></div>
+        <div class="funnel-bar"><div class="funnel-fill" style="width:${width}%"></div></div>
+        ${drop > 0 && prev >= 3 ? `<div class="funnel-drop">⬇ ${drop} انسحبوا هون (${pct(drop, prev)})</div>` : ''}
+      </div>`;
+    prev = v; return html;
+  }).join('');
+  const contactBySec = {}, contactByMethod = {};
+  for(const c of st.contacts){ const m = c.meta || {}; contactBySec[c.section || '—'] = (contactBySec[c.section || '—'] || 0) + 1; contactByMethod[m.method || '—'] = (contactByMethod[m.method || '—'] || 0) + 1; }
+  const itemLink = (c) => { const p = c.path && !c.path.includes('?') && c.id ? c.path + '?id=' + encodeURIComponent(c.id) : c.path; return `<a href="${escapeHTML((p || '').replace(/^\//, ''))}" target="_blank" rel="noopener">${pageLabel(p)}</a>`; };
+  body.innerHTML = `
+    <div class="admin-tabs">${['ads','tourism','malaab'].map(s => `<button type="button" class="admin-tab ${s===funnelSection?'active':''}" data-sec="${s}">${SECTION_LABEL[s]}<span class="admin-tab-count">${st.funnel[s].visits}</span></button>`).join('')}</div>
+    ${insightsHTML(buildInsights(st).filter(i => i.text.startsWith(SECTION_LABEL[funnelSection]) || /مصدر|بحث/.test(i.text)))}
+    <h3 class="section-heading">من الزيارة للنشر — وين بيوقف الزوار</h3>
+    <div class="funnel">${f.visits ? stepsHTML : '<div class="admin-empty">ما في زيارات لهالقسم بهالفترة.</div>'}</div>
+    <p class="admin-hint">كل خطوة = عدد الزيارات (الجلسات) اللي وصلتها. "بدأ يكتب" و"ضغط نشر" بتنسجّل تلقائياً من نماذج الإضافة.</p>
+    <h3 class="section-heading">نية التواصل — ضغطات اتصال / واتساب / اتجاهات</h3>
+    <div class="stats-cols">
+      <div>${table(['القسم','ضغطات'], Object.entries(contactBySec).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `<tr><td class="cell-title">${SECTION_LABEL[k] || k}</td><td>${v}</td></tr>`).join(''), 'ما في ضغطات تواصل بهالفترة')}</div>
+      <div>${table(['الطريقة','ضغطات'], Object.entries(contactByMethod).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `<tr><td class="cell-title">${CONTACT_LABEL[k] || k}</td><td>${v}</td></tr>`).join(''), 'ما في ضغطات تواصل بهالفترة')}</div>
     </div>
+    <h3 class="section-heading">أكثر المحتوى اللي جاب تواصل</h3>
+    ${table(['المحتوى','القسم','التصنيف','المدينة','ضغطات','الطرق'], st.contactItems.slice(0, 15).map(c => `<tr><td class="cell-title">${itemLink(c)}</td><td>${SECTION_LABEL[c.section] || c.section || '—'}</td><td>${escapeHTML(c.category || '—')}</td><td>${escapeHTML(c.city || '—')}</td><td>${c.n}</td><td>${Object.entries(c.methods).map(([m, n]) => `${CONTACT_LABEL[m] || m} ${n}`).join('، ')}</td></tr>`).join(''), 'ما في بيانات بعد')}`;
+  body.querySelectorAll('[data-sec]').forEach(b => b.addEventListener('click', () => { funnelSection = b.dataset.sec; renderFunnelTab(mount); }));
+}
 
-    <div class="admin-toolbar">
-      <div style="font-weight:700;font-size:14px;">آخر الأخطاء المسجّلة (${errors.length})</div>
-      <button class="btn btn-outline" id="clearErrorsBtn">مسح السجل</button>
+/* ---------- 3) أخطاء وأداء ---------- */
+async function renderQualityTab(mount){
+  const r = await statsBoot(mount, () => renderQualityTab(mount));
+  if(!r) return; const { body, st } = r;
+  const slowest = st.perf.slice(0, 15);
+  const allLoads = st.perf.reduce((a, p) => a + p.avg * p.n, 0), allN = st.perf.reduce((a, p) => a + p.n, 0);
+  body.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num">${st.errorsTotal}</div><div class="stat-label">خطأ عند الزوار</div></div>
+      <div class="stat-card"><div class="stat-num">${st.errors.length}</div><div class="stat-label">نوع خطأ مختلف</div></div>
+      <div class="stat-card"><div class="stat-num">${allN ? (allLoads / allN / 1000).toFixed(1) + ' ث' : '—'}</div><div class="stat-label">متوسط تحميل الصفحة</div></div>
+      <div class="stat-card"><div class="stat-num">${st.perf.filter(p => p.n >= 3 && p.avg > 3000).length}</div><div class="stat-label">صفحات بطيئة (>3 ث)</div></div>
     </div>
-    ${errors.length ? `
-    <table class="admin-table">
-      <thead><tr><th>الوقت</th><th>الصفحة</th><th>الرسالة</th><th>السطر</th></tr></thead>
-      <tbody>
-        ${errors.map(er=>`
-          <tr>
-            <td>${new Date(er.date).toLocaleString('ar')}</td>
-            <td>${er.page || er.source || '-'}</td>
-            <td class="cell-title" style="max-width:360px;white-space:normal;">${er.message}</td>
-            <td>${er.line ?? '-'}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>` : `<div class="admin-empty">لا توجد أخطاء مسجّلة — ممتاز 👍</div>`}
-  `;
-  document.getElementById('saveWebhookBtn').addEventListener('click', ()=>{
-    setErrorWebhook(document.getElementById('webhookInput').value.trim());
-    toast('تم حفظ رابط الإرسال التلقائي');
-  });
-  document.getElementById('clearErrorsBtn').addEventListener('click', ()=>{
-    if(confirm('هل تريد مسح كل سجل الأخطاء؟')){
-      clearErrors();
-      toast('تم مسح سجل الأخطاء');
-      renderErrorsTab(mount);
-    }
-  });
+    ${insightsHTML(buildInsights(st).filter(i => /خطأ|بطيئة/.test(i.text)))}
+    <h3 class="section-heading">أخطاء برمجية صارت عند الزوار فعلاً</h3>
+    ${table(['الخطأ','الصفحة','المصدر','مرات','زوار','آخر مرة','الأجهزة'], st.errors.slice(0, 30).map(e => `<tr>
+      <td class="cell-title" style="max-width:360px;white-space:normal;direction:ltr;text-align:end;font-size:12px;">${escapeHTML(e.message)}</td>
+      <td class="ltr">${pageLabel(e.page)}</td><td class="ltr" style="font-size:12px;">${escapeHTML((e.source || '') + (e.line ? ':' + e.line : ''))}</td>
+      <td>${e.count}</td><td>${e.sessions.size}</td><td>${fmtWhen(e.last)}</td><td>${[...e.devices].map(d => d === 'mobile' ? 'جوال' : 'حاسوب').join('، ')}</td></tr>`).join(''), '✅ ما في أخطاء مسجّلة عند الزوار بهالفترة')}
+    <h3 class="section-heading">سرعة الصفحات (كما حمّلت عند الزوار)</h3>
+    ${table(['الصفحة','قياسات','متوسط التحميل','75% من الزوار خلال'], slowest.map(p => `<tr><td class="cell-title ltr">${pageLabel(p.path)}</td><td>${p.n}</td><td ${p.avg > 3000 ? 'style="color:var(--danger);font-weight:700;"' : ''}>${(p.avg / 1000).toFixed(1)} ث</td><td>${(p.p75 / 1000).toFixed(1)} ث</td></tr>`).join(''), 'ما في قياسات بعد')}
+    <p class="admin-hint">التحميل = من طلب الصفحة لاكتمالها بمتصفّح الزائر (شبكته وجهازه محسوبين) — الأرقام الحقيقية اللي بيحسّها الناس، مو قياس مخبري.</p>`;
 }
 
 /* ---------------- Comments tab ---------------- */

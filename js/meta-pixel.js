@@ -383,6 +383,12 @@ const MetaPixel = (() => {
       if (!method) return;
       const data = (typeof ctx === 'function' ? ctx(a) : ctx) || {};
       contactSeller(Object.assign({}, data, { method: method }));
+      // الإحصائيات الداخلية (site-stats.js): نية تواصل حقيقية — أهم إشارة للمالك عن أي محتوى بيشتغل
+      try {
+        window.SiteStats && SiteStats.step && SiteStats.step('contact', {
+          method: method, id: data.id, category: data.category, city: data.city, governorate: data.governorate, kind: data.type,
+        });
+      } catch (err) { /* الإحصائيات ما لازم توقف البكسل */ }
     }, true);   // capture: منسجّل قبل ما أي handler تاني يوقف الحدث
   }
 

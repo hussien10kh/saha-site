@@ -48,7 +48,7 @@
   var section = /^\/tourism\//.test(path) ? 'tourism' : /^\/malaab\//.test(path) ? 'malaab' : 'ads';
   var qs = new URLSearchParams(location.search);
   var keepQ = new URLSearchParams();
-  ['id', 'cat', 'city', 'q', 'type', 'edit'].forEach(function (k) { if (qs.get(k)) keepQ.set(k, qs.get(k)); });
+  ['id', 'cat', 'city', 'q', 'type', 'edit', 'redirect'].forEach(function (k) { if (qs.get(k)) keepQ.set(k, qs.get(k)); });
   var pathWithQuery = (path + (keepQ.toString() ? '?' + keepQ.toString() : '')).slice(0, 300);
 
   var referrer = null;
@@ -65,6 +65,8 @@
     session_id: sessionId, visitor_id: visitorId, section: section,
     path: pathWithQuery, device: device,
   };
+  var ua = navigator.userAgent;
+  var os = /Android/i.test(ua) ? 'android' : /iPhone|iPad|iPod/i.test(ua) ? 'ios' : /Windows/i.test(ua) ? 'windows' : /Mac OS/i.test(ua) ? 'mac' : /Linux/i.test(ua) ? 'linux' : 'other';
   var pageviewRow = {
     type: 'pageview', view_id: viewId,
     title: (document.title || '').slice(0, 200),
@@ -72,7 +74,22 @@
     utm_source: (qs.get('utm_source') || '').slice(0, 100) || null,
     utm_medium: (qs.get('utm_medium') || '').slice(0, 100) || null,
     utm_campaign: (qs.get('utm_campaign') || '').slice(0, 150) || null,
+    meta: { os: os },
   };
+  // أداء الصفحة (من Navigation Timing) — بينضاف للمشاهدة لو التحميل خلص قبل إرسالها
+  function perfMeta() {
+    try {
+      var n = performance.getEntriesByType('navigation')[0];
+      if (!n || !n.loadEventEnd) return null;
+      return { ttfb_ms: Math.round(n.responseStart), dcl_ms: Math.round(n.domContentLoadedEventEnd), load_ms: Math.round(n.loadEventEnd) };
+    } catch (e) { return null; }
+  }
+  var pageviewSent = false;
+  function sendPageview(keepalive) {
+    if (pageviewSent) return; pageviewSent = true;
+    var p = perfMeta(); if (p) Object.assign(pageviewRow.meta, p);
+    send(pageviewRow, keepalive);
+  }
 
   // لو المستخدم مسجّل، منبعت بتوكنه حتى ينكتب user_id (سياسة الجدول بتقبله بس لو = auth.uid()).
   // بلا كاش: بصفحة الدخول الجلسة بتتغيّر بعد التحميل، وحدث login لازم يمشي بالتوكن الجديد.
@@ -114,6 +131,7 @@
     if (visibleSince) { visibleTotal += Date.now() - visibleSince; visibleSince = null; }
   }
   function sendLeave() {
+    sendPageview(true);
     if (leaveSent) return;
     flushVisible();
     var secs = Math.round(visibleTotal / 1000);
@@ -128,7 +146,39 @@
   });
   window.addEventListener('pagehide', sendLeave);
 
-  send(pageviewRow);
+  if (document.readyState === 'complete') sendPageview(); else { window.addEventListener('load', function () { setTimeout(function () { sendPageview(); }, 0); }); setTimeout(function () { sendPageview(); }, 2500); }
+
+  // أخطاء الزوار الحقيقية (بحد أقصى 3 لكل صفحة؛ متجاهلين ضجيج الإضافات والسكربتات الخارجية بلا تفاصيل)
+  var errorsSent = 0;
+  function reportError(message, source, line, col) {
+    if (errorsSent >= 3) return;
+    message = String(message || ''); source = String(source || '');
+    if (!message || message === 'Script error.' || /extension:\/\//.test(source)) return;
+    errorsSent++;
+    send({ type: 'error', view_id: viewId, meta: { message: message.slice(0, 300), source: source.replace(/^https?:\/\/[^/]+/, '').slice(0, 200), line: line || null, col: col || null } }, true);
+  }
+  window.addEventListener('error', function (e) { reportError(e.message, e.filename, e.lineno, e.colno); });
+  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; reportError('Promise: ' + (r && r.message ? r.message : String(r)), location.pathname); });
+
+  // مسار الإضافة تلقائياً بكل صفحات add-*: أول كتابة بالنموذج = form_start، والضغط على نشر = form_submit
+  var addMatch = /\/add-([a-z]+)\.html$/.exec(path);
+  if (addMatch) {
+    var kind = addMatch[1] === 'ad' ? 'ad' : addMatch[1];
+    var started = false;
+    document.addEventListener('input', function (e) {
+      if (started || !e.target || !e.target.closest || !e.target.closest('form')) return;
+      started = true; step('form_start', { kind: kind });
+    }, true);
+    document.addEventListener('submit', function (e) {
+      if (e.target && e.target.tagName === 'FORM') step('form_submit', { kind: kind });
+    }, true);
+  }
+
+  function step(name, meta) {
+    var m = { name: String(name).slice(0, 40) };
+    try { Object.assign(m, JSON.parse(JSON.stringify(meta || {}))); } catch (e) {}
+    send({ type: 'step', view_id: viewId, meta: m }, true);
+  }
 
   window.SiteStats = {
     sessionId: sessionId,
@@ -139,5 +189,7 @@
       try { m = JSON.parse(JSON.stringify(meta || {})); } catch (e) {}
       send({ type: type, view_id: viewId, meta: m }, true);   // keepalive: الصفحة غالباً بتنتقل فوراً بعد الحدث
     },
+    // خطوة بمسار الزائر: contact (اتصال/واتساب/اتجاهات)، form_start، form_submit…
+    step: step,
   };
 })();
