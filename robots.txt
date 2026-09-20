@@ -4,5 +4,13 @@ Disallow: /admin.html
 Disallow: /admin-login.html
 Disallow: /account.html
 Disallow: /login.html
+Disallow: /forgot-password.html
+Disallow: /reset-password.html
+Disallow: /malaab/login.html
+Disallow: /malaab/register.html
+Disallow: /malaab/admin.html
+Disallow: /tourism/profile.html
+Disallow: /tourism/seed-landmarks.html
+Disallow: /.netlify/
 
 Sitemap: https://saaha.net/sitemap.xml
