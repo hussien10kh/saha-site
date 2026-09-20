@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>بذر المعالم الأثرية — ساحة سياحة</title>
+<title>المعالم المدمجة — تنظيف النسخ المكرّرة | ساحة سياحة</title>
 <style>
   body{font-family:'Cairo','Tajawal',system-ui,sans-serif;background:#f4f6fa;color:#182333;padding:24px;max-width:720px;margin:0 auto;direction:rtl;}
   h1{color:#15264a;margin-top:0;}
@@ -15,47 +15,51 @@
   .status{font-size:.85em;padding:4px 10px;border-radius:999px;}
   .status.pending{background:#eef;color:#59f;}
   .status.ok{background:#e6f7ec;color:#1a9c5e;}
+  .status.dup{background:#fff3cd;color:#8a6d00;}
   .status.err{background:#fde8e6;color:#e0453d;}
   button{background:#15264a;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-weight:700;font-family:inherit;cursor:pointer;font-size:15px;}
   button:disabled{opacity:.5;cursor:not-allowed;}
-  .note{background:#fffbe6;border:1px solid #f0dc9a;border-radius:8px;padding:12px;color:#7a5a11;font-size:.9em;margin-top:12px;}
-  #log{background:#0c1424;color:#7fdbff;padding:12px;border-radius:8px;font-family:monospace;font-size:.85em;max-height:200px;overflow:auto;margin-top:12px;white-space:pre-wrap;}
+  button.danger{background:#e0453d;}
+  .note{background:#fffbe6;border:1px solid #f0dc9a;border-radius:8px;padding:12px;color:#7a5a11;font-size:.9em;margin-top:12px;line-height:1.8;}
+  #log{background:#0c1424;color:#7fdbff;padding:12px;border-radius:8px;font-family:monospace;font-size:.85em;max-height:220px;overflow:auto;margin-top:12px;white-space:pre-wrap;}
 </style>
 <script src="../js/vendor/supabase.js"></script>
 <script src="../js/supabase-client.js"></script>
-<script src="../js/media-processor.js"></script>
 <script src="places-data.js"></script>
 <script src="helpers.js"></script>
 <script src="header-auth.js"></script>
 </head>
 <body>
 
-<h1>بذر المعالم الأثرية</h1>
-<p>يُشغّل مرة واحدة فقط. يقرأ المعالم من <code>places-data.js</code>، يضغط صورها بـ<code>MediaProcessor</code> (WebP + علامة "ساحة")، يرفعها لـSupabase Storage، ويدرجها في <code>tourism_places</code> بحالة <code>approved</code>.</p>
+<h1>المعالم المدمجة</h1>
+<p>المعالم الخمسة بـ<code>places-data.js</code> هي المرجع بالموقع: روابطها ثابتة (slug) بالقوائم والـsitemap وصفحاتها مرسومة على السيرفر.
+أداة البذر القديمة كانت تنسخها إلى <code>tourism_places</code> فتظهر مرّتين بالقوائم. هالصفحة صارت للتنظيف بس:
+بتفحص إذا في نسخ مكرّرة بقاعدة البيانات وبتحذفها مع صورها من التخزين.</p>
 
-<div class="note">⚠️ يتطلب تسجيل دخول بحساب <b>أدمن</b> (<code>profiles.is_admin=true</code>). يتخطّى العناصر الموجودة مسبقاً في القاعدة.</div>
+<div class="note">⚠️ تتطلب تسجيل دخول بحساب <b>أدمن</b> (<code>profiles.is_admin=true</code>). الحذف نهائي ولا يمسّ إلا الصفوف اللي اسمها يطابق معلماً مدمجاً — أي مكان أضافه الزوار ما بينلمس.</div>
 
 <div class="card" id="list"></div>
 
-<button id="runBtn">ابدأ البذر</button>
-<button id="checkBtn" style="background:#374151;">فحص فقط</button>
+<button id="checkBtn" style="background:#374151;">فحص النسخ المكرّرة</button>
+<button id="cleanBtn" class="danger" disabled>حذف النسخ المكرّرة</button>
 
 <div id="log"></div>
 
 <script>
-const items = PLACES_DATA.filter(p => p.category === 'landmark');
+const items = PLACES_DATA;
 const listEl = document.getElementById('list');
 const logEl = document.getElementById('log');
-const runBtn = document.getElementById('runBtn');
 const checkBtn = document.getElementById('checkBtn');
+const cleanBtn = document.getElementById('cleanBtn');
+let duplicates = [];   // صفوف Supabase اللي اسمها يطابق معلماً مدمجاً
 
 function log(msg){ logEl.textContent += msg + "\n"; logEl.scrollTop = logEl.scrollHeight; }
 function render(){
   listEl.innerHTML = items.map(p => `
     <div class="row" data-id="${p.id}">
       <span class="name">${p.name}</span>
-      <span class="muted" style="font-size:.85em;color:#6b7686;">${p.city}</span>
-      <span class="status pending" id="s-${p.id}">في الانتظار</span>
+      <span style="font-size:.85em;color:#6b7686;">${p.city} · <code>${p.id}</code></span>
+      <span class="status pending" id="s-${p.id}">لم يُفحص</span>
     </div>
   `).join('');
 }
@@ -69,86 +73,59 @@ async function ensureAdmin(){
   return user;
 }
 
+async function findDuplicates(){
+  const { data, error } = await sb.from('tourism_places').select('id,name,images,status,created_at');
+  if(error) throw error;
+  return (data || []).filter(r => items.some(p => tourismNameKey(p.name) === tourismNameKey(r.name)));
+}
+
 checkBtn.addEventListener('click', async () => {
-  logEl.textContent = '';
+  logEl.textContent = ''; cleanBtn.disabled = true;
   try {
     const user = await ensureAdmin();
     log('✓ أدمن: ' + user.id.slice(0,8) + '...');
-    const { data, error, count } = await sb.from('tourism_places').select('id,name', { count:'exact' }).eq('category','landmark');
-    if(error) throw error;
-    log(`📊 موجود حالياً بـtourism_places (landmark): ${count}`);
-    data.forEach(r => log(`   - ${r.name}`));
+    duplicates = await findDuplicates();
+    items.forEach(p => {
+      const badge = document.getElementById('s-' + p.id);
+      const n = duplicates.filter(r => tourismNameKey(r.name) === tourismNameKey(p.name)).length;
+      badge.textContent = n ? `مكرّر ×${n} بالقاعدة` : 'مدمج فقط ✓';
+      badge.className = 'status ' + (n ? 'dup' : 'ok');
+    });
+    log(`📊 نسخ مكرّرة بـtourism_places: ${duplicates.length}`);
+    duplicates.forEach(r => log(`   - ${r.name} (${r.id.slice(0,8)}…، ${r.status})`));
+    cleanBtn.disabled = duplicates.length === 0;
+    if(!duplicates.length) log('✅ ما في تكرار — ما في شي يتعمل.');
   } catch(err) { log('❌ ' + err.message); }
 });
 
-runBtn.addEventListener('click', async () => {
-  logEl.textContent = '';
-  runBtn.disabled = true; runBtn.textContent = 'جاري البذر...';
+cleanBtn.addEventListener('click', async () => {
+  if(!duplicates.length) return;
+  if(!confirm(`حذف ${duplicates.length} نسخة مكرّرة نهائياً مع صورها؟ المعالم المدمجة بتضل ظاهرة بالموقع.`)) return;
+  cleanBtn.disabled = true; checkBtn.disabled = true;
+  let removed = 0;
   try {
-    const user = await ensureAdmin();
-    log('✓ أدمن مؤكّد.');
-
-    // نتفادى التكرار: نجيب الأسماء الموجودة
-    const { data:existing } = await sb.from('tourism_places').select('name').eq('category','landmark');
-    const existingNames = new Set((existing||[]).map(r => r.name));
-
-    let inserted = 0, skipped = 0;
-    for (const p of items) {
-      const badge = document.getElementById('s-' + p.id);
-      if (existingNames.has(p.name)) {
-        badge.textContent = 'موجود مسبقاً'; badge.className = 'status ok';
-        log(`⏭  ${p.name} — موجود، تخطّي.`); skipped++;
-        continue;
-      }
-
-      badge.textContent = 'جاري الرفع...';
+    await ensureAdmin();
+    for (const r of duplicates) {
       try {
-        // 1) اجلب الصورة من مسارها المحلي (المسارات بـplaces-data.js نسبية لمجلد images/)
-        const imgPath = p.image.startsWith('images/') || p.image.startsWith('http') ? p.image : 'images/' + p.image;
-        const imgResp = await fetch(imgPath);
-        if (!imgResp.ok) throw new Error('فشل جلب الصورة: ' + imgPath);
-        const imgBlob = await imgResp.blob();
-
-        // 2) اضغطها + طبع علامة "ساحة"
-        const processed = await MediaProcessor.processImage(imgBlob, { label: 'ساحة', output: 'blob' });
-
-        // 3) ارفعها إلى sahat-media/<uid>/tourism/landmarks/<slug>.webp
-        const key = `${user.id}/tourism/landmarks/${p.id}.webp`;
-        const { error:upErr } = await sb.storage.from('sahat-media').upload(key, processed, {
-          contentType:'image/webp', upsert:true, cacheControl:'3600',
-        });
-        if(upErr) throw upErr;
-        const { data:{ publicUrl } } = sb.storage.from('sahat-media').getPublicUrl(key);
-
-        // 4) أدرج بـtourism_places (status=approved، لأنها معالم رسمية موثّقة)
-        const { error:insErr } = await sb.from('tourism_places').insert({
-          added_by: user.id,
-          name: p.name,
-          category: 'landmark',
-          region: p.city,
-          city: p.area || p.city,
-          lat: p.lat, lng: p.lng,
-          description: p.desc,
-          images: [publicUrl],
-          status: 'approved',
-          reviewed_by: user.id,
-          reviewed_at: new Date().toISOString(),
-        });
-        if(insErr) throw insErr;
-
-        badge.textContent = '✓ تم'; badge.className = 'status ok';
-        log(`✅ ${p.name} — رُفعت (${Math.round(processed.size/1024)}KB) وأُدرجت.`);
-        inserted++;
-      } catch(err) {
-        badge.textContent = 'خطأ'; badge.className = 'status err';
-        log(`❌ ${p.name}: ${err.message}`);
-      }
+        const { data, error } = await sb.from('tourism_places').delete().eq('id', r.id).select('id');
+        if(error) throw error;
+        if(!data || !data.length) throw new Error('ما انحذف — الصلاحيات ناقصة (سياسة "Admins delete tourism places" بـsupabase_schema.sql)');
+        // الصور من التخزين — best-effort
+        for (const url of (r.images || [])) {
+          const idx = String(url).indexOf('/sahat-media/');
+          if (idx !== -1) await sb.storage.from('sahat-media').remove([String(url).slice(idx + '/sahat-media/'.length)]).catch(() => {});
+        }
+        removed++;
+        log(`🗑  ${r.name} (${r.id.slice(0,8)}…) — انحذف.`);
+      } catch(err) { log(`❌ ${r.name}: ${err.message}`); }
     }
-    log(`\n🎉 انتهى. أُدرج: ${inserted}، مُتخطّى: ${skipped}.`);
+    log(`\n🎉 انتهى. انحذف: ${removed} من ${duplicates.length}.`);
+    duplicates = [];
+    items.forEach(p => { const b = document.getElementById('s-' + p.id); b.textContent = 'مدمج فقط ✓'; b.className = 'status ok'; });
   } catch(err) {
     log('❌ ' + err.message);
   } finally {
-    runBtn.disabled = false; runBtn.textContent = 'ابدأ البذر';
+    checkBtn.disabled = false;
   }
 });
 </script>

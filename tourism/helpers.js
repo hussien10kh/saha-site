@@ -47,6 +47,14 @@ function tourismRowToPlace(row) {
   };
 }
 
+// مفتاح مقارنة الأسماء: بلا مسافات زائدة ولا تشكيل ولا فرق بين أشكال الألف/الياء/التاء المربوطة
+function tourismNameKey(name) {
+  return String(name || '')
+    .replace(/[ً-ْـ]/g, '')
+    .replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه')
+    .replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
 function tourismStaticPlaces() {
   return (typeof PLACES_DATA !== 'undefined' ? PLACES_DATA : []).map(function (p) {
     return Object.assign({}, p, {
@@ -66,9 +74,14 @@ async function tourismGetPlaces() {
       .order('created_at', { ascending: false });
     if (res.error) throw res.error;
     var remote = (res.data || []).map(tourismRowToPlace);
+    /* المعالم المدمجة (places-data.js) هي المرجع: روابطها slug ثابتة بالقوائم والـsitemap
+       والرسم على السيرفر. نسخة مبذورة منها بـSupabase بنفس الاسم (من seed-landmarks.html
+       القديمة) كانت تظهر كتكرار بالقوائم — منخفيها هون ومنخلّي المدمجة تفوز. */
+    var localNames = {};
+    local.forEach(function (p) { localNames[tourismNameKey(p.name)] = true; });
     var byId = {};
     local.forEach(function (p) { byId[p.id] = p; });
-    remote.forEach(function (p) { byId[p.id] = p; });
+    remote.forEach(function (p) { if (!localNames[tourismNameKey(p.name)]) byId[p.id] = p; });
     return Object.keys(byId).map(function (id) { return byId[id]; });
   } catch (e) {
     console.error('tourismGetPlaces failed:', e);
